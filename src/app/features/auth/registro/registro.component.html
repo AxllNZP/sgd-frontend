@@ -1,0 +1,77 @@
+<div class="registro-container">
+  <div class="registro-card">
+
+    <div class="registro-header">
+      <i class="fas fa-file-upload registro-icon"></i>
+      <h2>Mesa de Partes Virtual</h2>
+      <p>Registre su documento</p>
+    </div>
+
+    <div class="registro-form">
+      <div class="field">
+        <label>Nombre completo *</label>
+        <input pInputText [(ngModel)]="form.remitente" placeholder="Juan Pérez" class="w-full"/>
+      </div>
+
+      <div class="field">
+        <label>DNI o RUC *</label>
+        <input pInputText [(ngModel)]="form.dniRuc" placeholder="12345678" class="w-full"/>
+      </div>
+
+      <div class="field">
+        <label>Email *</label>
+        <input pInputText type="email" [(ngModel)]="form.emailRemitente"
+          placeholder="correo@ejemplo.com" class="w-full"/>
+      </div>
+
+      <div class="field">
+        <label>Asunto *</label>
+        <input pInputText [(ngModel)]="form.asunto"
+          placeholder="Descripción del documento" class="w-full"/>
+      </div>
+
+      <div class="field">
+        <label>Tipo de documento</label>
+        <p-select
+          [options]="tiposDocumento"
+          [(ngModel)]="form.tipoDocumento"
+          placeholder="Seleccione tipo"
+          styleClass="w-full">
+        </p-select>
+      </div>
+
+      <div class="field">
+        <label>Archivo adjunto (PDF, JPG, PNG)</label>
+        <input type="file" accept=".pdf,.jpg,.png"
+          (change)="onArchivoSeleccionado($event)"
+          class="file-input"/>
+      </div>
+
+      <div class="error-msg" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+
+      <div class="exito-msg" *ngIf="exito">
+        <i class="fas fa-check-circle"></i>
+        <strong>Documento registrado exitosamente</strong><br>
+        Número de trámite: <strong>{{ numeroTramite }}</strong><br>
+        <small>Se envió confirmación a su email</small>
+      </div>
+
+      <button pButton
+        label="Registrar Documento"
+        icon="fas fa-paper-plane"
+        class="w-full p-button-primary"
+        [loading]="cargando"
+        (click)="registrar()">
+      </button>
+
+      <div class="login-link">
+        <a routerLink="/login">
+          ¿Ya tiene cuenta? Ingresar al sistema
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>

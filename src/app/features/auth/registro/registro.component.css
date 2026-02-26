@@ -1,0 +1,95 @@
+.registro-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #0f172a;
+  padding: 2rem;
+}
+
+.registro-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+
+.registro-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.registro-icon {
+  font-size: 3rem;
+  color: #60a5fa;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.registro-header h2 {
+  color: white;
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.registro-header p {
+  color: #94a3b8;
+  margin: 0.25rem 0 0;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field label {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.file-input {
+  color: #e2e8f0;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.error-msg {
+  color: #f87171;
+  font-size: 0.85rem;
+}
+
+.exito-msg {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid #4ade80;
+  border-radius: 6px;
+  padding: 1rem;
+  text-align: center;
+  line-height: 1.8;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.login-link a {
+  color: #60a5fa;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
