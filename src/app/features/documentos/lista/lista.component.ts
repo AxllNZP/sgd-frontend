@@ -1,0 +1,95 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { DocumentoService } from '../../../core/services/documento.service';
+import { DocumentoResponse, DocumentoFiltro, EstadoDocumento } from '../../../core/models/documento.model';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { SelectModule } from 'primeng/select';
+
+@Component({
+  selector: 'app-lista',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, TagModule, SelectModule],
+  templateUrl: './lista.component.html',
+  styleUrl: './lista.component.css'
+})
+export class ListaComponent implements OnInit {
+  documentos: DocumentoResponse[] = [];
+  cargando = false;
+
+  filtro: DocumentoFiltro = {
+    remitente: '',
+    asunto: '',
+    estado: undefined
+  };
+
+  estados = [
+    { label: 'Todos', value: null },
+    { label: 'Recibido', value: 'RECIBIDO' },
+    { label: 'En Proceso', value: 'EN_PROCESO' },
+    { label: 'Observado', value: 'OBSERVADO' },
+    { label: 'Archivado', value: 'ARCHIVADO' }
+  ];
+
+  constructor(
+    private documentoService: DocumentoService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.listarTodos();
+  }
+
+  listarTodos(): void {
+    this.cargando = true;
+    this.documentoService.listarTodos().subscribe({
+      next: (docs) => {
+        this.documentos = docs;
+        this.cargando = false;
+      },
+      error: () => { this.cargando = false; }
+    });
+  }
+
+  buscar(): void {
+    this.cargando = true;
+    const filtroLimpio: DocumentoFiltro = {};
+    if (this.filtro.remitente) filtroLimpio.remitente = this.filtro.remitente;
+    if (this.filtro.asunto) filtroLimpio.asunto = this.filtro.asunto;
+    if (this.filtro.estado) filtroLimpio.estado = this.filtro.estado;
+
+    this.documentoService.buscarPorFiltros(filtroLimpio).subscribe({
+      next: (docs) => {
+        this.documentos = docs;
+        this.cargando = false;
+      },
+      error: () => { this.cargando = false; }
+    });
+  }
+
+  limpiar(): void {
+    this.filtro = { remitente: '', asunto: '', estado: undefined };
+    this.listarTodos();
+  }
+
+  verDetalle(numeroTramite: string): void {
+    this.router.navigate(['/documentos', numeroTramite]);
+  }
+
+  getEstadoClass(estado: string): string {
+    switch(estado) {
+      case 'RECIBIDO': return 'info';
+      case 'EN_PROCESO': return 'warn';
+      case 'OBSERVADO': return 'danger';
+      case 'ARCHIVADO': return 'success';
+      default: return 'info';
+    }
+  }
+
+  irDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+}

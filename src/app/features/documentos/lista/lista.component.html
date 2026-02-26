@@ -1,0 +1,113 @@
+<div class="lista-container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+      <button pButton icon="fas fa-arrow-left"
+        class="p-button-text p-button-sm"
+        (click)="irDashboard()">
+      </button>
+      <div>
+        <h1>Gestión de Documentos</h1>
+        <p>{{ documentos.length }} documento(s) encontrado(s)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros-card">
+    <h3><i class="fas fa-filter"></i> Filtros de búsqueda</h3>
+    <div class="filtros-grid">
+      <div class="field">
+        <label>Remitente</label>
+        <input pInputText
+          [(ngModel)]="filtro.remitente"
+          placeholder="Buscar por remitente..."
+          class="w-full"/>
+      </div>
+      <div class="field">
+        <label>Asunto</label>
+        <input pInputText
+          [(ngModel)]="filtro.asunto"
+          placeholder="Buscar por asunto..."
+          class="w-full"/>
+      </div>
+      <div class="field">
+        <label>Estado</label>
+        <p-select
+          [options]="estados"
+          [(ngModel)]="filtro.estado"
+          placeholder="Todos los estados"
+          styleClass="w-full">
+        </p-select>
+      </div>
+    </div>
+    <div class="filtros-actions">
+      <button pButton
+        label="Buscar"
+        icon="fas fa-search"
+        class="p-button-primary"
+        (click)="buscar()">
+      </button>
+      <button pButton
+        label="Limpiar"
+        icon="fas fa-times"
+        class="p-button-secondary"
+        (click)="limpiar()">
+      </button>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <div class="tabla-card">
+    <div *ngIf="cargando" class="loading">
+      <i class="fas fa-spinner fa-spin"></i> Cargando...
+    </div>
+
+    <div *ngIf="!cargando && documentos.length === 0" class="empty">
+      <i class="fas fa-folder-open"></i>
+      <p>No se encontraron documentos</p>
+    </div>
+
+    <div *ngIf="!cargando && documentos.length > 0" class="table-container">
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>N° Trámite</th>
+            <th>Remitente</th>
+            <th>DNI/RUC</th>
+            <th>Asunto</th>
+            <th>Tipo</th>
+            <th>Área</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of documentos">
+            <td><code>{{ doc.numeroTramite }}</code></td>
+            <td>{{ doc.remitente }}</td>
+            <td>{{ doc.dniRuc }}</td>
+            <td>{{ doc.asunto }}</td>
+            <td>{{ doc.tipoDocumento }}</td>
+            <td>{{ doc.areaNombre || '—' }}</td>
+            <td>{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <p-tag [value]="doc.estado" [severity]="getEstadoClass(doc.estado)"></p-tag>
+            </td>
+            <td>
+              <button pButton
+                icon="fas fa-eye"
+                class="p-button-text p-button-sm p-button-info"
+                (click)="verDetalle(doc.numeroTramite)"
+                pTooltip="Ver detalle">
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

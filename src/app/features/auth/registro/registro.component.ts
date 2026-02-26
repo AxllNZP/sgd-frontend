@@ -11,7 +11,7 @@ import { SelectModule } from 'primeng/select';
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, CardModule, DropdownModule, RouterLink],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, CardModule, SelectModule, RouterLink],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.css'
 })

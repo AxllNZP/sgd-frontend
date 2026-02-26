@@ -1,1 +1,93 @@
-<p>areas works!</p>
+<div class="areas-container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+      <button pButton icon="fas fa-arrow-left"
+        class="p-button-text p-button-sm"
+        (click)="volver()">
+      </button>
+      <div>
+        <h1>Gestión de Áreas</h1>
+        <p>{{ areas.length }} área(s) registrada(s)</p>
+      </div>
+    </div>
+    <button pButton
+      label="Nueva Área"
+      icon="fas fa-plus"
+      class="p-button-primary"
+      (click)="abrirDialog()">
+    </button>
+  </div>
+
+  <!-- CARDS DE AREAS -->
+  <div *ngIf="cargando" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Cargando...
+  </div>
+
+  <div *ngIf="!cargando && areas.length === 0" class="empty">
+    <i class="fas fa-building"></i>
+    <p>No hay áreas registradas</p>
+  </div>
+
+  <div *ngIf="!cargando && areas.length > 0" class="areas-grid">
+    <div class="area-card" *ngFor="let area of areas">
+      <div class="area-card-header">
+        <div class="area-icon">
+          <i class="fas fa-building"></i>
+        </div>
+        <span class="area-estado" [ngClass]="area.activa ? 'activa' : 'inactiva'">
+          <i class="fas" [ngClass]="area.activa ? 'fa-check-circle' : 'fa-times-circle'"></i>
+          {{ area.activa ? 'Activa' : 'Inactiva' }}
+        </span>
+      </div>
+      <div class="area-card-body">
+        <h3>{{ area.nombre }}</h3>
+        <p>{{ area.descripcion || 'Sin descripción' }}</p>
+      </div>
+      <div class="area-card-footer">
+        <button pButton
+          label="Desactivar"
+          icon="fas fa-ban"
+          class="p-button-text p-button-sm p-button-danger"
+          (click)="desactivar(area.id)"
+          [disabled]="!area.activa">
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DIALOG NUEVA ÁREA -->
+<p-dialog header="Nueva Área" [(visible)]="mostrarDialog"
+  [modal]="true" [style]="{width: '450px'}">
+  <div class="dialog-form">
+    <div class="field">
+      <label>Nombre del Área *</label>
+      <input pInputText [(ngModel)]="nuevaArea.nombre"
+        placeholder="Ej: Secretaría General" class="w-full"/>
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <textarea pTextarea [(ngModel)]="nuevaArea.descripcion"
+        rows="3" class="w-full"
+        placeholder="Descripción del área...">
+      </textarea>
+    </div>
+    <div class="error-msg" *ngIf="error">
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar"
+      class="p-button-text"
+      (click)="mostrarDialog = false">
+    </button>
+    <button pButton label="Crear Área"
+      icon="fas fa-plus"
+      class="p-button-primary"
+      (click)="crear()">
+    </button>
+  </ng-template>
+</p-dialog>

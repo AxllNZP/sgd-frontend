@@ -1,0 +1,121 @@
+<div class="usuarios-container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="header-left">
+      <button pButton icon="fas fa-arrow-left"
+        class="p-button-text p-button-sm"
+        (click)="volver()">
+      </button>
+      <div>
+        <h1>Gestión de Usuarios</h1>
+        <p>{{ usuarios.length }} usuario(s) registrado(s)</p>
+      </div>
+    </div>
+    <button pButton
+      label="Nuevo Usuario"
+      icon="fas fa-user-plus"
+      class="p-button-primary"
+      (click)="abrirDialog()">
+    </button>
+  </div>
+
+  <!-- TABLA -->
+  <div class="tabla-card">
+    <div *ngIf="cargando" class="loading">
+      <i class="fas fa-spinner fa-spin"></i> Cargando...
+    </div>
+
+    <div *ngIf="!cargando && usuarios.length === 0" class="empty">
+      <i class="fas fa-users"></i>
+      <p>No hay usuarios registrados</p>
+    </div>
+
+    <div *ngIf="!cargando && usuarios.length > 0" class="table-container">
+      <table class="usuarios-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Fecha Creación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usuarios">
+            <td>
+              <div class="user-info">
+                <div class="user-avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+                <span>{{ u.nombre }}</span>
+              </div>
+            </td>
+            <td>{{ u.email }}</td>
+            <td>
+              <p-tag [value]="u.rol" [severity]="getRolClass(u.rol)"></p-tag>
+            </td>
+            <td>
+              <span class="estado-badge" [ngClass]="u.activo ? 'activo' : 'inactivo'">
+                <i class="fas" [ngClass]="u.activo ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                {{ u.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td>{{ u.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <button pButton
+                icon="fas fa-user-slash"
+                class="p-button-text p-button-sm p-button-danger"
+                (click)="desactivar(u.id)"
+                [disabled]="!u.activo"
+                pTooltip="Desactivar usuario">
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- DIALOG NUEVO USUARIO -->
+<p-dialog header="Nuevo Usuario" [(visible)]="mostrarDialog"
+  [modal]="true" [style]="{width: '450px'}">
+  <div class="dialog-form">
+    <div class="field">
+      <label>Nombre completo *</label>
+      <input pInputText [(ngModel)]="nuevoUsuario.nombre"
+        placeholder="Juan Pérez" class="w-full"/>
+    </div>
+    <div class="field">
+      <label>Email *</label>
+      <input pInputText type="email" [(ngModel)]="nuevoUsuario.email"
+        placeholder="correo@ejemplo.com" class="w-full"/>
+    </div>
+    <div class="field">
+      <label>Contraseña *</label>
+      <input pInputText type="password" [(ngModel)]="nuevoUsuario.password"
+        placeholder="••••••••" class="w-full"/>
+    </div>
+    <div class="field">
+      <label>Rol *</label>
+      <p-select [options]="roles" [(ngModel)]="nuevoUsuario.rol"
+        styleClass="w-full"></p-select>
+    </div>
+    <div class="error-msg" *ngIf="error">
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar"
+      class="p-button-text"
+      (click)="mostrarDialog = false">
+    </button>
+    <button pButton label="Crear Usuario"
+      icon="fas fa-user-plus"
+      class="p-button-primary"
+      (click)="crear()">
+    </button>
+  </ng-template>
+</p-dialog>

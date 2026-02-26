@@ -1,0 +1,233 @@
+<div class="detalle-container">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <button pButton icon="fas fa-arrow-left"
+      class="p-button-text"
+      (click)="irAtras()">
+    </button>
+    <div>
+      <h1>Detalle del Documento</h1>
+      <code>{{ numeroTramite }}</code>
+    </div>
+  </div>
+
+  <div *ngIf="cargando" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Cargando...
+  </div>
+
+  <div *ngIf="!cargando && documento">
+
+    <!-- INFO PRINCIPAL -->
+    <div class="info-grid">
+      <div class="info-card">
+        <h3><i class="fas fa-info-circle"></i> Información General</h3>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-label">Remitente</span>
+            <span class="info-value">{{ documento!.remitente }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">DNI/RUC</span>
+            <span class="info-value">{{ documento!.dniRuc }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ documento!.emailRemitente }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Asunto</span>
+            <span class="info-value">{{ documento!.asunto }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Tipo</span>
+            <span class="info-value">{{ documento!.tipoDocumento }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Área</span>
+            <span class="info-value">{{ documento!.areaNombre || 'Sin asignar' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fecha Registro</span>
+            <span class="info-value">{{ documento!.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Estado</span>
+            <span class="info-value">
+              <p-tag [value]="documento!.estado" [severity]="getEstadoClass(documento!.estado)"></p-tag>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCIONES -->
+      <div class="acciones-card">
+        <h3><i class="fas fa-tools"></i> Acciones</h3>
+        <div class="acciones-list">
+          <button pButton
+            label="Cambiar Estado"
+            icon="fas fa-exchange-alt"
+            class="w-full p-button-warning"
+            (click)="abrirModalEstado()">
+          </button>
+          <button pButton
+            label="Asignar Área"
+            icon="fas fa-building"
+            class="w-full p-button-info"
+            (click)="abrirModalArea()">
+          </button>
+          <button pButton
+            label="Derivar Documento"
+            icon="fas fa-share"
+            class="w-full p-button-secondary"
+            (click)="abrirModalDerivacion()"
+            [disabled]="!documento!.areaId">
+          </button>
+          <button pButton
+            label="Emitir Respuesta"
+            icon="fas fa-reply"
+            class="w-full p-button-success"
+            (click)="abrirModalRespuesta()">
+          </button>
+          <button pButton
+            label="Descargar Archivo"
+            icon="fas fa-download"
+            class="w-full p-button-outlined"
+            (click)="descargar()"
+            [disabled]="!documento!.rutaArchivo">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="section-card">
+      <h3><i class="fas fa-history"></i> Historial de Estados</h3>
+      <div class="timeline">
+        <div class="timeline-item" *ngFor="let h of historial">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <p-tag [value]="h.estado" [severity]="getEstadoClass(h.estado)"></p-tag>
+              <span class="timeline-date">{{ h.fechaCambio | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <p class="timeline-obs">{{ h.observacion }}</p>
+            <small class="timeline-user"><i class="fas fa-user"></i> {{ h.usuarioResponsable }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DERIVACIONES -->
+    <div class="section-card" *ngIf="derivaciones.length > 0">
+      <h3><i class="fas fa-share-alt"></i> Derivaciones</h3>
+      <div class="derivacion-item" *ngFor="let d of derivaciones">
+        <span class="area-badge">{{ d.areaOrigen }}</span>
+        <i class="fas fa-arrow-right"></i>
+        <span class="area-badge destino">{{ d.areaDestino }}</span>
+        <span class="derivacion-info">{{ d.motivo }} — {{ d.fechaDerivacion | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </div>
+
+    <!-- RESPUESTAS -->
+    <div class="section-card" *ngIf="respuestas.length > 0">
+      <h3><i class="fas fa-reply"></i> Respuestas Emitidas</h3>
+      <div class="respuesta-item" *ngFor="let r of respuestas">
+        <div class="respuesta-header">
+          <span>{{ r.usuarioResponsable }}</span>
+          <span>{{ r.fechaRespuesta | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span *ngIf="r.enviadoPorEmail" class="email-badge">
+            <i class="fas fa-envelope"></i> Email enviado
+          </span>
+        </div>
+        <p class="respuesta-contenido">{{ r.contenido }}</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CAMBIAR ESTADO -->
+<p-dialog header="Cambiar Estado" [(visible)]="mostrarModalEstado" [modal]="true" [style]="{width:'400px'}">
+  <div class="modal-form">
+    <div class="field">
+      <label>Nuevo Estado</label>
+      <p-select [options]="estados" [(ngModel)]="cambioEstado.estado" styleClass="w-full"></p-select>
+    </div>
+    <div class="field">
+      <label>Observación</label>
+      <textarea pTextarea [(ngModel)]="cambioEstado.observacion"
+        rows="3" class="w-full" placeholder="Ingrese una observación..."></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalEstado=false"></button>
+    <button pButton label="Guardar" class="p-button-primary" (click)="guardarEstado()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- MODAL ASIGNAR ÁREA -->
+<p-dialog header="Asignar Área" [(visible)]="mostrarModalArea" [modal]="true" [style]="{width:'400px'}">
+  <div class="modal-form">
+    <div class="field">
+      <label>Seleccionar Área</label>
+      <p-select
+        [options]="areas"
+        [(ngModel)]="areaSeleccionada"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccione un área"
+        styleClass="w-full">
+      </p-select>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalArea=false"></button>
+    <button pButton label="Asignar" class="p-button-primary" (click)="guardarArea()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- MODAL DERIVAR -->
+<p-dialog header="Derivar Documento" [(visible)]="mostrarModalDerivacion" [modal]="true" [style]="{width:'400px'}">
+  <div class="modal-form">
+    <div class="field">
+      <label>Área Destino</label>
+      <p-select
+        [options]="getAreasParaDerivacion()"
+        [(ngModel)]="derivacionForm.areaDestinoId"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccione área destino"
+        styleClass="w-full">
+      </p-select>
+    </div>
+    <div class="field">
+      <label>Motivo</label>
+      <textarea pTextarea [(ngModel)]="derivacionForm.motivo"
+        rows="3" class="w-full" placeholder="Motivo de la derivación..."></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalDerivacion=false"></button>
+    <button pButton label="Derivar" class="p-button-primary" (click)="guardarDerivacion()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- MODAL RESPUESTA -->
+<p-dialog header="Emitir Respuesta" [(visible)]="mostrarModalRespuesta" [modal]="true" [style]="{width:'500px'}">
+  <div class="modal-form">
+    <div class="field">
+      <label>Contenido de la Respuesta</label>
+      <textarea pTextarea [(ngModel)]="respuestaForm.contenido"
+        rows="5" class="w-full" placeholder="Redacte la respuesta oficial..."></textarea>
+    </div>
+    <div class="field-check">
+      <input type="checkbox" [(ngModel)]="respuestaForm.enviarEmail" id="enviarEmail"/>
+      <label for="enviarEmail">Enviar notificación por email al ciudadano</label>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalRespuesta=false"></button>
+    <button pButton label="Emitir Respuesta" class="p-button-success" (click)="guardarRespuesta()"></button>
+  </ng-template>
+</p-dialog>
