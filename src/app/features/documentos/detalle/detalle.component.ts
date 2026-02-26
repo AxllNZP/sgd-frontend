@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router} from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
 import { HistorialService } from '../../../core/services/historial.service';
 import { DerivacionService } from '../../../core/services/derivacion.service';
@@ -23,7 +23,7 @@ import { DialogModule } from 'primeng/dialog';
   selector: 'app-detalle',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
+    CommonModule, FormsModule,
     ButtonModule, TagModule, SelectModule,
     TextareaModule, DialogModule
   ],
@@ -159,7 +159,7 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-  getEstadoClass(estado: string): string {
+  getEstadoClass(estado: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
     switch(estado) {
       case 'RECIBIDO': return 'info';
       case 'EN_PROCESO': return 'warn';

@@ -90,7 +90,7 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
-  getRolClass(rol: string): string {
+  getRolClass(rol: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
     switch(rol) {
       case 'ADMINISTRADOR': return 'danger';
       case 'MESA_PARTES': return 'warn';

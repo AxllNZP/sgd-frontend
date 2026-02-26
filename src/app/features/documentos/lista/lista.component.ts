@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
 import { DocumentoResponse, DocumentoFiltro, EstadoDocumento } from '../../../core/models/documento.model';
 import { ButtonModule } from 'primeng/button';
@@ -12,7 +12,7 @@ import { SelectModule } from 'primeng/select';
 @Component({
   selector: 'app-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ButtonModule, InputTextModule, TagModule, SelectModule],
+  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TagModule, SelectModule],
   templateUrl: './lista.component.html',
   styleUrl: './lista.component.css'
 })
@@ -79,7 +79,7 @@ export class ListaComponent implements OnInit {
     this.router.navigate(['/documentos', numeroTramite]);
   }
 
-  getEstadoClass(estado: string): string {
+  getEstadoClass(estado: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
     switch(estado) {
       case 'RECIBIDO': return 'info';
       case 'EN_PROCESO': return 'warn';

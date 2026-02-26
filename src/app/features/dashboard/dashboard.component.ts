@@ -53,7 +53,7 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  getEstadoClass(estado: string): string {
+  getEstadoClass(estado: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
     switch(estado) {
       case 'RECIBIDO': return 'info';
       case 'EN_PROCESO': return 'warn';
