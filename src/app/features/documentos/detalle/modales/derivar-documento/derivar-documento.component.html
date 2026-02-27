@@ -1,0 +1,44 @@
+<div class="modal" *ngIf="visible">
+  <div class="modal-header">
+    <span>Derivar Documento</span>
+    <button class="modal-close" (click)="onCerrar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <div class="mfield">
+      <label>Área Destino</label>
+      <div class="input-wrap select-wrap">
+        <select [(ngModel)]="derivacionForm.areaDestinoId">
+          <option value="" disabled>Seleccione área destino</option>
+          <option *ngFor="let a of areas" [value]="a.id">
+            {{ a.nombre }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mfield">
+      <label>Motivo</label>
+
+      <textarea
+        [(ngModel)]="derivacionForm.motivo"
+        rows="3"
+        placeholder="Motivo de la derivación...">
+      </textarea>
+    
+      <div *ngIf="intentoEnvio && esMotivoInvalido()" class="error-msg">
+          El motivo es obligatorio.
+      </div>
+    </div>
+
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="onCerrar()">Cancelar</button>
+    <button class="btn-modal primary"  (click)="onGuardar()" [disabled]="esMotivoInvalido()">
+  Derivar
+</button>
+  </div>
+</div>

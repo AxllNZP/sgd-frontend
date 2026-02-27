@@ -272,119 +272,33 @@
   (click)="cerrarModales()">
 </div>
 
-<!-- MODAL: CAMBIAR ESTADO -->
-<div class="modal" *ngIf="mostrarModalEstado">
-  <div class="modal-header">
-    <span>Cambiar Estado</span>
-    <button class="modal-close" (click)="mostrarModalEstado=false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-  <div class="modal-body">
-    <div class="mfield">
-      <label>Nuevo Estado</label>
-      <div class="input-wrap select-wrap">
-        <select [(ngModel)]="cambioEstado.estado">
-          <option *ngFor="let e of estados" [value]="e.value">{{ e.label }}</option>
-        </select>
-      </div>
-    </div>
-    <div class="mfield">
-      <label>Observación</label>
-      <textarea [(ngModel)]="cambioEstado.observacion"
-        rows="3" placeholder="Ingrese una observación..."></textarea>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn-modal secondary" (click)="mostrarModalEstado=false">Cancelar</button>
-    <button class="btn-modal primary" (click)="guardarEstado()">Guardar</button>
-  </div>
-</div>
+<app-emitir-respuesta
+  [visible]="mostrarModalRespuesta"
+  [respuestaForm]="respuestaForm"
+  (cerrar)="mostrarModalRespuesta = false"
+  (guardar)="guardarRespuesta()">
+</app-emitir-respuesta>
 
-<!-- MODAL: ASIGNAR ÁREA -->
-<div class="modal" *ngIf="mostrarModalArea">
-  <div class="modal-header">
-    <span>Asignar Área</span>
-    <button class="modal-close" (click)="mostrarModalArea=false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-  <div class="modal-body">
-    <div class="mfield">
-      <label>Seleccionar Área</label>
-      <div class="input-wrap select-wrap">
-        <select [(ngModel)]="areaSeleccionada">
-          <option value="" disabled>Seleccione un área</option>
-          <option *ngFor="let a of areas" [value]="a.id">{{ a.nombre }}</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn-modal secondary" (click)="mostrarModalArea=false">Cancelar</button>
-    <button class="btn-modal primary" (click)="guardarArea()">Asignar</button>
-  </div>
-</div>
+<app-cambiar-estado
+  [visible]="mostrarModalEstado"
+  [cambioEstado]="cambioEstado"
+  [estados]="estados"
+  (cerrar)="mostrarModalEstado = false"
+  (guardar)="guardarEstado()">
+</app-cambiar-estado>
 
-<!-- MODAL: DERIVAR -->
-<div class="modal" *ngIf="mostrarModalDerivacion">
-  <div class="modal-header">
-    <span>Derivar Documento</span>
-    <button class="modal-close" (click)="mostrarModalDerivacion=false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-  <div class="modal-body">
-    <div class="mfield">
-      <label>Área Destino</label>
-      <div class="input-wrap select-wrap">
-        <select [(ngModel)]="derivacionForm.areaDestinoId">
-          <option value="" disabled>Seleccione área destino</option>
-          <option *ngFor="let a of getAreasParaDerivacion()" [value]="a.id">{{ a.nombre }}</option>
-        </select>
-      </div>
-    </div>
-    <div class="mfield">
-      <label>Motivo</label>
-      <textarea [(ngModel)]="derivacionForm.motivo"
-        rows="3" placeholder="Motivo de la derivación..."></textarea>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn-modal secondary" (click)="mostrarModalDerivacion=false">Cancelar</button>
-    <button class="btn-modal primary" (click)="guardarDerivacion()">Derivar</button>
-  </div>
-</div>
+<app-asignar-area
+  [visible]="mostrarModalArea"
+  [areas]="areas"
+  [areaSeleccionada]="areaSeleccionada"
+  (cerrar)="mostrarModalArea = false"
+  (guardar)="guardarArea()">
+</app-asignar-area>
 
-<!-- MODAL: RESPUESTA -->
-<div class="modal wide" *ngIf="mostrarModalRespuesta">
-  <div class="modal-header">
-    <span>Emitir Respuesta</span>
-    <button class="modal-close" (click)="mostrarModalRespuesta=false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-  <div class="modal-body">
-    <div class="mfield">
-      <label>Contenido de la Respuesta</label>
-      <textarea [(ngModel)]="respuestaForm.contenido"
-        rows="6" placeholder="Redacte la respuesta oficial..."></textarea>
-    </div>
-    <div class="mfield-check">
-      <input type="checkbox" [(ngModel)]="respuestaForm.enviarEmail" id="enviarEmail"/>
-      <label for="enviarEmail">Enviar notificación por email al ciudadano</label>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn-modal secondary" (click)="mostrarModalRespuesta=false">Cancelar</button>
-    <button class="btn-modal success" (click)="guardarRespuesta()">Emitir Respuesta</button>
-  </div>
-</div>
+<app-derivar-documento
+  [visible]="mostrarModalDerivacion"
+  [derivacionForm]="derivacionForm"
+  [areas]="getAreasParaDerivacion()"
+  (cerrar)="mostrarModalDerivacion = false"
+  (guardar)="guardarDerivacion()">
+</app-derivar-documento>

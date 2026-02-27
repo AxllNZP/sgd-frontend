@@ -1,0 +1,29 @@
+<div class="modal" *ngIf="visible">
+  <div class="modal-header">
+    <span>Asignar Área</span>
+    <button class="modal-close" (click)="onCerrar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <div class="mfield">
+      <label>Seleccionar Área</label>
+      <div class="input-wrap select-wrap">
+        <select [(ngModel)]="areaSeleccionada">
+          <option value="" disabled>Seleccione un área</option>
+          <option *ngFor="let a of areas" [value]="a.id">
+            {{ a.nombre }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="onCerrar()">Cancelar</button>
+    <button class="btn-modal primary" (click)="onGuardar()">Asignar</button>
+  </div>
+</div>

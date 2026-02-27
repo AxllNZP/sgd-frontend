@@ -13,11 +13,15 @@ import { HistorialResponse } from '../../../core/models/historial.model';
 import { DerivacionRequest, DerivacionResponse } from '../../../core/models/derivacion.model';
 import { RespuestaRequest, RespuestaResponse } from '../../../core/models/respuesta.model';
 import { AreaResponse } from '../../../core/models/area.model';
+import { CambiarEstadoComponent } from './modales/cambiar-estado/cambiar-estado.component';
+import { AsignarAreaComponent } from './modales/asignar-area/asignar-area.component';
+import { DerivarDocumentoComponent } from './modales/derivar-documento/derivar-documento.component';
+import { EmitirRespuestaComponent } from './modales/emitir-respuesta/emitir-respuesta.component';
 
 @Component({
   selector: 'app-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CambiarEstadoComponent, AsignarAreaComponent, DerivarDocumentoComponent, EmitirRespuestaComponent],
   templateUrl: './detalle.component.html',
   styleUrl: './detalle.component.css'
 })

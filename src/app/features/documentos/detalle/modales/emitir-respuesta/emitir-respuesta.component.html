@@ -1,0 +1,39 @@
+<div class="modal wide" *ngIf="visible">
+  <div class="modal-header">
+    <span>Emitir Respuesta</span>
+    <button class="modal-close" (click)="onCerrar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <div class="mfield">
+      <label>Contenido de la Respuesta</label>
+      <textarea [(ngModel)]="respuestaForm.contenido"
+        rows="6"
+        placeholder="Redacte la respuesta oficial...">
+      </textarea>
+    </div>
+
+    <div class="mfield-check">
+      <input
+        type="checkbox"
+        [(ngModel)]="respuestaForm.enviarEmail"
+        id="enviarEmail"/>
+      <label for="enviarEmail">
+        Enviar notificación por email al ciudadano
+      </label>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="onCerrar()">
+      Cancelar
+    </button>
+    <button class="btn-modal success" (click)="onGuardar()">
+      Emitir Respuesta
+    </button>
+  </div>
+</div>
