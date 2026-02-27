@@ -1,107 +1,187 @@
-<div class="lista-container">
+<div class="lista-bg">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div class="header-left">
-      <button pButton icon="fas fa-arrow-left"
-        class="p-button-text p-button-sm"
-        (click)="irDashboard()">
-      </button>
-      <div>
-        <h1>Gestión de Documentos</h1>
-        <p>{{ documentos.length }} documento(s) encontrado(s)</p>
-      </div>
+  <!-- ===== TOPBAR ===== -->
+  <div class="topbar">
+    <button class="btn-back" (click)="irDashboard()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+      </svg>
+      Volver
+    </button>
+    <div class="topbar-info">
+      <h1>Gestión de Documentos</h1>
+      <span class="doc-count">{{ documentos.length }} documento(s) encontrado(s)</span>
     </div>
   </div>
 
-  <!-- FILTROS -->
-  <div class="filtros-card">
-    <h3><i class="fas fa-filter"></i> Filtros de búsqueda</h3>
+  <!-- ===== FILTROS ===== -->
+  <div class="card filtros-card">
+    <div class="card-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917
+          1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432
+          5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25
+          2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25
+          2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25
+          0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32
+          48.32 0 0112 3z"/>
+      </svg>
+      Filtros de búsqueda
+    </div>
+
     <div class="filtros-grid">
-      <div class="field">
+      <div class="filter-field">
         <label>Remitente</label>
-        <input pInputText
-          [(ngModel)]="filtro.remitente"
-          placeholder="Buscar por remitente..."
-          class="w-full"/>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75
+              3.75 0 017.5 0zM4.501 20.118a7.5 7.5
+              0 0114.998 0A17.933 17.933 0 0112
+              21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+          </svg>
+          <input type="text" [(ngModel)]="filtro.remitente"
+            placeholder="Buscar por remitente..."/>
+        </div>
       </div>
-      <div class="field">
+
+      <div class="filter-field">
         <label>Asunto</label>
-        <input pInputText
-          [(ngModel)]="filtro.asunto"
-          placeholder="Buscar por asunto..."
-          class="w-full"/>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0
+              1.6 1.123 2.994 2.707 3.227 1.129.166
+              2.27.293 3.423.379.35.026.67.21.865.501L12
+              21l2.755-4.133a1.14 1.14 0
+              01.865-.501 48.172 48.172 0
+              003.423-.379c1.584-.233
+              2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394
+              48.394 0 0012 3c-2.392
+              0-4.744.175-7.043.513C3.373
+              3.746 2.25 5.14 2.25 6.741v6.018z"/>
+          </svg>
+          <input type="text" [(ngModel)]="filtro.asunto"
+            placeholder="Buscar por asunto..."/>
+        </div>
       </div>
-      <div class="field">
+
+      <div class="filter-field">
         <label>Estado</label>
-        <p-select
-          [options]="estados"
-          [(ngModel)]="filtro.estado"
-          placeholder="Todos los estados"
-          styleClass="w-full">
-        </p-select>
+        <div class="input-wrap select-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21
+              12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <select [(ngModel)]="filtro.estado">
+            <option *ngFor="let e of estados" [value]="e.value">{{ e.label }}</option>
+          </select>
+        </div>
       </div>
     </div>
+
     <div class="filtros-actions">
-      <button pButton
-        label="Buscar"
-        icon="fas fa-search"
-        class="p-button-primary"
-        (click)="buscar()">
+      <button class="btn-buscar" (click)="buscar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21 21l-5.197-5.197m0 0A7.5 7.5
+            0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+        </svg>
+        Buscar
       </button>
-      <button pButton
-        label="Limpiar"
-        icon="fas fa-times"
-        class="p-button-secondary"
-        (click)="limpiar()">
+      <button class="btn-limpiar" (click)="limpiar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Limpiar
       </button>
     </div>
   </div>
 
-  <!-- TABLA -->
-  <div class="tabla-card">
-    <div *ngIf="cargando" class="loading">
-      <i class="fas fa-spinner fa-spin"></i> Cargando...
+  <!-- ===== TABLA ===== -->
+  <div class="card tabla-card">
+
+    <!-- LOADING -->
+    <div class="loading-wrap" *ngIf="cargando">
+      <div class="spinner"></div>
+      <span>Cargando documentos...</span>
     </div>
 
-    <div *ngIf="!cargando && documentos.length === 0" class="empty">
-      <i class="fas fa-folder-open"></i>
+    <!-- VACÍO -->
+    <div class="empty-wrap" *ngIf="!cargando && documentos.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117
+          0 .232.009.344.026m-16.5 0a2.25 2.25 0
+          00-1.883 2.542l.857 6a2.25 2.25 0
+          002.227 1.932H19.05a2.25 2.25 0
+          002.227-1.932l.857-6a2.25 2.25 0
+          00-1.883-2.542m-16.5
+          0V6A2.25 2.25 0 016 3.75h3.879a1.5
+          1.5 0 011.06.44l2.122 2.12a1.5 1.5
+          0 001.06.44H18A2.25 2.25 0 0120.25
+          9v.776"/>
+      </svg>
       <p>No se encontraron documentos</p>
     </div>
 
-    <div *ngIf="!cargando && documentos.length > 0" class="table-container">
+    <!-- TABLA -->
+    <div class="table-wrap" *ngIf="!cargando && documentos.length > 0">
       <table class="doc-table">
         <thead>
           <tr>
             <th>N° Trámite</th>
             <th>Remitente</th>
-            <th>DNI/RUC</th>
+            <th>DNI / RUC</th>
             <th>Asunto</th>
             <th>Tipo</th>
             <th>Área</th>
             <th>Fecha</th>
             <th>Estado</th>
-            <th>Acciones</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of documentos">
-            <td><code>{{ doc.numeroTramite }}</code></td>
-            <td>{{ doc.remitente }}</td>
-            <td>{{ doc.dniRuc }}</td>
-            <td>{{ doc.asunto }}</td>
-            <td>{{ doc.tipoDocumento }}</td>
-            <td>{{ doc.areaNombre || '—' }}</td>
-            <td>{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</td>
+          <tr *ngFor="let doc of documentos" (click)="verDetalle(doc.numeroTramite)">
             <td>
-              <p-tag [value]="doc.estado" [severity]="getEstadoClass(doc.estado)"></p-tag>
+              <span class="tramite-code">{{ doc.numeroTramite }}</span>
+            </td>
+            <td>{{ doc.remitente }}</td>
+            <td class="mono">{{ doc.dniRuc }}</td>
+            <td class="asunto-cell">{{ doc.asunto }}</td>
+            <td>
+              <span class="tipo-tag" *ngIf="doc.tipoDocumento">{{ doc.tipoDocumento }}</span>
+              <span class="dash" *ngIf="!doc.tipoDocumento">—</span>
             </td>
             <td>
-              <button pButton
-                icon="fas fa-eye"
-                class="p-button-text p-button-sm p-button-info"
-                (click)="verDetalle(doc.numeroTramite)"
-                pTooltip="Ver detalle">
+              <span class="area-tag" *ngIf="doc.areaNombre">{{ doc.areaNombre }}</span>
+              <span class="dash" *ngIf="!doc.areaNombre">—</span>
+            </td>
+            <td class="fecha-cell">{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy' }}<br>
+              <small>{{ doc.fechaHoraRegistro | date:'HH:mm' }}</small>
+            </td>
+            <td>
+              <span [class]="'estado-badge ' + getEstadoClass(doc.estado)">
+                {{ doc.estado }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-ver" (click)="verDetalle(doc.numeroTramite); $event.stopPropagation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0
+                    010-.639C3.423 7.51 7.36 4.5 12
+                    4.5c4.638 0 8.573 3.007 9.963
+                    7.178.07.207.07.431 0
+                    .639C20.577 16.49 16.64 19.5
+                    12 19.5c-4.638
+                    0-8.573-3.007-9.963-7.178z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
               </button>
             </td>
           </tr>

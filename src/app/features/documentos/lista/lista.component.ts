@@ -3,16 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
-import { DocumentoResponse, DocumentoFiltro, EstadoDocumento } from '../../../core/models/documento.model';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
-import { SelectModule } from 'primeng/select';
+import { DocumentoResponse, DocumentoFiltro } from '../../../core/models/documento.model';
 
 @Component({
   selector: 'app-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TagModule, SelectModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './lista.component.html',
   styleUrl: './lista.component.css'
 })
@@ -27,11 +23,11 @@ export class ListaComponent implements OnInit {
   };
 
   estados = [
-    { label: 'Todos', value: null },
-    { label: 'Recibido', value: 'RECIBIDO' },
+    { label: 'Todos',      value: '' },
+    { label: 'Recibido',   value: 'RECIBIDO' },
     { label: 'En Proceso', value: 'EN_PROCESO' },
-    { label: 'Observado', value: 'OBSERVADO' },
-    { label: 'Archivado', value: 'ARCHIVADO' }
+    { label: 'Observado',  value: 'OBSERVADO' },
+    { label: 'Archivado',  value: 'ARCHIVADO' }
   ];
 
   constructor(
@@ -46,10 +42,7 @@ export class ListaComponent implements OnInit {
   listarTodos(): void {
     this.cargando = true;
     this.documentoService.listarTodos().subscribe({
-      next: (docs) => {
-        this.documentos = docs;
-        this.cargando = false;
-      },
+      next: (docs) => { this.documentos = docs; this.cargando = false; },
       error: () => { this.cargando = false; }
     });
   }
@@ -58,14 +51,11 @@ export class ListaComponent implements OnInit {
     this.cargando = true;
     const filtroLimpio: DocumentoFiltro = {};
     if (this.filtro.remitente) filtroLimpio.remitente = this.filtro.remitente;
-    if (this.filtro.asunto) filtroLimpio.asunto = this.filtro.asunto;
-    if (this.filtro.estado) filtroLimpio.estado = this.filtro.estado;
+    if (this.filtro.asunto)    filtroLimpio.asunto    = this.filtro.asunto;
+    if (this.filtro.estado)    filtroLimpio.estado    = this.filtro.estado;
 
     this.documentoService.buscarPorFiltros(filtroLimpio).subscribe({
-      next: (docs) => {
-        this.documentos = docs;
-        this.cargando = false;
-      },
+      next: (docs) => { this.documentos = docs; this.cargando = false; },
       error: () => { this.cargando = false; }
     });
   }
@@ -79,13 +69,13 @@ export class ListaComponent implements OnInit {
     this.router.navigate(['/documentos', numeroTramite]);
   }
 
-  getEstadoClass(estado: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
-    switch(estado) {
-      case 'RECIBIDO': return 'info';
-      case 'EN_PROCESO': return 'warn';
-      case 'OBSERVADO': return 'danger';
-      case 'ARCHIVADO': return 'success';
-      default: return 'info';
+  getEstadoClass(estado: string): string {
+    switch (estado) {
+      case 'RECIBIDO':   return 'badge-info';
+      case 'EN_PROCESO': return 'badge-warn';
+      case 'OBSERVADO':  return 'badge-danger';
+      case 'ARCHIVADO':  return 'badge-success';
+      default:           return 'badge-info';
     }
   }
 

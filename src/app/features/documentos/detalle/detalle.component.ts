@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router} from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
 import { HistorialService } from '../../../core/services/historial.service';
 import { DerivacionService } from '../../../core/services/derivacion.service';
@@ -13,20 +13,11 @@ import { HistorialResponse } from '../../../core/models/historial.model';
 import { DerivacionRequest, DerivacionResponse } from '../../../core/models/derivacion.model';
 import { RespuestaRequest, RespuestaResponse } from '../../../core/models/respuesta.model';
 import { AreaResponse } from '../../../core/models/area.model';
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
-import { SelectModule } from 'primeng/select';
-import { TextareaModule } from 'primeng/textarea';
-import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-detalle',
   standalone: true,
-  imports: [
-    CommonModule, FormsModule,
-    ButtonModule, TagModule, SelectModule,
-    TextareaModule, DialogModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './detalle.component.html',
   styleUrl: './detalle.component.css'
 })
@@ -40,23 +31,21 @@ export class DetalleComponent implements OnInit {
   nombreUsuario = '';
   cargando = false;
 
-  // Modales
   mostrarModalEstado = false;
   mostrarModalArea = false;
   mostrarModalDerivacion = false;
   mostrarModalRespuesta = false;
 
-  // Formularios
   cambioEstado: CambioEstado = { estado: 'EN_PROCESO', observacion: '', usuarioResponsable: '' };
   areaSeleccionada = '';
   derivacionForm: DerivacionRequest = { areaDestinoId: '', motivo: '', usuarioResponsable: '' };
   respuestaForm: RespuestaRequest = { contenido: '', usuarioResponsable: '', enviarEmail: true };
 
   estados = [
-    { label: 'Recibido', value: 'RECIBIDO' },
+    { label: 'Recibido',   value: 'RECIBIDO' },
     { label: 'En Proceso', value: 'EN_PROCESO' },
-    { label: 'Observado', value: 'OBSERVADO' },
-    { label: 'Archivado', value: 'ARCHIVADO' }
+    { label: 'Observado',  value: 'OBSERVADO' },
+    { label: 'Archivado',  value: 'ARCHIVADO' }
   ];
 
   constructor(
@@ -82,10 +71,7 @@ export class DetalleComponent implements OnInit {
   cargarTodo(): void {
     this.cargando = true;
     this.documentoService.consultarPorNumeroTramite(this.numeroTramite).subscribe({
-      next: (doc) => {
-        this.documento = doc;
-        this.cargando = false;
-      }
+      next: (doc) => { this.documento = doc; this.cargando = false; }
     });
     this.historialService.obtenerPorTramite(this.numeroTramite).subscribe({
       next: (h) => this.historial = h
@@ -101,51 +87,42 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-  // ===== CAMBIAR ESTADO =====
-  abrirModalEstado(): void { this.mostrarModalEstado = true; }
+  abrirModalEstado(): void    { this.mostrarModalEstado = true; }
+  abrirModalArea(): void      { this.mostrarModalArea = true; }
+  abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
+  abrirModalRespuesta(): void  { this.mostrarModalRespuesta = true; }
+
+  cerrarModales(): void {
+    this.mostrarModalEstado = false;
+    this.mostrarModalArea = false;
+    this.mostrarModalDerivacion = false;
+    this.mostrarModalRespuesta = false;
+  }
+
   guardarEstado(): void {
     this.documentoService.cambiarEstado(this.numeroTramite, this.cambioEstado).subscribe({
-      next: () => {
-        this.mostrarModalEstado = false;
-        this.cargarTodo();
-      }
+      next: () => { this.mostrarModalEstado = false; this.cargarTodo(); }
     });
   }
 
-  // ===== ASIGNAR ÁREA =====
-  abrirModalArea(): void { this.mostrarModalArea = true; }
   guardarArea(): void {
     this.documentoService.asignarArea(this.numeroTramite, this.areaSeleccionada).subscribe({
-      next: () => {
-        this.mostrarModalArea = false;
-        this.cargarTodo();
-      }
+      next: () => { this.mostrarModalArea = false; this.cargarTodo(); }
     });
   }
 
-  // ===== DERIVAR =====
-  abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
   guardarDerivacion(): void {
     this.derivacionService.derivar(this.numeroTramite, this.derivacionForm).subscribe({
-      next: () => {
-        this.mostrarModalDerivacion = false;
-        this.cargarTodo();
-      }
+      next: () => { this.mostrarModalDerivacion = false; this.cargarTodo(); }
     });
   }
 
-  // ===== RESPUESTA =====
-  abrirModalRespuesta(): void { this.mostrarModalRespuesta = true; }
   guardarRespuesta(): void {
     this.respuestaService.emitir(this.numeroTramite, this.respuestaForm).subscribe({
-      next: () => {
-        this.mostrarModalRespuesta = false;
-        this.cargarTodo();
-      }
+      next: () => { this.mostrarModalRespuesta = false; this.cargarTodo(); }
     });
   }
 
-  // ===== DESCARGAR =====
   descargar(): void {
     this.documentoService.descargarArchivo(this.numeroTramite).subscribe({
       next: (blob) => {
@@ -159,13 +136,13 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-  getEstadoClass(estado: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
-    switch(estado) {
-      case 'RECIBIDO': return 'info';
-      case 'EN_PROCESO': return 'warn';
-      case 'OBSERVADO': return 'danger';
-      case 'ARCHIVADO': return 'success';
-      default: return 'info';
+  getEstadoClass(estado: string): string {
+    switch (estado) {
+      case 'RECIBIDO':   return 'badge-info';
+      case 'EN_PROCESO': return 'badge-warn';
+      case 'OBSERVADO':  return 'badge-danger';
+      case 'ARCHIVADO':  return 'badge-success';
+      default:           return 'badge-info';
     }
   }
 

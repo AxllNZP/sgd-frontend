@@ -1,79 +1,68 @@
-<div class="dashboard-container">
+<div class="dashboard-bg">
 
-  <!-- NAVBAR -->
+  <!-- ===== NAVBAR ===== -->
   <nav class="navbar">
     <div class="navbar-brand">
-      <i class="fas fa-file-alt"></i>
-      <span>SMP - SGD</span>
+      <span class="brand-logo">SGD</span>
+      <span class="brand-text">Sistema de Gestión Documental</span>
     </div>
-    <div class="navbar-menu">
-      <a routerLink="/documentos" class="nav-link">
-        <i class="fas fa-folder-open"></i> Documentos
-      </a>
-      <a routerLink="/areas" class="nav-link" *ngIf="rol === 'ADMINISTRADOR'">
-        <i class="fas fa-building"></i> Áreas
-      </a>
-      <a routerLink="/usuarios" class="nav-link" *ngIf="rol === 'ADMINISTRADOR'">
-        <i class="fas fa-users"></i> Usuarios
-      </a>
-      <div class="nav-user">
-        <i class="fas fa-user-circle"></i>
-        <span>{{ nombre }}</span>
-        <button pButton icon="fas fa-sign-out-alt"
-          class="p-button-text p-button-sm"
-          (click)="logout()">
-        </button>
-      </div>
+
+    <div class="navbar-links">
+      <a routerLink="/documentos">Documentos</a>
+      <a routerLink="/areas" *ngIf="rol === 'ADMINISTRADOR'">Áreas</a>
+      <a routerLink="/usuarios" *ngIf="rol === 'ADMINISTRADOR'">Usuarios</a>
+    </div>
+
+    <div class="navbar-user">
+      <span>{{ nombre }}</span>
+      <button class="btn-logout" (click)="logout()">Salir</button>
     </div>
   </nav>
 
-  <!-- CONTENIDO -->
+  <!-- ===== CONTENIDO ===== -->
   <div class="dashboard-content">
 
     <div class="welcome-section">
       <h1>Bienvenido, {{ nombre }}</h1>
-      <p>Panel de control del Sistema de Gestión Documental</p>
+      <p>Panel de control general del sistema</p>
     </div>
 
-    <!-- ESTADÍSTICAS -->
+    <!-- ===== ESTADÍSTICAS ===== -->
     <div class="stats-grid">
+
       <div class="stat-card total">
-        <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
-        <div class="stat-info">
-          <span class="stat-number">{{ totalDocumentos }}</span>
-          <span class="stat-label">Total Documentos</span>
-        </div>
+        <div class="stat-number">{{ totalDocumentos }}</div>
+        <div class="stat-label">Total Documentos</div>
       </div>
+
       <div class="stat-card recibidos">
-        <div class="stat-icon"><i class="fas fa-inbox"></i></div>
-        <div class="stat-info">
-          <span class="stat-number">{{ recibidos }}</span>
-          <span class="stat-label">Recibidos</span>
-        </div>
+        <div class="stat-number">{{ recibidos }}</div>
+        <div class="stat-label">Recibidos</div>
       </div>
+
       <div class="stat-card proceso">
-        <div class="stat-icon"><i class="fas fa-spinner"></i></div>
-        <div class="stat-info">
-          <span class="stat-number">{{ enProceso }}</span>
-          <span class="stat-label">En Proceso</span>
-        </div>
+        <div class="stat-number">{{ enProceso }}</div>
+        <div class="stat-label">En Proceso</div>
       </div>
+
       <div class="stat-card archivados">
-        <div class="stat-icon"><i class="fas fa-archive"></i></div>
-        <div class="stat-info">
-          <span class="stat-number">{{ archivados }}</span>
-          <span class="stat-label">Archivados</span>
-        </div>
+        <div class="stat-number">{{ archivados }}</div>
+        <div class="stat-label">Archivados</div>
       </div>
+
     </div>
 
-    <!-- DOCUMENTOS RECIENTES -->
-    <div class="recent-section">
+    <!-- ===== DOCUMENTOS RECIENTES ===== -->
+    <div class="card recent-card">
+
       <div class="section-header">
         <h2>Documentos Recientes</h2>
-        <a routerLink="/documentos" class="ver-todos">Ver todos →</a>
+        <a routerLink="/documentos" class="ver-todos">
+          Ver todos →
+        </a>
       </div>
-      <div class="table-container">
+
+      <div class="table-container" *ngIf="documentosRecientes.length > 0">
         <table class="recent-table">
           <thead>
             <tr>
@@ -82,27 +71,36 @@
               <th>Asunto</th>
               <th>Fecha</th>
               <th>Estado</th>
-              <th>Acción</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let doc of documentosRecientes">
-              <td><code>{{ doc.numeroTramite }}</code></td>
+              <td>
+                <code>{{ doc.numeroTramite }}</code>
+              </td>
               <td>{{ doc.remitente }}</td>
               <td>{{ doc.asunto }}</td>
               <td>{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</td>
               <td>
-                <p-tag [value]="doc.estado" [severity]="getEstadoClass(doc.estado)"></p-tag>
+                <span [class]="'estado-badge ' + getEstadoClass(doc.estado)">
+                  {{ doc.estado }}
+                </span>
               </td>
               <td>
                 <a [routerLink]="['/documentos', doc.numeroTramite]" class="btn-ver">
-                  <i class="fas fa-eye"></i> Ver
+                  Ver
                 </a>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <div class="empty-wrap" *ngIf="documentosRecientes.length === 0">
+        No hay documentos recientes
+      </div>
+
     </div>
 
   </div>

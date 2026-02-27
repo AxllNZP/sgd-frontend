@@ -4,24 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AreaService } from '../../core/services/area.service';
 import { AreaResponse, AreaRequest } from '../../core/models/area.model';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
-import { DialogModule } from 'primeng/dialog';
-import { TextareaModule } from 'primeng/textarea';
 
 @Component({
   selector: 'app-areas',
   standalone: true,
-  imports: [
-    CommonModule, FormsModule,
-    ButtonModule, InputTextModule,
-    TagModule, DialogModule, TextareaModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './areas.component.html',
   styleUrl: './areas.component.css'
 })
 export class AreasComponent implements OnInit {
+
   areas: AreaResponse[] = [];
   cargando = false;
   mostrarDialog = false;
@@ -49,7 +41,7 @@ export class AreasComponent implements OnInit {
         this.areas = areas;
         this.cargando = false;
       },
-      error: () => { this.cargando = false; }
+      error: () => this.cargando = false
     });
   }
 
@@ -60,10 +52,11 @@ export class AreasComponent implements OnInit {
   }
 
   crear(): void {
-    if (!this.nuevaArea.nombre) {
+    if (!this.nuevaArea.nombre.trim()) {
       this.error = 'El nombre del área es obligatorio';
       return;
     }
+
     this.areaService.crear(this.nuevaArea).subscribe({
       next: () => {
         this.mostrarDialog = false;
@@ -84,5 +77,9 @@ export class AreasComponent implements OnInit {
 
   volver(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  getEstadoClass(activa: boolean): string {
+    return activa ? 'badge-success' : 'badge-danger';
   }
 }

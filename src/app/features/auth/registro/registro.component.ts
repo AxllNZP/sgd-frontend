@@ -3,15 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { CardModule } from 'primeng/card';
-import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, CardModule, SelectModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.css'
 })
@@ -33,6 +29,7 @@ export class RegistroComponent {
   ];
 
   archivo: File | null = null;
+  archivoNombre = '';
   error = '';
   exito = false;
   numeroTramite = '';
@@ -41,7 +38,11 @@ export class RegistroComponent {
   constructor(private documentoService: DocumentoService) {}
 
   onArchivoSeleccionado(event: any): void {
-    this.archivo = event.target.files[0];
+    const file = event.target.files[0];
+    if (file) {
+      this.archivo = file;
+      this.archivoNombre = file.name;
+    }
   }
 
   registrar(): void {

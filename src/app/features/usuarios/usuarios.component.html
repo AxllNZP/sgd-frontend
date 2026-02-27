@@ -1,121 +1,148 @@
-<div class="usuarios-container">
+<div class="lista-bg">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div class="header-left">
-      <button pButton icon="fas fa-arrow-left"
-        class="p-button-text p-button-sm"
-        (click)="volver()">
-      </button>
-      <div>
-        <h1>Gestión de Usuarios</h1>
-        <p>{{ usuarios.length }} usuario(s) registrado(s)</p>
-      </div>
-    </div>
-    <button pButton
-      label="Nuevo Usuario"
-      icon="fas fa-user-plus"
-      class="p-button-primary"
-      (click)="abrirDialog()">
+  <!-- ===== TOPBAR ===== -->
+  <div class="topbar">
+    <button class="btn-back" (click)="volver()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+      </svg>
+      Volver
     </button>
+
+    <div class="topbar-info">
+      <h1>Gestión de Usuarios</h1>
+      <span class="doc-count">
+        {{ usuarios.length }} usuario(s) registrado(s)
+      </span>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn-primary" (click)="abrirDialog()">
+        Nuevo Usuario
+      </button>
+    </div>
   </div>
 
-  <!-- TABLA -->
-  <div class="tabla-card">
-    <div *ngIf="cargando" class="loading">
-      <i class="fas fa-spinner fa-spin"></i> Cargando...
+  <!-- ===== CARD ===== -->
+  <div class="card">
+
+    <!-- LOADING -->
+    <div class="loading-wrap" *ngIf="cargando">
+      <div class="spinner"></div>
+      <span>Cargando usuarios...</span>
     </div>
 
-    <div *ngIf="!cargando && usuarios.length === 0" class="empty">
-      <i class="fas fa-users"></i>
+    <!-- EMPTY -->
+    <div class="empty-wrap" *ngIf="!cargando && usuarios.length === 0">
       <p>No hay usuarios registrados</p>
     </div>
 
-    <div *ngIf="!cargando && usuarios.length > 0" class="table-container">
+    <!-- TABLE -->
+    <div class="table-container" *ngIf="!cargando && usuarios.length > 0">
       <table class="usuarios-table">
         <thead>
           <tr>
-            <th>Nombre</th>
+            <th>Usuario</th>
             <th>Email</th>
             <th>Rol</th>
             <th>Estado</th>
-            <th>Fecha Creación</th>
-            <th>Acciones</th>
+            <th>Fecha</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let u of usuarios">
             <td>
               <div class="user-info">
-                <div class="user-avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+                <div class="user-avatar">
+                  {{ u.nombre.charAt(0).toUpperCase() }}
+                </div>
                 <span>{{ u.nombre }}</span>
               </div>
             </td>
+
             <td>{{ u.email }}</td>
+
             <td>
-              <p-tag [value]="u.rol" [severity]="getRolClass(u.rol)"></p-tag>
+              <span [class]="'estado-badge ' + getRolClass(u.rol)">
+                {{ u.rol }}
+              </span>
             </td>
+
             <td>
-              <span class="estado-badge" [ngClass]="u.activo ? 'activo' : 'inactivo'">
-                <i class="fas" [ngClass]="u.activo ? 'fa-check-circle' : 'fa-times-circle'"></i>
+              <span [class]="'estado-badge ' + getEstadoClass(u.activo)">
                 {{ u.activo ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
+
             <td>{{ u.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+
             <td>
-              <button pButton
-                icon="fas fa-user-slash"
-                class="p-button-text p-button-sm p-button-danger"
+              <button class="btn-danger"
                 (click)="desactivar(u.id)"
-                [disabled]="!u.activo"
-                pTooltip="Desactivar usuario">
+                [disabled]="!u.activo">
+                Desactivar
               </button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
 
+  </div>
 </div>
 
-<!-- DIALOG NUEVO USUARIO -->
-<p-dialog header="Nuevo Usuario" [(visible)]="mostrarDialog"
-  [modal]="true" [style]="{width: '450px'}">
-  <div class="dialog-form">
+<!-- ===== DIALOG ===== -->
+<div class="dialog-overlay" *ngIf="mostrarDialog">
+  <div class="dialog-card">
+
+    <h2>Nuevo Usuario</h2>
+
     <div class="field">
       <label>Nombre completo *</label>
-      <input pInputText [(ngModel)]="nuevoUsuario.nombre"
-        placeholder="Juan Pérez" class="w-full"/>
+      <input type="text"
+        [(ngModel)]="nuevoUsuario.nombre"
+        placeholder="Juan Pérez">
     </div>
+
     <div class="field">
       <label>Email *</label>
-      <input pInputText type="email" [(ngModel)]="nuevoUsuario.email"
-        placeholder="correo@ejemplo.com" class="w-full"/>
+      <input type="email"
+        [(ngModel)]="nuevoUsuario.email"
+        placeholder="correo@ejemplo.com">
     </div>
+
     <div class="field">
       <label>Contraseña *</label>
-      <input pInputText type="password" [(ngModel)]="nuevoUsuario.password"
-        placeholder="••••••••" class="w-full"/>
+      <input type="password"
+        [(ngModel)]="nuevoUsuario.password"
+        placeholder="••••••••">
     </div>
+
     <div class="field">
       <label>Rol *</label>
-      <p-select [options]="roles" [(ngModel)]="nuevoUsuario.rol"
-        styleClass="w-full"></p-select>
+      <select [(ngModel)]="nuevoUsuario.rol">
+        <option *ngFor="let r of roles" [value]="r.value">
+          {{ r.label }}
+        </option>
+      </select>
     </div>
+
     <div class="error-msg" *ngIf="error">
-      <i class="fas fa-exclamation-circle"></i> {{ error }}
+      {{ error }}
     </div>
+
+    <div class="dialog-actions">
+      <button class="btn-limpiar"
+        (click)="mostrarDialog = false">
+        Cancelar
+      </button>
+      <button class="btn-primary"
+        (click)="crear()">
+        Crear Usuario
+      </button>
+    </div>
+
   </div>
-  <ng-template pTemplate="footer">
-    <button pButton label="Cancelar"
-      class="p-button-text"
-      (click)="mostrarDialog = false">
-    </button>
-    <button pButton label="Crear Usuario"
-      icon="fas fa-user-plus"
-      class="p-button-primary"
-      (click)="crear()">
-    </button>
-  </ng-template>
-</p-dialog>
+</div>

@@ -4,24 +4,24 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DocumentoService } from '../../core/services/documento.service';
 import { DocumentoResponse } from '../../core/models/documento.model';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ButtonModule, CardModule, TagModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
+
   nombre = '';
   rol = '';
+
   totalDocumentos = 0;
   recibidos = 0;
   enProceso = 0;
   archivados = 0;
+
   documentosRecientes: DocumentoResponse[] = [];
 
   constructor(
@@ -53,13 +53,13 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  getEstadoClass(estado: string): "success" | "secondary" | "info" | "warn" | "danger" | "contrast" | null | undefined {
-    switch(estado) {
-      case 'RECIBIDO': return 'info';
-      case 'EN_PROCESO': return 'warn';
-      case 'OBSERVADO': return 'danger';
-      case 'ARCHIVADO': return 'success';
-      default: return 'info';
+  getEstadoClass(estado: string): string {
+    switch (estado) {
+      case 'RECIBIDO': return 'badge-info';
+      case 'EN_PROCESO': return 'badge-warning';
+      case 'OBSERVADO': return 'badge-danger';
+      case 'ARCHIVADO': return 'badge-success';
+      default: return 'badge-info';
     }
   }
 }

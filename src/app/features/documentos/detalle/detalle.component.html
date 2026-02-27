@@ -1,34 +1,50 @@
-<div class="detalle-container">
+<div class="detalle-bg">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <button pButton icon="fas fa-arrow-left"
-      class="p-button-text"
-      (click)="irAtras()">
+  <!-- ===== HEADER ===== -->
+  <div class="topbar">
+    <button class="btn-back" (click)="irAtras()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+      </svg>
+      Volver
     </button>
-    <div>
+    <div class="topbar-info">
       <h1>Detalle del Documento</h1>
-      <code>{{ numeroTramite }}</code>
+      <span class="tramite-code">{{ numeroTramite }}</span>
     </div>
   </div>
 
-  <div *ngIf="cargando" class="loading">
-    <i class="fas fa-spinner fa-spin"></i> Cargando...
+  <!-- ===== LOADING ===== -->
+  <div class="loading-wrap" *ngIf="cargando">
+    <div class="spinner"></div>
+    <span>Cargando documento...</span>
   </div>
 
-  <div *ngIf="!cargando && documento">
+  <!-- ===== CONTENIDO ===== -->
+  <div class="detalle-body" *ngIf="!cargando && documento">
 
-    <!-- INFO PRINCIPAL -->
-    <div class="info-grid">
-      <div class="info-card">
-        <h3><i class="fas fa-info-circle"></i> Información General</h3>
+    <!-- GRID PRINCIPAL -->
+    <div class="main-grid">
+
+      <!-- INFO CARD -->
+      <div class="card info-card">
+        <div class="card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708
+              2.836a.75.75 0 001.063.853l.041-.021M21
+              12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+          </svg>
+          Información General
+        </div>
+
         <div class="info-rows">
           <div class="info-row">
             <span class="info-label">Remitente</span>
             <span class="info-value">{{ documento!.remitente }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">DNI/RUC</span>
+            <span class="info-label">DNI / RUC</span>
             <span class="info-value">{{ documento!.dniRuc }}</span>
           </div>
           <div class="info-row">
@@ -41,103 +57,207 @@
           </div>
           <div class="info-row">
             <span class="info-label">Tipo</span>
-            <span class="info-value">{{ documento!.tipoDocumento }}</span>
+            <span class="info-value">{{ documento!.tipoDocumento || '—' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Área</span>
+            <span class="info-label">Área asignada</span>
             <span class="info-value">{{ documento!.areaNombre || 'Sin asignar' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Fecha Registro</span>
+            <span class="info-label">Fecha de registro</span>
             <span class="info-value">{{ documento!.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
           </div>
-          <div class="info-row">
-            <span class="info-label">Estado</span>
-            <span class="info-value">
-              <p-tag [value]="documento!.estado" [severity]="getEstadoClass(documento!.estado)"></p-tag>
+          <div class="info-row no-border">
+            <span class="info-label">Estado actual</span>
+            <span [class]="'estado-badge ' + getEstadoClass(documento!.estado)">
+              {{ documento!.estado }}
             </span>
           </div>
         </div>
       </div>
 
-      <!-- ACCIONES -->
-      <div class="acciones-card">
-        <h3><i class="fas fa-tools"></i> Acciones</h3>
+      <!-- ACCIONES CARD -->
+      <div class="card acciones-card">
+        <div class="card-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M11.42 15.17L17.25 21A2.652 2.652 0
+              0021 17.25l-5.877-5.877M11.42
+              15.17l2.496-3.03c.317-.384.74-.626
+              1.208-.766M11.42 15.17l-4.655
+              5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164
+              1.163-.188 1.743-.14a4.5 4.5 0
+              004.486-6.336l-3.276 3.277a3.004
+              3.004 0 01-2.25-2.25l3.276-3.276a4.5
+              4.5 0 00-6.336 4.486c.091 1.076-.071
+              2.264-.904 2.95l-.102.085m-1.745
+              1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5
+              4.5v1.409l4.26 4.26m-1.745
+              1.437l1.745-1.437m6.615 8.206L15.75
+              15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
+          </svg>
+          Acciones
+        </div>
+
         <div class="acciones-list">
-          <button pButton
-            label="Cambiar Estado"
-            icon="fas fa-exchange-alt"
-            class="w-full p-button-warning"
-            (click)="abrirModalEstado()">
+          <button class="btn-accion warn" (click)="abrirModalEstado()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985
+                19.644v-4.992m0 0h4.992m-4.993
+                0l3.181 3.183a8.25 8.25 0
+                0013.803-3.7M4.031 9.865a8.25
+                8.25 0 0113.803-3.7l3.181
+                3.182m0-4.991v4.99"/>
+            </svg>
+            Cambiar Estado
           </button>
-          <button pButton
-            label="Asignar Área"
-            icon="fas fa-building"
-            class="w-full p-button-info"
-            (click)="abrirModalArea()">
+
+          <button class="btn-accion info" (click)="abrirModalArea()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3.75 21h16.5M4.5 3h15M5.25
+                3v18m13.5-18v18M9 6.75h1.5m-1.5
+                3h1.5m-1.5 3h1.5m3-6H15m-1.5
+                3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125
+                1.125-1.125h3.75c.621 0
+                1.125.504 1.125 1.125V21"/>
+            </svg>
+            Asignar Área
           </button>
-          <button pButton
-            label="Derivar Documento"
-            icon="fas fa-share"
-            class="w-full p-button-secondary"
+
+          <button class="btn-accion secondary"
             (click)="abrirModalDerivacion()"
             [disabled]="!documento!.areaId">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M7.5 21L3 16.5m0 0L7.5
+                12M3 16.5h13.5m0-13.5L21
+                7.5m0 0L16.5 12M21 7.5H7.5"/>
+            </svg>
+            Derivar Documento
           </button>
-          <button pButton
-            label="Emitir Respuesta"
-            icon="fas fa-reply"
-            class="w-full p-button-success"
-            (click)="abrirModalRespuesta()">
+
+          <button class="btn-accion success" (click)="abrirModalRespuesta()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 15L3 9m0 0l6-6M3
+                9h12a6 6 0 010 12h-3"/>
+            </svg>
+            Emitir Respuesta
           </button>
-          <button pButton
-            label="Descargar Archivo"
-            icon="fas fa-download"
-            class="w-full p-button-outlined"
+
+          <button class="btn-accion outline"
             (click)="descargar()"
             [disabled]="!documento!.rutaArchivo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0
+                005.25 21h13.5A2.25 2.25 0
+                0021 18.75V16.5M16.5
+                12L12 16.5m0 0L7.5 12m4.5
+                4.5V3"/>
+            </svg>
+            Descargar Archivo
           </button>
         </div>
       </div>
     </div>
 
     <!-- HISTORIAL -->
-    <div class="section-card">
-      <h3><i class="fas fa-history"></i> Historial de Estados</h3>
-      <div class="timeline">
-        <div class="timeline-item" *ngFor="let h of historial">
-          <div class="timeline-dot"></div>
+    <div class="card section-card">
+      <div class="card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 6v6h4.5m4.5
+            0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Historial de Estados
+      </div>
+
+      <div class="timeline" *ngIf="historial.length > 0">
+        <div class="timeline-item" *ngFor="let h of historial; let last = last">
+          <div class="timeline-left">
+            <div class="timeline-dot"></div>
+            <div class="timeline-line" *ngIf="!last"></div>
+          </div>
           <div class="timeline-content">
-            <div class="timeline-header">
-              <p-tag [value]="h.estado" [severity]="getEstadoClass(h.estado)"></p-tag>
+            <div class="timeline-top">
+              <span [class]="'estado-badge sm ' + getEstadoClass(h.estado)">{{ h.estado }}</span>
               <span class="timeline-date">{{ h.fechaCambio | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
             <p class="timeline-obs">{{ h.observacion }}</p>
-            <small class="timeline-user"><i class="fas fa-user"></i> {{ h.usuarioResponsable }}</small>
+            <small class="timeline-user">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 6a3.75 3.75 0 11-7.5
+                  0 3.75 3.75 0 017.5
+                  0zM4.501 20.118a7.5 7.5 0
+                  0114.998 0A17.933 17.933
+                  0 0112 21.75c-2.676
+                  0-5.216-.584-7.499-1.632z"/>
+              </svg>
+              {{ h.usuarioResponsable }}
+            </small>
           </div>
         </div>
       </div>
+      <p class="empty-text" *ngIf="historial.length === 0">Sin historial disponible</p>
     </div>
 
     <!-- DERIVACIONES -->
-    <div class="section-card" *ngIf="derivaciones.length > 0">
-      <h3><i class="fas fa-share-alt"></i> Derivaciones</h3>
+    <div class="card section-card" *ngIf="derivaciones.length > 0">
+      <div class="card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M7.5 21L3 16.5m0 0L7.5
+            12M3 16.5h13.5m0-13.5L21
+            7.5m0 0L16.5 12M21 7.5H7.5"/>
+        </svg>
+        Derivaciones
+      </div>
       <div class="derivacion-item" *ngFor="let d of derivaciones">
-        <span class="area-badge">{{ d.areaOrigen }}</span>
-        <i class="fas fa-arrow-right"></i>
-        <span class="area-badge destino">{{ d.areaDestino }}</span>
-        <span class="derivacion-info">{{ d.motivo }} — {{ d.fechaDerivacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        <span class="area-tag origen">{{ d.areaOrigen }}</span>
+        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+        </svg>
+        <span class="area-tag destino">{{ d.areaDestino }}</span>
+        <span class="derivacion-meta">{{ d.motivo }}</span>
+        <span class="derivacion-fecha">{{ d.fechaDerivacion | date:'dd/MM/yyyy HH:mm' }}</span>
       </div>
     </div>
 
     <!-- RESPUESTAS -->
-    <div class="section-card" *ngIf="respuestas.length > 0">
-      <h3><i class="fas fa-reply"></i> Respuestas Emitidas</h3>
+    <div class="card section-card" *ngIf="respuestas.length > 0">
+      <div class="card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 15L3 9m0 0l6-6M3
+            9h12a6 6 0 010 12h-3"/>
+        </svg>
+        Respuestas Emitidas
+      </div>
       <div class="respuesta-item" *ngFor="let r of respuestas">
-        <div class="respuesta-header">
-          <span>{{ r.usuarioResponsable }}</span>
-          <span>{{ r.fechaRespuesta | date:'dd/MM/yyyy HH:mm' }}</span>
-          <span *ngIf="r.enviadoPorEmail" class="email-badge">
-            <i class="fas fa-envelope"></i> Email enviado
+        <div class="respuesta-meta">
+          <span class="respuesta-usuario">{{ r.usuarioResponsable }}</span>
+          <span class="respuesta-fecha">{{ r.fechaRespuesta | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span class="email-tag" *ngIf="r.enviadoPorEmail">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21.75 6.75v10.5a2.25
+                2.25 0 01-2.25 2.25h-15a2.25
+                2.25 0 01-2.25-2.25V6.75m19.5
+                0A2.25 2.25 0 0019.5
+                4.5h-15a2.25 2.25 0
+                00-2.25 2.25m19.5
+                0v.243a2.25 2.25 0
+                01-1.07 1.916l-7.5
+                4.615a2.25 2.25 0
+                01-2.36 0L3.32
+                8.91a2.25 2.25 0
+                01-1.07-1.916V6.75"/>
+            </svg>
+            Email enviado
           </span>
         </div>
         <p class="respuesta-contenido">{{ r.contenido }}</p>
@@ -147,87 +267,124 @@
   </div>
 </div>
 
-<!-- MODAL CAMBIAR ESTADO -->
-<p-dialog header="Cambiar Estado" [(visible)]="mostrarModalEstado" [modal]="true" [style]="{width:'400px'}">
-  <div class="modal-form">
-    <div class="field">
+<!-- ===== OVERLAY MODALES ===== -->
+<div class="modal-overlay" *ngIf="mostrarModalEstado || mostrarModalArea || mostrarModalDerivacion || mostrarModalRespuesta"
+  (click)="cerrarModales()">
+</div>
+
+<!-- MODAL: CAMBIAR ESTADO -->
+<div class="modal" *ngIf="mostrarModalEstado">
+  <div class="modal-header">
+    <span>Cambiar Estado</span>
+    <button class="modal-close" (click)="mostrarModalEstado=false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="mfield">
       <label>Nuevo Estado</label>
-      <p-select [options]="estados" [(ngModel)]="cambioEstado.estado" styleClass="w-full"></p-select>
+      <div class="input-wrap select-wrap">
+        <select [(ngModel)]="cambioEstado.estado">
+          <option *ngFor="let e of estados" [value]="e.value">{{ e.label }}</option>
+        </select>
+      </div>
     </div>
-    <div class="field">
+    <div class="mfield">
       <label>Observación</label>
-      <textarea pTextarea [(ngModel)]="cambioEstado.observacion"
-        rows="3" class="w-full" placeholder="Ingrese una observación..."></textarea>
+      <textarea [(ngModel)]="cambioEstado.observacion"
+        rows="3" placeholder="Ingrese una observación..."></textarea>
     </div>
   </div>
-  <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalEstado=false"></button>
-    <button pButton label="Guardar" class="p-button-primary" (click)="guardarEstado()"></button>
-  </ng-template>
-</p-dialog>
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="mostrarModalEstado=false">Cancelar</button>
+    <button class="btn-modal primary" (click)="guardarEstado()">Guardar</button>
+  </div>
+</div>
 
-<!-- MODAL ASIGNAR ÁREA -->
-<p-dialog header="Asignar Área" [(visible)]="mostrarModalArea" [modal]="true" [style]="{width:'400px'}">
-  <div class="modal-form">
-    <div class="field">
+<!-- MODAL: ASIGNAR ÁREA -->
+<div class="modal" *ngIf="mostrarModalArea">
+  <div class="modal-header">
+    <span>Asignar Área</span>
+    <button class="modal-close" (click)="mostrarModalArea=false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="mfield">
       <label>Seleccionar Área</label>
-      <p-select
-        [options]="areas"
-        [(ngModel)]="areaSeleccionada"
-        optionLabel="nombre"
-        optionValue="id"
-        placeholder="Seleccione un área"
-        styleClass="w-full">
-      </p-select>
+      <div class="input-wrap select-wrap">
+        <select [(ngModel)]="areaSeleccionada">
+          <option value="" disabled>Seleccione un área</option>
+          <option *ngFor="let a of areas" [value]="a.id">{{ a.nombre }}</option>
+        </select>
+      </div>
     </div>
   </div>
-  <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalArea=false"></button>
-    <button pButton label="Asignar" class="p-button-primary" (click)="guardarArea()"></button>
-  </ng-template>
-</p-dialog>
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="mostrarModalArea=false">Cancelar</button>
+    <button class="btn-modal primary" (click)="guardarArea()">Asignar</button>
+  </div>
+</div>
 
-<!-- MODAL DERIVAR -->
-<p-dialog header="Derivar Documento" [(visible)]="mostrarModalDerivacion" [modal]="true" [style]="{width:'400px'}">
-  <div class="modal-form">
-    <div class="field">
+<!-- MODAL: DERIVAR -->
+<div class="modal" *ngIf="mostrarModalDerivacion">
+  <div class="modal-header">
+    <span>Derivar Documento</span>
+    <button class="modal-close" (click)="mostrarModalDerivacion=false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="mfield">
       <label>Área Destino</label>
-      <p-select
-        [options]="getAreasParaDerivacion()"
-        [(ngModel)]="derivacionForm.areaDestinoId"
-        optionLabel="nombre"
-        optionValue="id"
-        placeholder="Seleccione área destino"
-        styleClass="w-full">
-      </p-select>
+      <div class="input-wrap select-wrap">
+        <select [(ngModel)]="derivacionForm.areaDestinoId">
+          <option value="" disabled>Seleccione área destino</option>
+          <option *ngFor="let a of getAreasParaDerivacion()" [value]="a.id">{{ a.nombre }}</option>
+        </select>
+      </div>
     </div>
-    <div class="field">
+    <div class="mfield">
       <label>Motivo</label>
-      <textarea pTextarea [(ngModel)]="derivacionForm.motivo"
-        rows="3" class="w-full" placeholder="Motivo de la derivación..."></textarea>
+      <textarea [(ngModel)]="derivacionForm.motivo"
+        rows="3" placeholder="Motivo de la derivación..."></textarea>
     </div>
   </div>
-  <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalDerivacion=false"></button>
-    <button pButton label="Derivar" class="p-button-primary" (click)="guardarDerivacion()"></button>
-  </ng-template>
-</p-dialog>
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="mostrarModalDerivacion=false">Cancelar</button>
+    <button class="btn-modal primary" (click)="guardarDerivacion()">Derivar</button>
+  </div>
+</div>
 
-<!-- MODAL RESPUESTA -->
-<p-dialog header="Emitir Respuesta" [(visible)]="mostrarModalRespuesta" [modal]="true" [style]="{width:'500px'}">
-  <div class="modal-form">
-    <div class="field">
+<!-- MODAL: RESPUESTA -->
+<div class="modal wide" *ngIf="mostrarModalRespuesta">
+  <div class="modal-header">
+    <span>Emitir Respuesta</span>
+    <button class="modal-close" (click)="mostrarModalRespuesta=false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="mfield">
       <label>Contenido de la Respuesta</label>
-      <textarea pTextarea [(ngModel)]="respuestaForm.contenido"
-        rows="5" class="w-full" placeholder="Redacte la respuesta oficial..."></textarea>
+      <textarea [(ngModel)]="respuestaForm.contenido"
+        rows="6" placeholder="Redacte la respuesta oficial..."></textarea>
     </div>
-    <div class="field-check">
+    <div class="mfield-check">
       <input type="checkbox" [(ngModel)]="respuestaForm.enviarEmail" id="enviarEmail"/>
       <label for="enviarEmail">Enviar notificación por email al ciudadano</label>
     </div>
   </div>
-  <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" class="p-button-text" (click)="mostrarModalRespuesta=false"></button>
-    <button pButton label="Emitir Respuesta" class="p-button-success" (click)="guardarRespuesta()"></button>
-  </ng-template>
-</p-dialog>
+  <div class="modal-footer">
+    <button class="btn-modal secondary" (click)="mostrarModalRespuesta=false">Cancelar</button>
+    <button class="btn-modal success" (click)="guardarRespuesta()">Emitir Respuesta</button>
+  </div>
+</div>
