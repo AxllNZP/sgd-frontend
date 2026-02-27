@@ -17,11 +17,13 @@ import { CambiarEstadoComponent } from './modales/cambiar-estado/cambiar-estado.
 import { AsignarAreaComponent } from './modales/asignar-area/asignar-area.component';
 import { DerivarDocumentoComponent } from './modales/derivar-documento/derivar-documento.component';
 import { EmitirRespuestaComponent } from './modales/emitir-respuesta/emitir-respuesta.component';
+import { EstadoBadgeComponent } from '../../../shared/components/estado-badge/estado-badge.component';
+import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, CambiarEstadoComponent, AsignarAreaComponent, DerivarDocumentoComponent, EmitirRespuestaComponent],
+  imports: [CommonModule, FormsModule, CambiarEstadoComponent, AsignarAreaComponent, DerivarDocumentoComponent, EmitirRespuestaComponent, EstadoBadgeComponent, SpinnerComponent],
   templateUrl: './detalle.component.html',
   styleUrl: './detalle.component.css'
 })
@@ -93,7 +95,7 @@ export class DetalleComponent implements OnInit {
 
   abrirModalEstado(): void    { this.mostrarModalEstado = true; }
   abrirModalArea(): void      { this.mostrarModalArea = true; }
-  abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
+    abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
   abrirModalRespuesta(): void  { this.mostrarModalRespuesta = true; }
 
   cerrarModales(): void {
@@ -140,15 +142,6 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-  getEstadoClass(estado: string): string {
-    switch (estado) {
-      case 'RECIBIDO':   return 'badge-info';
-      case 'EN_PROCESO': return 'badge-warn';
-      case 'OBSERVADO':  return 'badge-danger';
-      case 'ARCHIVADO':  return 'badge-success';
-      default:           return 'badge-info';
-    }
-  }
 
   getAreasParaDerivacion(): AreaResponse[] {
     return this.areas.filter(a => a.id !== this.documento?.areaId);

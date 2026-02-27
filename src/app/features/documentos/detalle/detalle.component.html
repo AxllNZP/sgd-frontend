@@ -15,10 +15,7 @@
   </div>
 
   <!-- ===== LOADING ===== -->
-  <div class="loading-wrap" *ngIf="cargando">
-    <div class="spinner"></div>
-    <span>Cargando documento...</span>
-  </div>
+  <app-spinner *ngIf="cargando"></app-spinner>
 
   <!-- ===== CONTENIDO ===== -->
   <div class="detalle-body" *ngIf="!cargando && documento">
@@ -69,9 +66,7 @@
           </div>
           <div class="info-row no-border">
             <span class="info-label">Estado actual</span>
-            <span [class]="'estado-badge ' + getEstadoClass(documento!.estado)">
-              {{ documento!.estado }}
-            </span>
+            <app-estado-badge [estado]="documento!.estado"></app-estado-badge>
           </div>
         </div>
       </div>
@@ -183,7 +178,7 @@
           </div>
           <div class="timeline-content">
             <div class="timeline-top">
-              <span [class]="'estado-badge sm ' + getEstadoClass(h.estado)">{{ h.estado }}</span>
+              <app-estado-badge [estado]="h.estado"></app-estado-badge>
               <span class="timeline-date">{{ h.fechaCambio | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
             <p class="timeline-obs">{{ h.observacion }}</p>

@@ -105,10 +105,7 @@
   <div class="card tabla-card">
 
     <!-- LOADING -->
-    <div class="loading-wrap" *ngIf="cargando">
-      <div class="spinner"></div>
-      <span>Cargando documentos...</span>
-    </div>
+    <app-spinner *ngIf="cargando"></app-spinner>
 
     <!-- VACÍO -->
     <div class="empty-wrap" *ngIf="!cargando && documentos.length === 0">
@@ -164,9 +161,7 @@
               <small>{{ doc.fechaHoraRegistro | date:'HH:mm' }}</small>
             </td>
             <td>
-              <span [class]="'estado-badge ' + getEstadoClass(doc.estado)">
-                {{ doc.estado }}
-              </span>
+              <app-estado-badge [estado]="doc.estado"></app-estado-badge>
             </td>
             <td>
               <button class="btn-ver" (click)="verDetalle(doc.numeroTramite); $event.stopPropagation()">

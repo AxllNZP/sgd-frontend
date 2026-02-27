@@ -196,3 +196,14 @@
   text-decoration: none;
   font-size: 0.85rem;
 }
+
+.grafico-card {
+  margin-bottom: 1.5rem;
+}
+
+.grafico-wrap {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

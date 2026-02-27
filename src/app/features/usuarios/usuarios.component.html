@@ -28,10 +28,7 @@
   <div class="card">
 
     <!-- LOADING -->
-    <div class="loading-wrap" *ngIf="cargando">
-      <div class="spinner"></div>
-      <span>Cargando usuarios...</span>
-    </div>
+    <app-spinner *ngIf="cargando"></app-spinner>
 
     <!-- EMPTY -->
     <div class="empty-wrap" *ngIf="!cargando && usuarios.length === 0">

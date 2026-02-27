@@ -25,6 +25,9 @@ export class DerivarDocumentoComponent {
   esMotivoInvalido(): boolean {
     return !this.derivacionForm?.motivo || this.derivacionForm.motivo.trim() === '';
   }
+  esAreaInvalida(): boolean {
+  return !this.derivacionForm?.areaDestinoId || this.derivacionForm.areaDestinoId === '';
+}
 
   onCerrar(): void {
     this.intentoEnvio = false;
@@ -32,12 +35,12 @@ export class DerivarDocumentoComponent {
   }
 
   onGuardar(): void {
-    this.intentoEnvio = true;
+  this.intentoEnvio = true;
 
-    if (this.esMotivoInvalido()) {
-      return; // NO permite enviar
-    }
-
-    this.guardar.emit();
+  if (this.esAreaInvalida() || this.esMotivoInvalido()) {
+    return;
   }
+
+  this.guardar.emit();
+}
 }

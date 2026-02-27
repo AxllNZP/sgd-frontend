@@ -18,6 +18,9 @@
             {{ a.nombre }}
           </option>
         </select>
+        <div *ngIf="intentoEnvio && esAreaInvalida()" class="error-msg">
+            El área destino es obligatoria.
+        </div>
       </div>
     </div>
 
@@ -37,8 +40,8 @@
 
   <div class="modal-footer">
     <button class="btn-modal secondary" (click)="onCerrar()">Cancelar</button>
-    <button class="btn-modal primary"  (click)="onGuardar()" [disabled]="esMotivoInvalido()">
-  Derivar
-</button>
+    <button class="btn-modal primary" (click)="onGuardar()" [disabled]="esAreaInvalida() || esMotivoInvalido()">
+      Derivar
+    </button>
   </div>
 </div>

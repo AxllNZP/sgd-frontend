@@ -83,9 +83,7 @@
               <td>{{ doc.asunto }}</td>
               <td>{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</td>
               <td>
-                <span [class]="'estado-badge ' + getEstadoClass(doc.estado)">
-                  {{ doc.estado }}
-                </span>
+                <app-estado-badge [estado]="doc.estado"></app-estado-badge>
               </td>
               <td>
                 <a [routerLink]="['/documentos', doc.numeroTramite]" class="btn-ver">
@@ -100,6 +98,16 @@
       <div class="empty-wrap" *ngIf="documentosRecientes.length === 0">
         No hay documentos recientes
       </div>
+
+      <!-- ===== GRÁFICO ===== -->
+        <div class="card grafico-card">
+          <div class="section-header">
+            <h2>Distribución por Estado</h2>
+          </div>
+          <div class="grafico-wrap">
+            <canvas #graficoEstados></canvas>
+          </div>
+        </div>
 
     </div>
 

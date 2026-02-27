@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AreaService } from '../../core/services/area.service';
 import { AreaResponse, AreaRequest } from '../../core/models/area.model';
+import { SpinnerComponent } from '../../shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-areas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SpinnerComponent],
   templateUrl: './areas.component.html',
   styleUrl: './areas.component.css'
 })

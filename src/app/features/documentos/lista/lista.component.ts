@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
 import { DocumentoResponse, DocumentoFiltro } from '../../../core/models/documento.model';
+import { EstadoBadgeComponent } from '../../../shared/components/estado-badge/estado-badge.component';
+import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EstadoBadgeComponent, SpinnerComponent],
   templateUrl: './lista.component.html',
   styleUrl: './lista.component.css'
 })
