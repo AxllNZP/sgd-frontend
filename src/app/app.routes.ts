@@ -8,16 +8,56 @@ export const routes: Routes = [
     redirectTo: 'login',
     pathMatch: 'full'
   },
+
+  // ── STAFF ──────────────────────────────────────────────
   {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
+
+  // ── CIUDADANO (punto de entrada) ───────────────────────
+  {
+    path: 'ciudadano',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/seleccion/seleccion.component')
+        .then(m => m.SeleccionComponent)
+  },
+
+  // ── CIUDADANO: CAMINO A – sin cuenta ───────────────────
   {
     path: 'registro-documento',
     loadComponent: () =>
       import('./features/auth/registro/registro.component').then(m => m.RegistroComponent)
   },
+
+  // ── CIUDADANO: CAMINO B – con cuenta ───────────────────
+  {
+    path: 'ciudadano/login',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/login-ciudadano/login-ciudadano.component')
+        .then(m => m.LoginCiudadanoComponent)
+  },
+  {
+    path: 'ciudadano/registro-natural',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/registro-natural/registro-natural.component')
+        .then(m => m.RegistroNaturalComponent)
+  },
+  {
+    path: 'ciudadano/registro-juridica',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/registro-juridica/registro-juridica.component')
+        .then(m => m.RegistroJuridicaComponent)
+  },
+  {
+    path: 'ciudadano/verificar',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/verificar/verificar.component')
+        .then(m => m.VerificarComponent)
+  },
+
+  // ── SISTEMA INTERNO ────────────────────────────────────
   {
     path: 'dashboard',
     canActivate: [authGuard],
@@ -48,8 +88,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/areas/areas.component').then(m => m.AreasComponent)
   },
-  {
-    path: '**',
-    redirectTo: 'login'
-  }
+
+  { path: '**', redirectTo: 'login' }
 ];

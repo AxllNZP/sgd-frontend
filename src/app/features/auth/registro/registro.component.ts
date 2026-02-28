@@ -13,20 +13,22 @@ import { SoloNumerosDirective } from '../../../shared/directives/solo-numeros.di
   styleUrl: './registro.component.css'
 })
 export class RegistroComponent {
+
   form = {
     remitente: '',
     dniRuc: '',
     emailRemitente: '',
     asunto: '',
-    tipoDocumento: ''
+    tipoDocumento: '',
+    numeroFolios: 1
   };
 
   tiposDocumento = [
-    { label: 'Solicitud', value: 'SOLICITUD' },
-    { label: 'Informe', value: 'INFORME' },
-    { label: 'Oficio', value: 'OFICIO' },
-    { label: 'Memorando', value: 'MEMORANDO' },
-    { label: 'Carta', value: 'CARTA' }
+    { label: 'Solicitud',  value: 'SOLICITUD'  },
+    { label: 'Informe',    value: 'INFORME'    },
+    { label: 'Oficio',     value: 'OFICIO'     },
+    { label: 'Memorando',  value: 'MEMORANDO'  },
+    { label: 'Carta',      value: 'CARTA'      }
   ];
 
   archivo: File | null = null;
@@ -46,48 +48,69 @@ export class RegistroComponent {
     }
   }
 
+  private detectarTipoPersona(): string {
+    return this.form.dniRuc.length === 11 ? 'JURIDICA' : 'NATURAL';
+  }
+
   registrar(): void {
-  if (!this.form.remitente || !this.form.dniRuc || !this.form.asunto || !this.form.emailRemitente) {
-    this.error = 'Por favor complete todos los campos obligatorios';
-    return;
-  }
-
-  const soloNumeros = /^\d+$/.test(this.form.dniRuc);
-  if (!soloNumeros) {
-    this.error = 'El DNI o RUC solo debe contener números';
-    return;
-  }
-
-  if (this.form.dniRuc.length !== 8 && this.form.dniRuc.length !== 11) {
-    this.error = 'El DNI debe tener 8 dígitos o el RUC 11 dígitos';
-    return;
-  }
-
-  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.emailRemitente);
-  if (!emailValido) {
-    this.error = 'El correo electrónico no tiene un formato válido';
-    return;
-  }
-
-  this.cargando = true;
-  this.error = '';
-
-  const formData = new FormData();
-  formData.append('datos', new Blob([JSON.stringify(this.form)], { type: 'application/json' }));
-  if (this.archivo) {
-    formData.append('archivo', this.archivo);
-  }
-
-  this.documentoService.registrar(formData).subscribe({
-    next: (response) => {
-      this.cargando = false;
-      this.exito = true;
-      this.numeroTramite = response.numeroTramite;
-    },
-    error: () => {
-      this.cargando = false;
-      this.error = 'Error al registrar el documento. Intente nuevamente.';
+    if (!this.form.remitente || !this.form.dniRuc || !this.form.asunto || !this.form.emailRemitente) {
+      this.error = 'Por favor complete todos los campos obligatorios';
+      return;
     }
-  });
-}
+
+    const soloNumeros = /^\d+$/.test(this.form.dniRuc);
+    if (!soloNumeros) {
+      this.error = 'El DNI o RUC solo debe contener números';
+      return;
+    }
+
+    if (this.form.dniRuc.length !== 8 && this.form.dniRuc.length !== 11) {
+      this.error = 'El DNI debe tener 8 dígitos o el RUC 11 dígitos';
+      return;
+    }
+
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.emailRemitente);
+    if (!emailValido) {
+      this.error = 'El correo electrónico no tiene un formato válido';
+      return;
+    }
+
+    if (this.form.numeroFolios < 1) {
+      this.error = 'El número de folios debe ser al menos 1';
+      return;
+    }
+
+    this.cargando = true;
+    this.error = '';
+
+    // Los nombres de campo coinciden exactamente con DocumentoRequestDTO del backend:
+    // tipoPersona, remitente, dniRuc, tipoDocumento, numeroFolios, asunto, emailRemitente
+    const datos = {
+      tipoPersona:   this.detectarTipoPersona(),
+      remitente:     this.form.remitente,
+      dniRuc:        this.form.dniRuc,
+      tipoDocumento: this.form.tipoDocumento,
+      numeroFolios:  this.form.numeroFolios,
+      asunto:        this.form.asunto,
+      emailRemitente: this.form.emailRemitente
+    };
+
+    const formData = new FormData();
+    formData.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
+    if (this.archivo) {
+      formData.append('archivo', this.archivo);
+    }
+
+    this.documentoService.registrar(formData).subscribe({
+      next: (response) => {
+        this.cargando = false;
+        this.exito = true;
+        this.numeroTramite = response.numeroTramite;
+      },
+      error: () => {
+        this.cargando = false;
+        this.error = 'Error al registrar el documento. Intente nuevamente.';
+      }
+    });
+  }
 }

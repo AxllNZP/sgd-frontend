@@ -41,6 +41,8 @@
 
       <div class="form-grid">
 
+        
+
         <!-- Nombre -->
         <div class="field-group full">
           <label>
@@ -80,6 +82,29 @@
             <input type="text" [(ngModel)]="form.dniRuc"
                 placeholder="478547854 o 20123456789"
                 appSoloNumeros/>
+          </div>
+        </div>
+        <!-- AGREGAR este bloque en el form-grid,
+     entre el campo "DNI o RUC" y el campo "Correo electrónico"  -->
+
+        <div class="field-group half">
+          <label>
+            <span class="label-text">Número de folios</span>
+            <span class="required">*</span>
+          </label>
+          <div class="input-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M6.75 3v1.5M17.25 3v1.5M3 18.75V7.5a2.25 2.25 0
+                012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18
+                0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0
+                0021 18.75m-18 0v-7.5A2.25 2.25 0
+                015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+            </svg>
+            <input type="number"
+                   [(ngModel)]="form.numeroFolios"
+                   min="1"
+                   placeholder="Ej: 3"/>
           </div>
         </div>
 

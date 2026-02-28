@@ -1,0 +1,214 @@
+<div class="registro-bg">
+
+  <div class="registro-card">
+
+    <div class="registro-header">
+      <button class="btn-back" routerLink="/ciudadano">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+        </svg>
+      </button>
+      <div class="header-text">
+        <h1>Persona <span class="accent">Natural</span></h1>
+        <p>Registro de ciudadano con DNI o Carné</p>
+      </div>
+    </div>
+
+    <!-- ALERTA -->
+    <div class="alert-error" *ngIf="errorMsg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
+      {{ errorMsg }}
+    </div>
+
+    <form (ngSubmit)="registrar()" #regForm="ngForm" novalidate>
+
+      <!-- SECCIÓN: DOCUMENTO -->
+      <div class="seccion">
+        <div class="seccion-titulo">
+          <span class="seccion-num">1</span> Documento de Identidad
+        </div>
+        <div class="grid-2">
+          <div class="field-group">
+            <label>Tipo de documento *</label>
+            <div class="select-wrap">
+              <select [(ngModel)]="form.tipoDocumento" name="tipoDocumento" required>
+                <option value="">Seleccionar...</option>
+                <option value="DNI">DNI</option>
+                <option value="CARNET_EXTRANJERIA">Carné de Extranjería</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Número de documento *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.numeroDocumento" name="numeroDocumento"
+                placeholder="8 a 12 caracteres" required minlength="8" maxlength="12"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: DATOS PERSONALES -->
+      <div class="seccion">
+        <div class="seccion-titulo">
+          <span class="seccion-num">2</span> Datos Personales
+        </div>
+        <div class="field-group">
+          <label>Nombres *</label>
+          <div class="input-wrap">
+            <input type="text" [(ngModel)]="form.nombres" name="nombres" placeholder="Sus nombres completos" required/>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field-group">
+            <label>Apellido paterno *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.apellidoPaterno" name="apellidoPaterno" placeholder="Apellido paterno" required/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Apellido materno *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.apellidoMaterno" name="apellidoMaterno" placeholder="Apellido materno" required/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: UBICACIÓN -->
+      <div class="seccion">
+        <div class="seccion-titulo">
+          <span class="seccion-num">3</span> Ubigeo y Contacto
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label>Departamento *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.departamento" name="departamento" placeholder="Ej: Lima" required/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Provincia *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.provincia" name="provincia" placeholder="Ej: Lima" required/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Distrito *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.distrito" name="distrito" placeholder="Ej: Miraflores" required/>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field-group">
+            <label>Dirección *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.direccion" name="direccion" placeholder="Dirección completa" required/>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Teléfono *</label>
+            <div class="input-wrap">
+              <input type="text" [(ngModel)]="form.telefono" name="telefono" placeholder="Ej: 987654321" required/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: CREDENCIALES -->
+      <div class="seccion">
+        <div class="seccion-titulo">
+          <span class="seccion-num">4</span> Credenciales de Acceso
+        </div>
+        <div class="field-group">
+          <label>Correo electrónico *</label>
+          <div class="input-wrap">
+            <input type="email" [(ngModel)]="form.email" name="email" placeholder="correo@ejemplo.com" required/>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field-group">
+            <label>Contraseña *</label>
+            <div class="input-wrap">
+              <input [type]="showPw ? 'text' : 'password'" [(ngModel)]="form.password" name="password"
+                placeholder="Mínimo 8 caracteres" required minlength="8"/>
+              <button type="button" class="toggle-pw" (click)="showPw = !showPw">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path *ngIf="!showPw" stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path *ngIf="showPw" stroke-linecap="round" stroke-linejoin="round"
+                    d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Confirmar contraseña *</label>
+            <div class="input-wrap">
+              <input [type]="showPwConfirm ? 'text' : 'password'" [(ngModel)]="confirmarPassword" name="confirmarPassword"
+                placeholder="Repita la contraseña" required/>
+              <button type="button" class="toggle-pw" (click)="showPwConfirm = !showPwConfirm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: SEGURIDAD -->
+      <div class="seccion">
+        <div class="seccion-titulo">
+          <span class="seccion-num">5</span> Pregunta de Seguridad
+        </div>
+        <div class="field-group">
+          <label>Pregunta *</label>
+          <div class="select-wrap">
+            <select [(ngModel)]="form.preguntaSeguridad" name="preguntaSeguridad" required>
+              <option value="">Seleccionar...</option>
+              <option value="NOMBRE_MASCOTA">¿Cuál es el nombre de tu primera mascota?</option>
+              <option value="CIUDAD_NACIMIENTO">¿En qué ciudad naciste?</option>
+              <option value="NOMBRE_COLEGIO">¿Cuál es el nombre de tu colegio de primaria?</option>
+              <option value="NOMBRE_MADRE">¿Cuál es el primer nombre de tu madre?</option>
+              <option value="PELICULA_FAVORITA">¿Cuál es tu película favorita?</option>
+              <option value="APODO_INFANCIA">¿Cuál era tu apodo de infancia?</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Respuesta *</label>
+          <div class="input-wrap">
+            <input type="text" [(ngModel)]="form.respuestaSeguridad" name="respuestaSeguridad"
+              placeholder="Su respuesta (no distingue mayúsculas)" required/>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: OPCIONES -->
+      <div class="seccion">
+        <div class="seccion-titulo">
+          <span class="seccion-num">6</span> Opciones
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.afiliadoBuzon" name="afiliadoBuzon"/>
+          <span class="checkmark"></span>
+          Afiliarme al Buzón Electrónico (recibir notificaciones digitales)
+        </label>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="loading">
+        <span *ngIf="!loading">Crear cuenta</span>
+        <span *ngIf="loading" class="spinner"></span>
+      </button>
+
+    </form>
+
+    <div class="card-footer">
+      ¿Ya tiene cuenta? <a routerLink="/ciudadano/login" class="link-login">Iniciar sesión</a>
+    </div>
+
+  </div>
+</div>

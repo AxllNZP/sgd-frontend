@@ -1,0 +1,75 @@
+<div class="verificar-bg">
+  <div class="particles">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="verificar-card">
+
+    <div class="verificar-header">
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25
+            2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0
+            0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5
+            0v.243a2.25 2.25 0 01-1.07 1.916l-7.5
+            4.615a2.25 2.25 0 01-2.36 0L3.32
+            8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+        </svg>
+      </div>
+      <h1>Verificar <span class="accent">Cuenta</span></h1>
+      <p>Ingrese el código de 6 dígitos enviado a su correo electrónico</p>
+    </div>
+
+    <!-- ALERTA ERROR -->
+    <div class="alert-error" *ngIf="errorMsg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
+      {{ errorMsg }}
+    </div>
+
+    <!-- ALERTA ÉXITO -->
+    <div class="alert-success" *ngIf="successMsg">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      {{ successMsg }}
+    </div>
+
+    <!-- INPUTS DE CÓDIGO -->
+    <div class="codigo-wrap">
+      <input
+        *ngFor="let d of digits; let i = index"
+        type="text"
+        inputmode="numeric"
+        maxlength="1"
+        class="codigo-input"
+        [class.filled]="digits[i] !== ''"
+        [(ngModel)]="digits[i]"
+        (keydown)="onKeyDown($event, i)"
+        (input)="onInput($event, i)"
+        (paste)="onPaste($event)"
+        [id]="'digit-' + i"
+      />
+    </div>
+
+    <button class="btn-submit" (click)="verificar()" [disabled]="loading || !codigoCompleto">
+      <span *ngIf="!loading">Verificar y activar cuenta</span>
+      <span *ngIf="loading" class="spinner"></span>
+    </button>
+
+    <!-- REENVIAR -->
+    <div class="reenviar-wrap">
+      <span class="reenviar-text">¿No recibió el código?</span>
+      <button
+        type="button"
+        class="btn-reenviar"
+        (click)="reenviarCodigo()"
+        [disabled]="reenvioDisabled">
+        {{ reenvioDisabled ? 'Reenviar en ' + countdown + 's' : 'Reenviar código' }}
+      </button>
+    </div>
+
+    <div class="verificar-footer">
+      <a routerLink="/ciudadano" class="link-volver">← Volver al inicio</a>
+    </div>
+
+  </div>
+</div>
