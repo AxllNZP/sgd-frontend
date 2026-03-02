@@ -1,246 +1,200 @@
-<div class="registro-bg">
-  <div class="particles">
-    <span></span><span></span><span></span>
-    <span></span><span></span>
+<!-- ──────────────────────────────────────────────────────────
+     ETAPA 1: Formulario de registro de documento
+────────────────────────────────────────────────────────── -->
+<div class="registro-container" *ngIf="etapa === 1">
+
+  <h2 class="titulo">Registro de Documento</h2>
+
+  <!-- Indicador de etapas -->
+  <div class="etapas-indicador">
+    <span class="etapa-activa">1. Datos del documento</span>
+    <span class="separador"> › </span>
+    <span class="etapa-inactiva">2. Confirmación</span>
   </div>
 
-  <div class="registro-card">
+  <!-- Mensaje de error -->
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
 
-    <!-- HEADER -->
-    <div class="registro-header">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0
-            0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-        </svg>
-      </div>
-      <h1>Mesa de Partes <span class="accent">Virtual</span></h1>
-      <p>Complete el formulario para registrar su documento</p>
+  <!-- ── Datos del remitente ── -->
+  <section class="seccion">
+    <h3>Datos del remitente</h3>
+
+    <div class="campo">
+      <label>Nombre completo o Razón Social *</label>
+      <input type="text" [(ngModel)]="form.remitente"
+             placeholder="Ingrese nombre o razón social" maxlength="200" />
     </div>
 
-    <!-- ÉXITO -->
-    <div class="exito-panel" *ngIf="exito">
-      <div class="exito-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-      </div>
-      <h3>¡Documento registrado!</h3>
-      <p>Su trámite ha sido ingresado exitosamente al sistema.</p>
-      <div class="tramite-badge">
-        <span class="tramite-label">Número de trámite</span>
-        <span class="tramite-numero">{{ numeroTramite }}</span>
-      </div>
-      <small>Se envió una confirmación a su correo electrónico</small>
-      <a routerLink="/login" class="btn-volver">Ir al sistema</a>
+    <div class="campo">
+      <label>DNI / RUC *</label>
+      <input type="text" [(ngModel)]="form.dniRuc" appSoloNumeros
+             placeholder="8 dígitos (DNI) o 11 dígitos (RUC)" maxlength="11" />
     </div>
 
-    <!-- FORMULARIO -->
-    <div class="registro-form" *ngIf="!exito">
+    <div class="campo">
+      <label>Correo electrónico *</label>
+      <input type="email" [(ngModel)]="form.emailRemitente"
+             placeholder="correo@ejemplo.com" maxlength="100" />
+    </div>
+  </section>
 
-      <div class="form-grid">
+  <!-- ── Datos del documento ── -->
+  <section class="seccion">
+    <h3>Datos del documento</h3>
 
-        
+    <div class="campo">
+      <label>Tipo de documento</label>
+      <select [(ngModel)]="form.tipoDocumento">
+        <option value="">-- Seleccione --</option>
+        <option *ngFor="let t of tiposDocumento" [value]="t.value">{{ t.label }}</option>
+      </select>
+    </div>
 
-        <!-- Nombre -->
-        <div class="field-group full">
-          <label>
-            <span class="label-text">Nombre completo</span>
-            <span class="required">*</span>
-          </label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5
-                0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933
-                0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-            </svg>
-            <input type="text" [(ngModel)]="form.remitente"
-              placeholder="Juan Pérez García"/>
-          </div>
-        </div>
+    <div class="campo">
+      <label>Asunto *</label>
+      <textarea [(ngModel)]="form.asunto" rows="3"
+                placeholder="Describa el asunto del documento" maxlength="500"></textarea>
+    </div>
 
-        <!-- DNI / RUC -->
-        <div class="field-group half">
-          <label>
-            <span class="label-text">DNI o RUC</span>
-            <span class="required">*</span>
-          </label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5
-                19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25
-                2.25 0 0019.5 4.5h-15a2.25 2.25 0
-                00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875
-                1.875 0 11-3.75 0 1.875 1.875 0 013.75
-                0zm1.294 6.336a6.721 6.721 0 01-3.17.789
-                6.721 6.721 0 01-3.168-.789 3.376 3.376
-                0 016.338 0z"/>
-            </svg>
-            <input type="text" [(ngModel)]="form.dniRuc"
-                placeholder="478547854 o 20123456789"
-                appSoloNumeros/>
-          </div>
-        </div>
-        <!-- AGREGAR este bloque en el form-grid,
-     entre el campo "DNI o RUC" y el campo "Correo electrónico"  -->
+    <div class="campo campo-corto">
+      <label>Número de folios *</label>
+      <input type="number" [(ngModel)]="form.numeroFolios" min="1" max="999" />
+    </div>
+  </section>
 
-        <div class="field-group half">
-          <label>
-            <span class="label-text">Número de folios</span>
-            <span class="required">*</span>
-          </label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M6.75 3v1.5M17.25 3v1.5M3 18.75V7.5a2.25 2.25 0
-                012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18
-                0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0
-                0021 18.75m-18 0v-7.5A2.25 2.25 0
-                015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
-            </svg>
-            <input type="number"
-                   [(ngModel)]="form.numeroFolios"
-                   min="1"
-                   placeholder="Ej: 3"/>
-          </div>
-        </div>
+  <!-- ── Adjuntos ── -->
+  <section class="seccion">
+    <h3>Archivos adjuntos</h3>
 
-        <!-- Email -->
-        <div class="field-group half">
-          <label>
-            <span class="label-text">Correo electrónico</span>
-            <span class="required">*</span>
-          </label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M21.75 6.75v10.5a2.25 2.25 0
-                01-2.25 2.25h-15a2.25 2.25 0
-                01-2.25-2.25V6.75m19.5 0A2.25 2.25
-                0 0019.5 4.5h-15a2.25 2.25 0
-                00-2.25 2.25m19.5 0v.243a2.25 2.25
-                0 01-1.07 1.916l-7.5 4.615a2.25 2.25
-                0 01-2.36 0L3.32 8.91a2.25 2.25 0
-                01-1.07-1.916V6.75"/>
-            </svg>
-            <input type="email" [(ngModel)]="form.emailRemitente"
-              placeholder="correo@ejemplo.com"/>
-          </div>
-        </div>
+    <div class="campo">
+      <label>Documento principal (PDF)</label>
+      <input type="file" accept=".pdf" (change)="onArchivoSeleccionado($event)" />
+      <small *ngIf="archivoNombre">Seleccionado: {{ archivoNombre }}</small>
+    </div>
 
-        <!-- Asunto -->
-        <div class="field-group full">
-          <label>
-            <span class="label-text">Asunto</span>
-            <span class="required">*</span>
-          </label>
-          <div class="input-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M7.5 8.25h9m-9 3H12m-9.75
-                1.51c0 1.6 1.123 2.994 2.707
-                3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12
-                21l2.755-4.133a1.14 1.14 0
-                01.865-.501 48.172 48.172 0
-                003.423-.379c1.584-.233
-                2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394
-                48.394 0 0012 3c-2.392
-                0-4.744.175-7.043.513C3.373
-                3.746 2.25 5.14 2.25 6.741v6.018z"/>
-            </svg>
-            <input type="text" [(ngModel)]="form.asunto"
-              placeholder="Descripción breve del documento"/>
-          </div>
-        </div>
+    <div class="campo">
+      <label>Anexo (opcional)</label>
+      <input type="file" accept=".pdf,.doc,.docx,.zip"
+             (change)="onAnexoSeleccionado($event)" />
+      <small *ngIf="anexoNombre">Seleccionado: {{ anexoNombre }}</small>
+    </div>
+  </section>
 
-        <!-- Tipo de documento -->
-        <div class="field-group half">
-          <label>
-            <span class="label-text">Tipo de documento</span>
-          </label>
-          <div class="input-wrap select-wrap">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0
-                00-3.375-3.375h-1.5A1.125 1.125 0
-                0113.5 7.125v-1.5a3.375 3.375 0
-                00-3.375-3.375H8.25m0 12.75h7.5m-7.5
-                3H12M10.5 2.25H5.625c-.621
-                0-1.125.504-1.125 1.125v17.25c0
-                .621.504 1.125 1.125 1.125h12.75c.621
-                0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-            </svg>
-            <select [(ngModel)]="form.tipoDocumento">
-              <option value="" disabled>Seleccione tipo</option>
-              <option *ngFor="let t of tiposDocumento" [value]="t.value">
-                {{ t.label }}
-              </option>
-            </select>
-          </div>
-        </div>
+  <!-- ── Botón continuar ── -->
+  <div class="acciones">
+    <button class="btn-primario" (click)="continuar()">Continuar →</button>
+  </div>
 
-        <!-- Archivo -->
-        <div class="field-group half">
-          <label>
-            <span class="label-text">Archivo adjunto</span>
-            <span class="tag-opcional">opcional</span>
-          </label>
-          <label class="file-drop" [class.has-file]="archivoNombre">
-            <input type="file" accept=".pdf,.jpg,.png"
-              (change)="onArchivoSeleccionado($event)" hidden/>
-            <svg *ngIf="!archivoNombre" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M18.375 12.739l-7.693
-                7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3
-                3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81
-                7.81a1.5 1.5 0 002.112 2.13"/>
-            </svg>
-            <svg *ngIf="archivoNombre" class="file-ok" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span>{{ archivoNombre || 'PDF, JPG o PNG' }}</span>
-          </label>
-        </div>
+</div>
 
-      </div>
 
-      <!-- ERROR -->
-      <div class="error-box" *ngIf="error">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        {{ error }}
-      </div>
+<!-- ──────────────────────────────────────────────────────────
+     ETAPA 2: Confirmación "¡Ya casi termina!"
+────────────────────────────────────────────────────────── -->
+<div class="registro-container" *ngIf="etapa === 2">
 
-      <!-- BOTÓN -->
-      <button class="btn-registrar" (click)="registrar()" [disabled]="cargando">
-        <span *ngIf="!cargando">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M6 12L3.269 3.126A59.768 59.768 0
-              0121.485 12 59.77 59.77 0
-              013.27 20.876L5.999 12zm0
-              0h7.5"/>
-          </svg>
-          Registrar documento
-        </span>
-        <span *ngIf="cargando" class="loading-dots">
-          <i></i><i></i><i></i>
-        </span>
+  <h2 class="titulo">¡Ya casi termina!</h2>
+
+  <div class="etapas-indicador">
+    <span class="etapa-inactiva">1. Datos del documento</span>
+    <span class="separador"> › </span>
+    <span class="etapa-activa">2. Confirmación</span>
+  </div>
+
+  <p class="confirmar-texto">
+    Por favor verifique los datos antes de enviar su documento.
+  </p>
+
+  <!-- Resumen de los datos ingresados -->
+  <section class="resumen">
+
+    <div class="resumen-fila">
+      <span class="resumen-label">Remitente:</span>
+      <span class="resumen-valor">{{ form.remitente }}</span>
+    </div>
+
+    <div class="resumen-fila">
+      <span class="resumen-label">DNI / RUC:</span>
+      <span class="resumen-valor">{{ form.dniRuc }}</span>
+    </div>
+
+    <div class="resumen-fila">
+      <span class="resumen-label">Correo:</span>
+      <span class="resumen-valor">{{ form.emailRemitente }}</span>
+    </div>
+
+    <div class="resumen-fila" *ngIf="form.tipoDocumento">
+      <span class="resumen-label">Tipo documento:</span>
+      <span class="resumen-valor">{{ form.tipoDocumento }}</span>
+    </div>
+
+    <div class="resumen-fila">
+      <span class="resumen-label">Asunto:</span>
+      <span class="resumen-valor">{{ form.asunto }}</span>
+    </div>
+
+    <div class="resumen-fila">
+      <span class="resumen-label">Folios:</span>
+      <span class="resumen-valor">{{ form.numeroFolios }}</span>
+    </div>
+
+    <div class="resumen-fila" *ngIf="archivoNombre">
+      <span class="resumen-label">Archivo:</span>
+      <span class="resumen-valor">{{ archivoNombre }}</span>
+    </div>
+
+    <div class="resumen-fila" *ngIf="anexoNombre">
+      <span class="resumen-label">Anexo:</span>
+      <span class="resumen-valor">{{ anexoNombre }}</span>
+    </div>
+
+  </section>
+
+  <!-- Mensaje de error -->
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+  <!-- Botones de acción -->
+  <div class="acciones">
+    <button class="btn-secundario" (click)="cancelar()" [disabled]="cargando">
+      ← No, corregir datos
+    </button>
+    <button class="btn-primario" (click)="confirmarEnvio()" [disabled]="cargando">
+      <span *ngIf="!cargando">Sí, enviar documento</span>
+      <span *ngIf="cargando">Enviando...</span>
+    </button>
+  </div>
+
+</div>
+
+
+<!-- ──────────────────────────────────────────────────────────
+     MODAL: Número de expediente + GENERAR CARGO
+────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="mostrarModal">
+  <div class="modal-box">
+
+    <div class="modal-icono">✔</div>
+    <h3 class="modal-titulo">Documento registrado con éxito</h3>
+
+    <p>Su documento ha sido enviado correctamente.</p>
+
+    <div class="expediente-box">
+      <span class="expediente-label">N° de Expediente:</span>
+      <strong class="expediente-numero">{{ numeroTramite }}</strong>
+    </div>
+
+    <p class="modal-email">
+      Se envió una copia a: <strong>{{ emailConfirmacion }}</strong>
+    </p>
+
+    <div class="modal-acciones">
+      <button class="btn-primario" (click)="generarCargo()">
+        GENERAR CARGO
       </button>
-
-      <a routerLink="/login" class="btn-volver-login">
-        ¿Ya tiene cuenta? Ingresar al sistema
-      </a>
-
+      <button class="btn-secundario" (click)="cerrarModal()">
+        Cerrar
+      </button>
     </div>
+
   </div>
 </div>

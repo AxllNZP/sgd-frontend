@@ -1,0 +1,127 @@
+/* ── Contenedor ── */
+.mis-datos-container {
+  max-width: 680px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+
+.titulo {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Pestañas ── */
+.pestanas {
+  display: flex;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 1.5rem;
+}
+.pestana-btn {
+  background: none;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+.pestana-btn.activa {
+  color: #005a9c;
+  border-bottom-color: #005a9c;
+  font-weight: bold;
+}
+
+/* ── Secciones ── */
+.seccion {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.seccion h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* ── Campos ── */
+.campo {
+  margin-bottom: 1rem;
+}
+.campo label {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.3rem;
+  color: #444;
+}
+.campo input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+.campo input:disabled {
+  background: #f5f5f5;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* Fila de dos columnas */
+.fila-dos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ── Mensajes ── */
+.error-msg {
+  background: #fde8e8;
+  border: 1px solid #e57373;
+  color: #c62828;
+  padding: 0.7rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.exito-msg {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  color: #1b5e20;
+  padding: 0.7rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.cargando-msg {
+  color: #555;
+  font-style: italic;
+}
+
+/* ── Acciones ── */
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-primario {
+  background: #005a9c;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.btn-primario:disabled {
+  background: #9cb8d4;
+  cursor: not-allowed;
+}
+
+/* ── Responsive: una columna en pantallas pequeñas ── */
+@media (max-width: 480px) {
+  .fila-dos {
+    grid-template-columns: 1fr;
+  }
+}

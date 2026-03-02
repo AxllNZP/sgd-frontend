@@ -1,0 +1,132 @@
+<!-- ══════════════════════════════════════════════════════════
+     ETAPA 1: Solicitar código
+     Body → { tipoPersna, identificador, email }
+════════════════════════════════════════════════════════════ -->
+<div class="recuperar-container" *ngIf="etapa === 1">
+
+  <h2 class="titulo">Recuperar Contraseña</h2>
+  <p class="subtitulo">
+    Ingrese sus datos de acceso y le enviaremos un código de verificación a su correo registrado.
+  </p>
+
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+  <div class="campo">
+    <label>Tipo de persona *</label>
+    <select [(ngModel)]="solicitud.tipoPersna">
+      <option value="">-- Seleccione --</option>
+      <option value="NATURAL">Persona Natural</option>
+      <option value="JURIDICA">Persona Jurídica</option>
+    </select>
+  </div>
+
+  <div class="campo">
+    <label>{{ labelIdentificador }} *</label>
+    <input type="text" [(ngModel)]="solicitud.identificador"
+           [placeholder]="solicitud.tipoPersna === 'JURIDICA' ? '11 dígitos' : '8 dígitos'"
+           maxlength="11" />
+  </div>
+
+  <div class="campo">
+    <label>Correo electrónico registrado *</label>
+    <input type="email" [(ngModel)]="solicitud.email"
+           placeholder="correo@ejemplo.com" maxlength="100"
+           (keyup.enter)="solicitarCodigo()" />
+  </div>
+
+  <div class="acciones">
+    <a routerLink="/ciudadano/login" class="link-volver">← Volver al inicio de sesión</a>
+    <button class="btn-primario" (click)="solicitarCodigo()" [disabled]="cargando">
+      <span *ngIf="!cargando">Enviar código</span>
+      <span *ngIf="cargando">Enviando...</span>
+    </button>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ETAPA 2: Verificar código
+     Body → { tipoPersna, identificador, codigo }
+════════════════════════════════════════════════════════════ -->
+<div class="recuperar-container" *ngIf="etapa === 2">
+
+  <h2 class="titulo">Verificar Código</h2>
+  <p class="subtitulo">
+    Enviamos un código de 6 dígitos a <strong>{{ solicitud.email }}</strong>.
+    Revise su bandeja de entrada o carpeta de spam.
+  </p>
+
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+  <div class="campo">
+    <label>Código de verificación *</label>
+    <input type="text" [(ngModel)]="codigo"
+           placeholder="Ej: 123456" maxlength="6"
+           class="input-codigo"
+           (keyup.enter)="verificarCodigo()" />
+  </div>
+
+  <div class="acciones">
+    <button class="btn-link" (click)="reenviarCodigo()" [disabled]="cargando">
+      Reenviar código
+    </button>
+    <button class="btn-primario" (click)="verificarCodigo()" [disabled]="cargando">
+      <span *ngIf="!cargando">Verificar</span>
+      <span *ngIf="cargando">Verificando...</span>
+    </button>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ETAPA 3: Nueva contraseña
+     Body → { tipoPersna, identificador, nuevaPassword, confirmarPassword }
+════════════════════════════════════════════════════════════ -->
+<div class="recuperar-container" *ngIf="etapa === 3">
+
+  <h2 class="titulo">Nueva Contraseña</h2>
+  <p class="subtitulo">Ingrese y confirme su nueva contraseña. Mínimo 8 caracteres.</p>
+
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+  <div class="campo">
+    <label>Nueva contraseña *</label>
+    <input type="password" [(ngModel)]="nuevaPassword"
+           placeholder="Mínimo 8 caracteres" maxlength="100" />
+  </div>
+
+  <div class="campo">
+    <label>Confirmar contraseña *</label>
+    <input type="password" [(ngModel)]="confirmarPassword"
+           placeholder="Repita la contraseña" maxlength="100"
+           (keyup.enter)="cambiarPassword()" />
+  </div>
+
+  <div class="acciones">
+    <button class="btn-primario" (click)="cambiarPassword()" [disabled]="cargando">
+      <span *ngIf="!cargando">Cambiar contraseña</span>
+      <span *ngIf="cargando">Guardando...</span>
+    </button>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ETAPA 4: Éxito
+════════════════════════════════════════════════════════════ -->
+<div class="recuperar-container exito-container" *ngIf="etapa === 4">
+
+  <div class="exito-icono">✔</div>
+  <h2 class="titulo">¡Contraseña actualizada!</h2>
+  <p class="subtitulo">
+    Su contraseña se cambió correctamente. Ya puede iniciar sesión.
+  </p>
+
+  <div class="acciones centrado">
+    <button class="btn-primario" (click)="irAlLogin()">Ir al inicio de sesión</button>
+  </div>
+
+</div>

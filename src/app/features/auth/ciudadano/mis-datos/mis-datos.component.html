@@ -1,0 +1,216 @@
+<div class="mis-datos-container">
+
+  <h2 class="titulo">Mis Datos</h2>
+
+  <!-- ── Pestañas ── -->
+  <div class="pestanas">
+    <button class="pestana-btn" [class.activa]="pestanaActiva === 'perfil'"
+            (click)="cambiarPestana('perfil')">Datos personales</button>
+    <button class="pestana-btn" [class.activa]="pestanaActiva === 'password'"
+            (click)="cambiarPestana('password')">Cambiar contraseña</button>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
+       PESTAÑA 1: Datos personales
+  ════════════════════════════════════════════════════════════ -->
+  <div *ngIf="pestanaActiva === 'perfil'">
+
+    <p *ngIf="cargandoPerfil" class="cargando-msg">Cargando datos...</p>
+
+    <div *ngIf="!cargandoPerfil">
+
+      <div class="error-msg" *ngIf="errorPerfil">{{ errorPerfil }}</div>
+      <div class="exito-msg" *ngIf="exitoPerfil">{{ exitoPerfil }}</div>
+
+      <!-- ── PERSONA NATURAL ── -->
+      <ng-container *ngIf="esNatural">
+
+        <!-- Solo lectura -->
+        <section class="seccion">
+          <h3>Datos de identidad <span class="badge-readonly">Solo lectura</span></h3>
+          <div class="fila-dos">
+            <div class="campo">
+              <label>Tipo de documento</label>
+              <input type="text" [value]="lectNatural.tipoDocumento" disabled />
+            </div>
+            <div class="campo">
+              <label>Número de documento</label>
+              <input type="text" [value]="lectNatural.numeroDocumento" disabled />
+            </div>
+          </div>
+          <div class="fila-dos">
+            <div class="campo">
+              <label>Nombres</label>
+              <input type="text" [value]="lectNatural.nombres" disabled />
+            </div>
+            <div class="campo">
+              <label>Apellidos</label>
+              <input type="text"
+                     [value]="lectNatural.apellidoPaterno + ' ' + lectNatural.apellidoMaterno"
+                     disabled />
+            </div>
+          </div>
+          <div class="fila-tres">
+            <div class="campo">
+              <label>Departamento</label>
+              <input type="text" [value]="lectNatural.departamento" disabled />
+            </div>
+            <div class="campo">
+              <label>Provincia</label>
+              <input type="text" [value]="lectNatural.provincia" disabled />
+            </div>
+            <div class="campo">
+              <label>Distrito</label>
+              <input type="text" [value]="lectNatural.distrito" disabled />
+            </div>
+          </div>
+        </section>
+
+        <!-- Editables: EditarNaturalRequestDTO -->
+        <!-- { direccion, telefono, email, preguntaSeguridad, respuestaSeguridad } -->
+        <section class="seccion">
+          <h3>Datos editables</h3>
+          <div class="campo">
+            <label>Dirección *</label>
+            <input type="text" [(ngModel)]="editNatural.direccion" maxlength="300" />
+          </div>
+          <div class="campo">
+            <label>Teléfono / Celular *</label>
+            <input type="text" [(ngModel)]="editNatural.telefono" maxlength="20" />
+          </div>
+          <div class="campo">
+            <label>Correo electrónico *</label>
+            <input type="email" [(ngModel)]="editNatural.email" maxlength="100" />
+          </div>
+        </section>
+
+        <section class="seccion">
+          <h3>Pregunta de seguridad</h3>
+          <p class="seccion-nota">Pregunta actual: <em>{{ lectNatural.descripcionPregunta || '—' }}</em></p>
+          <div class="campo">
+            <label>Nueva pregunta de seguridad *</label>
+            <select [(ngModel)]="editNatural.preguntaSeguridad">
+              <option value="">-- Seleccione --</option>
+              <option *ngFor="let p of preguntasSeguridad" [value]="p.value">
+                {{ p.label }}
+              </option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Respuesta *</label>
+            <input type="text" [(ngModel)]="editNatural.respuestaSeguridad"
+                   maxlength="200" placeholder="Ingrese su respuesta" />
+          </div>
+        </section>
+
+      </ng-container>
+
+
+      <!-- ── PERSONA JURÍDICA ── -->
+      <ng-container *ngIf="!esNatural">
+
+        <!-- Solo lectura -->
+        <section class="seccion">
+          <h3>Datos de la empresa <span class="badge-readonly">Solo lectura</span></h3>
+          <div class="fila-dos">
+            <div class="campo">
+              <label>RUC</label>
+              <input type="text" [value]="lectJuridica.ruc" disabled />
+            </div>
+            <div class="campo">
+              <label>Razón Social</label>
+              <input type="text" [value]="lectJuridica.razonSocial" disabled />
+            </div>
+          </div>
+          <div class="campo">
+            <label>Representante Legal</label>
+            <input type="text"
+                   [value]="lectJuridica.nombresRepresentante + ' ' + lectJuridica.apellidoPaternoRepresentante + ' ' + lectJuridica.apellidoMaternoRepresentante"
+                   disabled />
+          </div>
+          <div class="campo">
+            <label>Correo del representante</label>
+            <input type="text" [value]="lectJuridica.emailRepresentante" disabled />
+          </div>
+        </section>
+
+        <!-- Editables: EditarJuridicaRequestDTO -->
+        <!-- { direccion, telefono, departamento, provincia, distrito } -->
+        <section class="seccion">
+          <h3>Datos editables</h3>
+          <div class="campo">
+            <label>Dirección *</label>
+            <input type="text" [(ngModel)]="editJuridica.direccion" maxlength="300" />
+          </div>
+          <div class="campo">
+            <label>Teléfono *</label>
+            <input type="text" [(ngModel)]="editJuridica.telefono" maxlength="20" />
+          </div>
+          <div class="fila-tres">
+            <div class="campo">
+              <label>Departamento *</label>
+              <input type="text" [(ngModel)]="editJuridica.departamento" maxlength="100" />
+            </div>
+            <div class="campo">
+              <label>Provincia *</label>
+              <input type="text" [(ngModel)]="editJuridica.provincia" maxlength="100" />
+            </div>
+            <div class="campo">
+              <label>Distrito *</label>
+              <input type="text" [(ngModel)]="editJuridica.distrito" maxlength="100" />
+            </div>
+          </div>
+        </section>
+
+      </ng-container>
+
+      <div class="acciones">
+        <button class="btn-primario" (click)="guardarPerfil()" [disabled]="guardandoPerfil">
+          <span *ngIf="!guardandoPerfil">Guardar cambios</span>
+          <span *ngIf="guardandoPerfil">Guardando...</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
+       PESTAÑA 2: Cambiar contraseña
+       POST /api/cuenta/cambiar-password
+       Body: { tipoPersna, identificador, passwordActual, nuevaPassword, confirmarPassword }
+  ════════════════════════════════════════════════════════════ -->
+  <div *ngIf="pestanaActiva === 'password'">
+
+    <div class="error-msg" *ngIf="errorPass">{{ errorPass }}</div>
+    <div class="exito-msg" *ngIf="exitoPass">{{ exitoPass }}</div>
+
+    <section class="seccion">
+      <h3>Cambiar contraseña</h3>
+      <div class="campo">
+        <label>Contraseña actual *</label>
+        <input type="password" [(ngModel)]="passwords.passwordActual" maxlength="100" />
+      </div>
+      <div class="campo">
+        <label>Nueva contraseña *</label>
+        <input type="password" [(ngModel)]="passwords.nuevaPassword"
+               maxlength="100" placeholder="Mínimo 8 caracteres" />
+      </div>
+      <div class="campo">
+        <label>Confirmar nueva contraseña *</label>
+        <input type="password" [(ngModel)]="passwords.confirmarPassword"
+               maxlength="100" (keyup.enter)="cambiarPassword()" />
+      </div>
+    </section>
+
+    <div class="acciones">
+      <button class="btn-primario" (click)="cambiarPassword()" [disabled]="guardandoPass">
+        <span *ngIf="!guardandoPass">Cambiar contraseña</span>
+        <span *ngIf="guardandoPass">Guardando...</span>
+      </button>
+    </div>
+
+  </div>
+
+</div>

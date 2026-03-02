@@ -1,0 +1,198 @@
+/* ============================= */
+/* SELECCIÓN - MESA DE PARTES   */
+/* ============================= */
+
+.seleccion-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #060d1a;
+  font-family: 'DM Sans', sans-serif;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.seleccion-bg::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+  top: -200px;
+  right: -200px;
+  border-radius: 50%;
+}
+
+.seleccion-bg::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%);
+  bottom: -100px;
+  left: -100px;
+  border-radius: 50%;
+}
+
+.seleccion-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 620px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.08), 0 40px 80px rgba(0,0,0,0.6);
+  animation: slideUp 0.5s ease-out;
+}
+
+/* HEADER */
+.seleccion-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.seleccion-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.seleccion-header p {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* GRID OPCIONES */
+.opciones-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .opciones-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* CARD OPCIÓN */
+.opcion-card {
+  position: relative;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 1.6rem 1.4rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  color: #cbd5e1;
+}
+
+.opcion-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(59,130,246,0.4);
+  box-shadow: 0 10px 30px rgba(29,78,216,0.25);
+  background: rgba(59,130,246,0.06);
+}
+
+.opcion-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.opcion-card p {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+/* ICONO OPCIÓN */
+.opcion-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  transition: all 0.25s ease;
+}
+
+.opcion-icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+/* Colores diferenciados */
+.opcion-icon.natural {
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  box-shadow: 0 6px 18px rgba(29,78,216,0.4);
+}
+
+.opcion-icon.juridica {
+  background: linear-gradient(135deg, #6366f1, #2563eb);
+  box-shadow: 0 6px 18px rgba(99,102,241,0.4);
+}
+
+/* Flecha */
+.opcion-arrow {
+  margin-top: auto;
+  align-self: flex-end;
+  opacity: 0.6;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.opcion-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.opcion-card:hover .opcion-arrow {
+  transform: translateX(6px);
+  opacity: 1;
+}
+
+/* FOOTER */
+.seleccion-footer {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  text-align: center;
+}
+
+.btn-login-link,
+.btn-staff-link {
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.btn-login-link {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.btn-login-link:hover {
+  color: #60a5fa;
+}
+
+.btn-staff-link {
+  color: #475569;
+}
+
+.btn-staff-link:hover {
+  color: #94a3b8;
+}
