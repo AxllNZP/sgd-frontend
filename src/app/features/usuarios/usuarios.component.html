@@ -7,7 +7,7 @@
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
       </svg>
-      Volver
+      <span>Volver</span>
     </button>
 
     <div class="topbar-info">
@@ -19,7 +19,7 @@
 
     <div class="topbar-actions">
       <button class="btn-primary" (click)="abrirDialog()">
-        Nuevo Usuario
+        + Nuevo Usuario
       </button>
     </div>
   </div>
@@ -27,15 +27,13 @@
   <!-- ===== CARD ===== -->
   <div class="card">
 
-    <!-- LOADING -->
     <app-spinner *ngIf="cargando"></app-spinner>
 
-    <!-- EMPTY -->
     <div class="empty-wrap" *ngIf="!cargando && usuarios.length === 0">
+      <div class="empty-icon">👤</div>
       <p>No hay usuarios registrados</p>
     </div>
 
-    <!-- TABLE -->
     <div class="table-container" *ngIf="!cargando && usuarios.length > 0">
       <table class="usuarios-table">
         <thead>
@@ -45,7 +43,7 @@
             <th>Rol</th>
             <th>Estado</th>
             <th>Fecha</th>
-            <th></th>
+            <th class="text-right">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -55,11 +53,13 @@
                 <div class="user-avatar">
                   {{ u.nombre.charAt(0).toUpperCase() }}
                 </div>
-                <span>{{ u.nombre }}</span>
+                <div class="user-text">
+                  <span class="user-name">{{ u.nombre }}</span>
+                </div>
               </div>
             </td>
 
-            <td>{{ u.email }}</td>
+            <td class="email-cell">{{ u.email }}</td>
 
             <td>
               <span [class]="'estado-badge ' + getRolClass(u.rol)">
@@ -73,9 +73,11 @@
               </span>
             </td>
 
-            <td>{{ u.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="fecha-cell">
+              {{ u.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+            </td>
 
-            <td>
+            <td class="text-right">
               <button class="btn-danger"
                 (click)="desactivar(u.id)"
                 [disabled]="!u.activo">
@@ -89,6 +91,7 @@
 
   </div>
 </div>
+
 
 <!-- ===== DIALOG ===== -->
 <div class="dialog-overlay" *ngIf="mostrarDialog">
@@ -131,7 +134,7 @@
     </div>
 
     <div class="dialog-actions">
-      <button class="btn-limpiar"
+      <button class="btn-secondary"
         (click)="mostrarDialog = false">
         Cancelar
       </button>

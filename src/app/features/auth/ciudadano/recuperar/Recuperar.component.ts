@@ -9,7 +9,7 @@ import { HttpClient } from '@angular/common/http';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './recuperar.component.html',
-  styleUrl: './recuperar.component.css'
+  styleUrls: ['./Recuperar.component.css']
 })
 export class RecuperarComponent {
 
