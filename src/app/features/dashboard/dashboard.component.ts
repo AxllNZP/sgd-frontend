@@ -29,7 +29,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   observados = 0;
   archivados = 0;
 
-  documentosRecientes: DocumentoResponse[] = [];
+  // Lista completa de recientes
+  todosLosRecientes: DocumentoResponse[] = [];
+
+  // ===== PAGINACIÓN =====
+  documentosRecientes: DocumentoResponse[] = [];  // Página actual
+  paginaActual = 1;
+  itemsPorPagina = 5;
+  totalPaginas = 0;
+
+  protected Math = Math;
 
   private chart: Chart | null = null;
   private datosCargados = false;
@@ -56,23 +65,52 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.documentoService.listarTodos().subscribe({
       next: (docs) => {
         this.totalDocumentos = docs.length;
-        this.recibidos = docs.filter(d => d.estado === 'RECIBIDO').length;
-        this.enProceso = docs.filter(d => d.estado === 'EN_PROCESO').length;
+        this.recibidos  = docs.filter(d => d.estado === 'RECIBIDO').length;
+        this.enProceso  = docs.filter(d => d.estado === 'EN_PROCESO').length;
         this.observados = docs.filter(d => d.estado === 'OBSERVADO').length;
         this.archivados = docs.filter(d => d.estado === 'ARCHIVADO').length;
-        this.documentosRecientes = docs.slice(0, 5);
+
+        // Guardamos todos (no solo 5)
+        this.todosLosRecientes = docs;
+        this.paginaActual = 1;
+        this.calcularPaginacion();
+
         this.datosCargados = true;
         this.crearGrafico();
       }
     });
   }
 
+  // ===== PAGINACIÓN =====
+
+  calcularPaginacion(): void {
+    this.totalPaginas = Math.ceil(this.todosLosRecientes.length / this.itemsPorPagina);
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    const fin    = inicio + this.itemsPorPagina;
+    this.documentosRecientes = this.todosLosRecientes.slice(inicio, fin);
+  }
+
+  cambiarPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas) return;
+    this.paginaActual = pagina;
+    this.calcularPaginacion();
+  }
+
+  getPaginas(): number[] {
+    const rango = 2;
+    const inicio = Math.max(1, this.paginaActual - rango);
+    const fin    = Math.min(this.totalPaginas, this.paginaActual + rango);
+    const paginas: number[] = [];
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i);
+    }
+    return paginas;
+  }
+
+  // ===== GRÁFICO =====
   crearGrafico(): void {
     if (!this.graficoRef) return;
-
-    if (this.chart) {
-      this.chart.destroy();
-    }
+    if (this.chart) { this.chart.destroy(); }
 
     this.chart = new Chart(this.graficoRef.nativeElement, {
       type: 'doughnut',
@@ -91,11 +129,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         plugins: {
           legend: {
             position: 'bottom',
-            labels: {
-              color: '#e2e8f0',
-              padding: 16,
-              font: { size: 13 }
-            }
+            labels: { color: '#e2e8f0', padding: 16, font: { size: 13 } }
           }
         }
       }
@@ -108,8 +142,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.chart) {
-      this.chart.destroy();
-    }
+    if (this.chart) { this.chart.destroy(); }
   }
+
+  getHasta(): number {
+  return Math.min(this.paginaActual * this.itemsPorPagina, this.todosLosRecientes.length);
+}
 }

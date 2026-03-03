@@ -62,7 +62,7 @@
         </a>
       </div>
 
-      <div class="table-container" *ngIf="documentosRecientes.length > 0">
+      <div class="table-container" *ngIf="todosLosRecientes.length > 0">
         <table class="recent-table">
           <thead>
             <tr>
@@ -75,10 +75,9 @@
             </tr>
           </thead>
           <tbody>
+            <!-- ✅ Itera documentosRecientes (página actual) -->
             <tr *ngFor="let doc of documentosRecientes">
-              <td>
-                <code>{{ doc.numeroTramite }}</code>
-              </td>
+              <td><code>{{ doc.numeroTramite }}</code></td>
               <td>{{ doc.remitente }}</td>
               <td>{{ doc.asunto }}</td>
               <td>{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -93,21 +92,49 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- ===== PAGINACIÓN ===== -->
+        <div class="pagination-wrap" *ngIf="totalPaginas > 1">
+
+          <span class="pagination-info">
+            Mostrando
+            {{ (paginaActual - 1) * itemsPorPagina + 1 }}–{{ getHasta() }}
+            de {{ todosLosRecientes.length }}
+          </span>
+
+          <div class="pagination-controls">
+            <button class="btn-page" (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">«</button>
+            <button class="btn-page" (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹</button>
+
+            <button
+              *ngFor="let p of getPaginas()"
+              class="btn-page"
+              [class.active]="p === paginaActual"
+              (click)="cambiarPagina(p)">
+              {{ p }}
+            </button>
+
+            <button class="btn-page" (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">›</button>
+            <button class="btn-page" (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">»</button>
+          </div>
+        </div>
+        <!-- ===== FIN PAGINACIÓN ===== -->
+
       </div>
 
-      <div class="empty-wrap" *ngIf="documentosRecientes.length === 0">
+      <div class="empty-wrap" *ngIf="todosLosRecientes.length === 0">
         No hay documentos recientes
       </div>
 
       <!-- ===== GRÁFICO ===== -->
-        <div class="card grafico-card">
-          <div class="section-header">
-            <h2>Distribución por Estado</h2>
-          </div>
-          <div class="grafico-wrap">
-            <canvas #graficoEstados></canvas>
-          </div>
+      <div class="card grafico-card">
+        <div class="section-header">
+          <h2>Distribución por Estado</h2>
         </div>
+        <div class="grafico-wrap">
+          <canvas #graficoEstados></canvas>
+        </div>
+      </div>
 
     </div>
 

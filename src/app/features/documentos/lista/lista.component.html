@@ -125,7 +125,7 @@
       <p>No se encontraron documentos</p>
     </div>
 
-    <!-- TABLA -->
+    <!-- TABLA — Ahora itera documentosPaginados -->
     <div class="table-wrap" *ngIf="!cargando && documentos.length > 0">
       <table class="doc-table">
         <thead>
@@ -142,7 +142,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let doc of documentos" (click)="verDetalle(doc.numeroTramite)">
+          <!-- ✅ CAMBIO: documentosPaginados en vez de documentos -->
+          <tr *ngFor="let doc of documentosPaginados" (click)="verDetalle(doc.numeroTramite)">
             <td>
               <span class="tramite-code">{{ doc.numeroTramite }}</span>
             </td>
@@ -182,6 +183,50 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- ===== PAGINACIÓN ===== -->
+      <div class="pagination-wrap" *ngIf="totalPaginas > 1">
+
+        <!-- Info: mostrando X-Y de Z -->
+        <span class="pagination-info">
+          Mostrando
+          {{ (paginaActual - 1) * itemsPorPagina + 1 }}–{{ getHasta() }}
+          de {{ documentos.length }}
+        </span>
+
+        <div class="pagination-controls">
+          <!-- Botón Primera página -->
+          <button class="btn-page" (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">
+            «
+          </button>
+
+          <!-- Botón Anterior -->
+          <button class="btn-page" (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+            ‹
+          </button>
+
+          <!-- Páginas numeradas -->
+          <button
+            *ngFor="let p of getPaginas()"
+            class="btn-page"
+            [class.active]="p === paginaActual"
+            (click)="cambiarPagina(p)">
+            {{ p }}
+          </button>
+
+          <!-- Botón Siguiente -->
+          <button class="btn-page" (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+            ›
+          </button>
+
+          <!-- Botón Última página -->
+          <button class="btn-page" (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">
+            »
+          </button>
+        </div>
+      </div>
+      <!-- ===== FIN PAGINACIÓN ===== -->
+
     </div>
   </div>
 
