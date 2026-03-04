@@ -59,14 +59,18 @@ export class VerificarComponent implements OnInit, OnDestroy {
   }
 
   onInput(event: Event, index: number): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value.replace(/\D/g, '');
-    this.digits[index] = value ? value[0] : '';
+  const input = event.target as HTMLInputElement;
+  // Tomar solo el último carácter numérico ingresado
+  const raw = input.value.replace(/\D/g, '');
+  const digit = raw ? raw[raw.length - 1] : '';
+  this.digits[index] = digit;
+  // Forzar sincronía visual con ngModel
+  input.value = digit;
 
-    if (this.digits[index] && index < 5) {
-      document.getElementById('digit-' + (index + 1))?.focus();
-    }
+  if (digit && index < 5) {
+    document.getElementById('digit-' + (index + 1))?.focus();
   }
+}
 
   onKeyDown(event: KeyboardEvent, index: number): void {
     if (event.key === 'Backspace') {
@@ -108,6 +112,7 @@ export class VerificarComponent implements OnInit, OnDestroy {
     this.http.post('http://localhost:8080/api/auth/verificar', body)
       .subscribe({
         next: () => {
+          this.loading = false;
           this.successMsg = '¡Cuenta activada correctamente! Redirigiendo...';
           setTimeout(() => this.router.navigate(['/ciudadano/login']), 1800);
         },

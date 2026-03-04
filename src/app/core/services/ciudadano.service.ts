@@ -33,12 +33,12 @@ export class CiudadanoService {
     return this.http.post<void>(`${this.base}/verificar`, data);
   }
 
-  reenviarCodigo(tipoPersna: string, identificador: string): Observable<void> {
-    return this.http.post<void>(
-      `${this.base}/reenviar-codigo?tipoPersna=${tipoPersna}&identificador=${identificador}`,
-      {}
-    );
-  }
+reenviarCodigo(tipoPersona: string, identificador: string): Observable<void> {
+  return this.http.post<void>(
+    `${this.base}/reenviar-codigo?tipoPersona=${tipoPersona}&identificador=${identificador}`,
+    {}
+  );
+}
 
   // ---- LOGIN CIUDADANO ----
 

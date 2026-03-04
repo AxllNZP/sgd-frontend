@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
+
+
 @Component({
   selector: 'app-registro-juridica',
   standalone: true,
@@ -73,8 +75,8 @@ export class RegistroJuridicaComponent {
         next: (res) => {
           this.router.navigate(['/ciudadano/verificar'], {
             state: {
-              identificador: res.identificador,
-              tipoPersna: res.tipoPersna
+              identificador: res.identificador ?? this.form.ruc,
+              tipoPersna: res.tipoPersna ?? res.tipoPersona ?? 'JURIDICA'
             }
           });
         },
