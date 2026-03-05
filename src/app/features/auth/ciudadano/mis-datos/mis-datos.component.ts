@@ -66,6 +66,7 @@ export class MisDatosComponent implements OnInit {
     email:              '',
     preguntaSeguridad:  '',   // valor del enum PreguntaSeguridad
     respuestaSeguridad: ''
+    
   };
 
   // ── Datos editables Jurídica: EditarJuridicaRequestDTO ───
