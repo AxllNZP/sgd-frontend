@@ -44,6 +44,12 @@ export const routes: Routes = [
       import('./features/auth/ciudadano/registro-natural/registro-natural.component')
         .then(m => m.RegistroNaturalComponent)
   },
+  {
+  path: 'ciudadano/mis-datos',
+  loadComponent: () =>
+    import('./features/auth/ciudadano/mis-datos/mis-datos.component')
+      .then(m => m.MisDatosComponent)
+},
 
   {
   path: 'ciudadano/recuperar',

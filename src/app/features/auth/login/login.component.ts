@@ -94,6 +94,8 @@ export class LoginComponent {
         localStorage.setItem('email', res.email);
         localStorage.setItem('rol', res.rol);
         localStorage.setItem('nombre', res.nombre);
+        localStorage.setItem('tipoPersna', tipoPersna);
+        localStorage.setItem('identificador', this.identificador);
         // Ciudadano va a registrar su documento
         this.router.navigate(['/registro-documento']);
       },

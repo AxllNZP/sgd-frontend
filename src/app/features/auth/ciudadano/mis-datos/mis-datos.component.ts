@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 
 // Valores del enum PreguntaSeguridad del backend
 const PREGUNTAS_SEGURIDAD = [
@@ -16,7 +17,7 @@ const PREGUNTAS_SEGURIDAD = [
 @Component({
   selector: 'app-mis-datos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mis-datos.component.html',
   styleUrl: './mis-datos.component.css'
 })

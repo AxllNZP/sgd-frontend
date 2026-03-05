@@ -42,6 +42,9 @@ export class LoginCiudadanoComponent {
           localStorage.setItem('rol', res.rol);
           localStorage.setItem('nombre', res.nombre);
           localStorage.setItem('email', res.email);
+          const tipoPersna = this.form.tipoPersna === 'NATURAL' ? 'NATURAL' : 'JURIDICA';
+          localStorage.setItem('tipoPersna', tipoPersna);
+          localStorage.setItem('identificador', this.form.identificador);
           this.router.navigate(['/registro-documento']);
         },
         error: (err) => {
