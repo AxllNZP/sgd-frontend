@@ -177,12 +177,19 @@
         <span *ngIf="cargando" class="loading-dots"><i></i><i></i><i></i></span>
       </button>
 
-      <!-- CORRECCIÓN: /ciudadano/registro → /ciudadano (pantalla de selección) -->
-      <div class="ciudadano-links">
-        <a routerLink="/ciudadano/recuperar">¿Olvidaste tu contraseña?</a>
-        <span class="sep">·</span>
-        <a routerLink="/ciudadano">Crear cuenta</a>
-      </div>
+      <div class="login-footer">
+
+  <a routerLink="/ciudadano/recuperar" class="link-recovery">
+    ¿Olvidaste tu contraseña?
+  </a>
+
+  <div class="footer-actions">
+    <a routerLink="/ciudadano">Crear cuenta</a>
+    <span>•</span>
+    <a routerLink="/ciudadano/activar-cuenta">Activar cuenta</a>
+  </div>
+
+</div>
 
     </div>
 

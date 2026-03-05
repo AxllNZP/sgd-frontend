@@ -231,3 +231,267 @@
   transition: color 0.2s;
 }
 .link-registro:hover { color: #60a5fa; }
+
+/* =========================
+   FONTS
+========================= */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap');
+
+
+/* =========================
+   RESET
+========================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* =========================
+   BACKGROUND
+========================= */
+
+.login-bg {
+  position: relative;
+  overflow: hidden;
+
+  min-height: 100vh;
+  padding: 2rem 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #060d1a;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.login-bg::before {
+  content: '';
+  position: absolute;
+
+  width: 600px;
+  height: 600px;
+
+  top: -200px;
+  right: -200px;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(37,99,235,0.12) 0%,
+    transparent 70%
+  );
+}
+
+.login-bg::after {
+  content: '';
+  position: absolute;
+
+  width: 400px;
+  height: 400px;
+
+  bottom: -100px;
+  left: -100px;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(14,165,233,0.08) 0%,
+    transparent 70%
+  );
+}
+
+
+/* =========================
+   PARTICLES
+========================= */
+
+.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particles span {
+  position: absolute;
+  display: block;
+
+  border-radius: 50%;
+
+  animation: float 8s infinite ease-in-out;
+}
+
+.particles span:nth-child(1) {
+  width: 4px;
+  height: 4px;
+  background: #3b82f6;
+  top: 15%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.particles span:nth-child(2) {
+  width: 3px;
+  height: 3px;
+  background: #0ea5e9;
+  top: 70%;
+  left: 85%;
+  animation-delay: 1.5s;
+}
+
+.particles span:nth-child(3) {
+  width: 5px;
+  height: 5px;
+  background: #6366f1;
+  top: 85%;
+  left: 25%;
+  animation-delay: 3s;
+}
+
+.particles span:nth-child(4) {
+  width: 2px;
+  height: 2px;
+  background: #38bdf8;
+  top: 30%;
+  left: 75%;
+  animation-delay: 0.8s;
+}
+
+.particles span:nth-child(5) {
+  width: 4px;
+  height: 4px;
+  background: #818cf8;
+  top: 5%;
+  left: 50%;
+  animation-delay: 2.2s;
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0) scale(1); opacity: .5; }
+  50%     { transform: translateY(-18px) scale(1.2); opacity: 1; }
+}
+
+
+/* =========================
+   CARD
+========================= */
+
+.login-card {
+  position: relative;
+  z-index: 10;
+
+  width: 100%;
+  max-width: 440px;
+
+  padding: 2.5rem 2rem;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+
+  backdrop-filter: blur(20px);
+  background: rgba(15,23,42,.88);
+
+  box-shadow:
+    0 0 0 1px rgba(59,130,246,.08),
+    0 40px 80px rgba(0,0,0,.6);
+
+  animation: slideUp .5s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.login-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.icon-wrap {
+  width: 52px;
+  height: 52px;
+
+  margin: 0 auto .9rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  background: linear-gradient(135deg,#1d4ed8,#0ea5e9);
+
+  box-shadow: 0 8px 24px rgba(29,78,216,.4);
+}
+
+.icon-wrap svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.login-header h1 {
+  margin-bottom: .25rem;
+
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+
+  color: #f1f5f9;
+  font-family: 'Syne', sans-serif;
+}
+
+.accent { color: #3b82f6; }
+
+.login-header p {
+  font-size: .85rem;
+  color: #64748b;
+}
+
+.login-footer{
+  margin-top: 22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  color:#9aa4b2;
+}
+
+.login-footer a{
+  color:#4ea1ff;
+  text-decoration:none;
+  font-weight:500;
+}
+
+.login-footer a:hover{
+  text-decoration:underline;
+}
+
+/* enlace admin menos llamativo */
+.admin-link{
+  font-size:13px;
+  color:#7c8aa5;
+  opacity:0.8;
+}
+
+.admin-link:hover{
+  color:#9db7ff;
+}
+
+.login-footer{
+  border-top:1px solid rgba(255,255,255,0.05);
+  padding-top:18px;
+}

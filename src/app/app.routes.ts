@@ -69,6 +69,12 @@ export const routes: Routes = [
       import('./features/auth/ciudadano/verificar/verificar.component')
         .then(m => m.VerificarComponent)
   },
+  {
+  path: 'ciudadano/activar-cuenta',
+  loadComponent: () =>
+    import('./features/auth/ciudadano/activar-cuenta/activar-cuenta.component')
+      .then(m => m.ActivarCuentaComponent)
+},
 
   // ── SISTEMA INTERNO ────────────────────────────────────
   {
