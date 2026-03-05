@@ -41,8 +41,8 @@
           <div class="field-group">
             <label>Número de documento *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.numeroDocumento" name="numeroDocumento"
-                placeholder="8 a 12 caracteres" required minlength="8" maxlength="12"/>
+              <!-- numeroDocumento -->
+              <input type="text" [(ngModel)]="form.numeroDocumento" name="numeroDocumento" placeholder="8 a 12 caracteres" required minlength="8" maxlength="12" appSoloNumeros appTrimInput/>
             </div>
           </div>
         </div>
@@ -56,20 +56,20 @@
         <div class="field-group">
           <label>Nombres *</label>
           <div class="input-wrap">
-            <input type="text" [(ngModel)]="form.nombres" name="nombres" placeholder="Sus nombres completos" required/>
+            <input type="text" [(ngModel)]="form.nombres" name="nombres" placeholder="Sus nombres completos" required appSoloLetras appTrimInput/>
           </div>
         </div>
         <div class="grid-2">
           <div class="field-group">
             <label>Apellido paterno *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.apellidoPaterno" name="apellidoPaterno" placeholder="Apellido paterno" required/>
+              <input type="text" [(ngModel)]="form.apellidoPaterno" name="apellidoPaterno" placeholder="Apellido paterno" required appSoloLetras appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Apellido materno *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.apellidoMaterno" name="apellidoMaterno" placeholder="Apellido materno" required/>
+              <input type="text" [(ngModel)]="form.apellidoMaterno" name="apellidoMaterno" placeholder="Apellido materno" required appSoloLetras appTrimInput/>
             </div>
           </div>
         </div>
@@ -84,19 +84,19 @@
           <div class="field-group">
             <label>Departamento *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.departamento" name="departamento" placeholder="Ej: Lima" required/>
+              <input type="text" [(ngModel)]="form.departamento" name="departamento" placeholder="Ej: Lima" required appSoloLetras appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Provincia *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.provincia" name="provincia" placeholder="Ej: Lima" required/>
+              <input type="text" [(ngModel)]="form.provincia" name="provincia" placeholder="Ej: Lima" required appSoloLetras appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Distrito *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.distrito" name="distrito" placeholder="Ej: Miraflores" required/>
+              <input type="text" [(ngModel)]="form.distrito" name="distrito" placeholder="Ej: Miraflores" required appSoloLetras appTrimInput/>
             </div>
           </div>
         </div>
@@ -104,13 +104,13 @@
           <div class="field-group">
             <label>Dirección *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.direccion" name="direccion" placeholder="Dirección completa" required/>
+              <input type="text" [(ngModel)]="form.direccion" name="direccion" placeholder="Dirección completa" required appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Teléfono *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.telefono" name="telefono" placeholder="Ej: 987654321" required/>
+              <input type="text" [(ngModel)]="form.telefono" name="telefono" placeholder="Ej: 987654321" required appSoloNumeros appTrimInput maxlength="9"/>
             </div>
           </div>
         </div>
@@ -124,7 +124,7 @@
         <div class="field-group">
           <label>Correo electrónico *</label>
           <div class="input-wrap">
-            <input type="email" [(ngModel)]="form.email" name="email" placeholder="correo@ejemplo.com" required/>
+            <input type="email" [(ngModel)]="form.email" name="email" placeholder="correo@ejemplo.com" required appTrimInput/>
           </div>
         </div>
         <div class="grid-2">

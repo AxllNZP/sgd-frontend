@@ -3,11 +3,17 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { SoloNumerosDirective } from '../../../../shared/directives/solo-numeros.directive';
+import { TrimInputDirective } from '../../../../shared/directives/trim-input.directive';
+import { validarDniRuc } from '../../../../shared/validators/validators';
+
+
+
 
 @Component({
   selector: 'app-login-ciudadano',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SoloNumerosDirective, TrimInputDirective],
   templateUrl: './login-ciudadano.component.html',
   styleUrl: './login-ciudadano.component.css'
 })
@@ -30,6 +36,12 @@ export class LoginCiudadanoComponent {
 
     if (!this.form.identificador || !this.form.password) {
       this.errorMsg = 'Complete todos los campos.';
+      return;
+    }
+
+    const { valido } = validarDniRuc(this.form.identificador);
+    if (!valido) {
+      this.errorMsg = 'El DNI debe tener 8 dígitos o el RUC 11 dígitos.';
       return;
     }
 

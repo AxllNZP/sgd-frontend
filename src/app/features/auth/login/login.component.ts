@@ -4,11 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CiudadanoService } from '../../../core/services/ciudadano.service';
+import { SoloNumerosDirective } from '../../../shared/directives/solo-numeros.directive';
+import { TrimInputDirective } from '../../../shared/directives/trim-input.directive';
+import { validarDniRuc } from '../../../shared/validators/validators';
+
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SoloNumerosDirective, TrimInputDirective],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -72,12 +76,12 @@ export class LoginComponent {
       return;
     }
 
-    if (this.identificador.length !== 8 && this.identificador.length !== 11) {
-      this.error = 'El DNI debe tener 8 dígitos o el RUC 11 dígitos';
-      return;
-    }
-
-    const tipoPersna = this.identificador.length === 11 ? 'JURIDICA' : 'NATURAL';
+    const { valido, tipo } = validarDniRuc(this.identificador);
+      if (!valido) {
+        this.error = 'El DNI debe tener 8 dígitos o el RUC 11 dígitos';
+          return;
+        }
+    const tipoPersna = tipo!;
 
     this.cargando = true;
     this.error = '';

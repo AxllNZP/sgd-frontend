@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { SoloNumerosDirective } from '../../../../shared/directives/solo-numeros.directive';
+import { validarDniRuc } from '../../../../shared/validators/validators';
 
 @Component({
   selector: 'app-activar-cuenta',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SoloNumerosDirective],
   templateUrl: './activar-cuenta.component.html',
   styleUrl: './activar-cuenta.component.css'
 
@@ -44,6 +46,14 @@ export class ActivarCuentaComponent {
       this.errorMsg = this.form.tipoPersna === 'NATURAL'
         ? 'Ingrese su número de documento.'
         : 'Ingrese su RUC.';
+      return;
+    }
+
+    const { valido } = validarDniRuc(this.form.identificador);
+    if (!valido) {
+      this.errorMsg = this.form.tipoPersna === 'NATURAL'
+        ? 'El DNI debe tener 8 dígitos.'
+        : 'El RUC debe tener 11 dígitos.';
       return;
     }
 

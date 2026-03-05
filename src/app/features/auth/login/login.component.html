@@ -134,7 +134,9 @@
             [(ngModel)]="identificador"
             placeholder="DNI (8 dígitos) o RUC (11 dígitos)"
             (keyup.enter)="loginCiudadano()"
-            maxlength="11"
+            appSoloNumeros
+            appTrimInput
+            [maxlength]="identificador.length <= 8 ? 8 : 11"
             inputmode="numeric"
             autocomplete="username"/>
         </div>

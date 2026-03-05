@@ -27,7 +27,8 @@
           <div class="field-group">
             <label>RUC *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.ruc" name="ruc" placeholder="11 dígitos" required minlength="11" maxlength="11"/>
+              <input type="text" [(ngModel)]="form.ruc" name="ruc" placeholder="11 dígitos" required minlength="11" maxlength="11" appSoloNumeros appTrimInput/>
+
             </div>
           </div>
           <div class="field-group">
@@ -56,34 +57,34 @@
           <div class="field-group">
             <label>Número de documento *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.numDocRepresentante" name="numDocRepresentante" placeholder="Número de doc." required/>
+              <input type="text" [(ngModel)]="form.numDocRepresentante" name="numDocRepresentante" placeholder="Número de doc." required appSoloNumeros appTrimInput maxlength="12"/>
             </div>
           </div>
         </div>
         <div class="field-group">
           <label>Nombres *</label>
           <div class="input-wrap">
-            <input type="text" [(ngModel)]="form.nombresRepresentante" name="nombresRepresentante" placeholder="Nombres del representante" required/>
+            <input type="text" [(ngModel)]="form.nombresRepresentante" name="nombresRepresentante" placeholder="Nombres del representante" required appSoloLetras appTrimInput/>
           </div>
         </div>
         <div class="grid-2">
           <div class="field-group">
             <label>Apellido paterno *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.apellidoPaternoRepresentante" name="apellidoPaternoRepresentante" placeholder="Apellido paterno" required/>
+              <input type="text" [(ngModel)]="form.apellidoPaternoRepresentante" name="apellidoPaternoRepresentante" placeholder="Apellido paterno" required appSoloLetras appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Apellido materno *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.apellidoMaternoRepresentante" name="apellidoMaternoRepresentante" placeholder="Apellido materno" required/>
+              <input type="text" [(ngModel)]="form.apellidoMaternoRepresentante" name="apellidoMaternoRepresentante" placeholder="Apellido materno" required appSoloLetras appTrimInput/>
             </div>
           </div>
         </div>
         <div class="field-group">
           <label>Email del representante * <span class="label-hint">(recibirá el código de verificación)</span></label>
           <div class="input-wrap">
-            <input type="email" [(ngModel)]="form.emailRepresentante" name="emailRepresentante" placeholder="correo@empresa.com" required/>
+            <input type="email" [(ngModel)]="form.emailRepresentante" name="emailRepresentante" placeholder="correo@empresa.com" required appTrimInput/>
           </div>
         </div>
       </div>
@@ -95,19 +96,19 @@
           <div class="field-group">
             <label>Departamento *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.departamento" name="departamento" placeholder="Ej: Lima" required/>
+              <input type="text" [(ngModel)]="form.departamento" name="departamento" placeholder="Ej: Lima" required appSoloLetras appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Provincia *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.provincia" name="provincia" placeholder="Ej: Lima" required/>
+              <input type="text" [(ngModel)]="form.provincia" name="provincia" placeholder="Ej: Lima" required appSoloLetras appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Distrito *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.distrito" name="distrito" placeholder="Ej: San Isidro" required/>
+              <input type="text" [(ngModel)]="form.distrito" name="distrito" placeholder="Ej: San Isidro" required appSoloLetras appTrimInput/>
             </div>
           </div>
         </div>
@@ -115,13 +116,13 @@
           <div class="field-group">
             <label>Dirección *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.direccion" name="direccion" placeholder="Dirección fiscal" required/>
+              <input type="text" [(ngModel)]="form.direccion" name="direccion" placeholder="Dirección fiscal" required appTrimInput/>
             </div>
           </div>
           <div class="field-group">
             <label>Teléfono *</label>
             <div class="input-wrap">
-              <input type="text" [(ngModel)]="form.telefono" name="telefono" placeholder="Ej: 014567890" required/>
+              <input type="text" [(ngModel)]="form.telefono" name="telefono" placeholder="Ej: 014567890" required appSoloNumeros appTrimInput maxlength="9"/>
             </div>
           </div>
         </div>

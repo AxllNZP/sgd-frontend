@@ -147,9 +147,10 @@
             [(ngModel)]="form.identificador"
             required
             autocomplete="off"
-            [placeholder]="form.tipoPersna === 'NATURAL'
-              ? 'Ej: 12345678'
-              : 'Ej: 20123456789'"
+            appSoloNumeros
+            appTrimInput
+            [maxlength]="form.tipoPersna === 'NATURAL' ? 8 : 11"
+            [placeholder]="form.tipoPersna === 'NATURAL' ? 'Ej: 12345678' : 'Ej: 20123456789'"
           />
 
         </div>
