@@ -1,16 +1,13 @@
 // =============================================================
 // documento.service.ts
 // CORRECCIONES:
-//   1. listarTodos() → retorna Observable<PageResponse<DocumentoResponse>>
-//      El backend GET /api/documentos retorna Page<DocumentoResponseDTO>
-//      con query params: ?page=0&size=20&sortBy=fechaHoraRegistro
-//   2. buscarPorFiltros() → POST /api/documentos/buscar con body DocumentoFiltro
-//      Retorna Page<DocumentoResponseDTO>  (no List)
-//      El endpoint es POST, no GET
-//   3. listarPorEstado() → ELIMINADO: no existe en el backend
-//      El backend NO tiene GET /api/documentos/estado/{estado}
-//      Usar buscarPorFiltros con { estado: 'X' } en su lugar
-//   4. descargarAnexo() → AÑADIDO: GET /api/documentos/{numeroTramite}/descargar-anexo
+//   1. URL absoluta → relativa (/api/documentos) — CORS fix
+//   2. consultarPorNumeroTramite() — nombre correcto (era obtenerPorNumeroTramite)
+//      Fuente: DocumentoController GET /api/documentos/{numeroTramite}
+//   3. asignarArea() — RESTAURADO
+//      Fuente: DocumentoController PATCH /api/documentos/{numeroTramite}/area/{areaId}
+//   4. descargarArchivo() — RESTAURADO
+//      Fuente: DocumentoController GET /api/documentos/{numeroTramite}/descargar
 // =============================================================
 
 import { Injectable } from '@angular/core';
@@ -19,7 +16,6 @@ import { Observable } from 'rxjs';
 import {
   DocumentoResponse,
   DocumentoFiltro,
-  DocumentoRequest,
   CambioEstado,
   PageResponse,
 } from '../models/documento.model';
@@ -27,7 +23,8 @@ import {
 @Injectable({ providedIn: 'root' })
 export class DocumentoService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/documentos';
+  // CORRECCIÓN: URL relativa — el proxy reenvía a http://localhost:8080
+  private readonly apiUrl = '/api/documentos';
 
   constructor(private http: HttpClient) {}
 
@@ -38,13 +35,8 @@ export class DocumentoService {
   }
 
   // ── GET /api/documentos?page=0&size=20&sortBy=fechaHoraRegistro ──
-  // Requiere autenticación (isAuthenticated())
-  // CORRECCIÓN: retorna PageResponse<DocumentoResponse>, no DocumentoResponse[]
-  listarTodos(
-    page = 0,
-    size = 20,
-    sortBy = 'fechaHoraRegistro'
-  ): Observable<PageResponse<DocumentoResponse>> {
+  // Requiere: isAuthenticated()
+  listarTodos(page = 0, size = 20, sortBy = 'fechaHoraRegistro'): Observable<PageResponse<DocumentoResponse>> {
     const params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
@@ -54,48 +46,17 @@ export class DocumentoService {
 
   // ── GET /api/documentos/{numeroTramite} ───────────────────
   // Público — no requiere token
+  // NOMBRE EXACTO del método en DocumentoService.java del backend — NO renombrar
   consultarPorNumeroTramite(numeroTramite: string): Observable<DocumentoResponse> {
     return this.http.get<DocumentoResponse>(`${this.apiUrl}/${numeroTramite}`);
   }
 
-  // ── PATCH /api/documentos/{numeroTramite}/estado ──────────
-  // Requiere rol MESA_PARTES o ADMINISTRADOR
-  cambiarEstado(
-    numeroTramite: string,
-    cambio: CambioEstado
-  ): Observable<DocumentoResponse> {
-    return this.http.patch<DocumentoResponse>(
-      `${this.apiUrl}/${numeroTramite}/estado`,
-      cambio
-    );
-  }
-
-  // ── PATCH /api/documentos/{numeroTramite}/area/{areaId} ───
-  // Requiere rol MESA_PARTES o ADMINISTRADOR
-  asignarArea(
-    numeroTramite: string,
-    areaId: string
-  ): Observable<DocumentoResponse> {
-    return this.http.patch<DocumentoResponse>(
-      `${this.apiUrl}/${numeroTramite}/area/${areaId}`,
-      {}
-    );
-  }
-
   // ── POST /api/documentos/buscar ───────────────────────────
-  // CORRECCIÓN: era GET, debe ser POST con body
-  // CORRECCIÓN: retorna PageResponse<DocumentoResponse>, no DocumentoResponse[]
-  // Requiere autenticación
-  buscarPorFiltros(
-    filtro: DocumentoFiltro,
-    page = 0,
-    size = 20,
-    sortBy = 'fechaHoraRegistro'
-  ): Observable<PageResponse<DocumentoResponse>> {
+  // Requiere: isAuthenticated()
+  buscarPorFiltros(filtro: DocumentoFiltro, page = 0, size = 20): Observable<PageResponse<DocumentoResponse>> {
     const params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sortBy', sortBy);
+      .set('size', size.toString());
     return this.http.post<PageResponse<DocumentoResponse>>(
       `${this.apiUrl}/buscar`,
       filtro,
@@ -103,31 +64,47 @@ export class DocumentoService {
     );
   }
 
-  // ── GET /api/documentos/{numeroTramite}/descargar ─────────
-  // Requiere autenticación
-  descargarArchivo(numeroTramite: string): Observable<Blob> {
-    return this.http.get(
-      `${this.apiUrl}/${numeroTramite}/descargar`,
-      { responseType: 'blob' }
+  // ── PATCH /api/documentos/{numeroTramite}/estado ──────────
+  // Requiere: MESA_PARTES o ADMINISTRADOR
+  cambiarEstado(numeroTramite: string, cambio: CambioEstado): Observable<DocumentoResponse> {
+    return this.http.patch<DocumentoResponse>(
+      `${this.apiUrl}/${numeroTramite}/estado`,
+      cambio
     );
+  }
+
+  // ── PATCH /api/documentos/{numeroTramite}/area/{areaId} ───
+  // Requiere: MESA_PARTES o ADMINISTRADOR
+  // Fuente: DocumentoController @PatchMapping("/{numeroTramite}/area/{areaId}")
+  asignarArea(numeroTramite: string, areaId: string): Observable<DocumentoResponse> {
+    return this.http.patch<DocumentoResponse>(
+      `${this.apiUrl}/${numeroTramite}/area/${areaId}`,
+      {}
+    );
+  }
+
+  // ── GET /api/documentos/{numeroTramite}/descargar ─────────
+  // Requiere: isAuthenticated()
+  // Fuente: DocumentoController @GetMapping("/{numeroTramite}/descargar")
+  descargarArchivo(numeroTramite: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${numeroTramite}/descargar`, {
+      responseType: 'blob'
+    });
   }
 
   // ── GET /api/documentos/{numeroTramite}/descargar-anexo ───
-  // Requiere autenticación
+  // Requiere: isAuthenticated()
   descargarAnexo(numeroTramite: string): Observable<Blob> {
-    return this.http.get(
-      `${this.apiUrl}/${numeroTramite}/descargar-anexo`,
-      { responseType: 'blob' }
-    );
+    return this.http.get(`${this.apiUrl}/${numeroTramite}/descargar-anexo`, {
+      responseType: 'blob'
+    });
   }
 
   // ── GET /api/documentos/{numeroTramite}/cargo ─────────────
-  // Público — no requiere token
-  // Retorna HTML como bytes (Content-Type: text/html)
-  generarCargo(numeroTramite: string): Observable<Blob> {
-    return this.http.get(
-      `${this.apiUrl}/${numeroTramite}/cargo`,
-      { responseType: 'blob' }
-    );
+  // Público — genera el cargo de recepción en HTML/PDF
+  descargarCargo(numeroTramite: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${numeroTramite}/cargo`, {
+      responseType: 'blob'
+    });
   }
 }

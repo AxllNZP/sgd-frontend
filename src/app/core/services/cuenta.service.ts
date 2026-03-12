@@ -1,3 +1,9 @@
+// =============================================================
+// cuenta.service.ts
+// CORRECCIÓN CRÍTICA:
+//   URL absoluta 'http://localhost:8080/api/cuenta' → '/api/cuenta'
+// =============================================================
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -15,7 +21,8 @@ import {
 @Injectable({ providedIn: 'root' })
 export class CuentaService {
 
-  private base = 'http://localhost:8080/api/cuenta';
+  // CORRECCIÓN: URL relativa — el proxy reenvía a http://localhost:8080
+  private readonly base = '/api/cuenta';
 
   constructor(private http: HttpClient) {}
 
@@ -25,8 +32,14 @@ export class CuentaService {
     return this.http.get<PerfilNaturalResponse>(`${this.base}/natural/${numeroDocumento}`);
   }
 
-  editarPerfilNatural(numeroDocumento: string, data: EditarNaturalRequest): Observable<PerfilNaturalResponse> {
-    return this.http.put<PerfilNaturalResponse>(`${this.base}/natural/${numeroDocumento}`, data);
+  editarPerfilNatural(
+    numeroDocumento: string,
+    data: EditarNaturalRequest
+  ): Observable<PerfilNaturalResponse> {
+    return this.http.put<PerfilNaturalResponse>(
+      `${this.base}/natural/${numeroDocumento}`,
+      data
+    );
   }
 
   // ---- PERFIL JURÍDICO ----
@@ -35,8 +48,14 @@ export class CuentaService {
     return this.http.get<PerfilJuridicaResponse>(`${this.base}/juridica/${ruc}`);
   }
 
-  editarPerfilJuridica(ruc: string, data: EditarJuridicaRequest): Observable<PerfilJuridicaResponse> {
-    return this.http.put<PerfilJuridicaResponse>(`${this.base}/juridica/${ruc}`, data);
+  editarPerfilJuridica(
+    ruc: string,
+    data: EditarJuridicaRequest
+  ): Observable<PerfilJuridicaResponse> {
+    return this.http.put<PerfilJuridicaResponse>(
+      `${this.base}/juridica/${ruc}`,
+      data
+    );
   }
 
   // ---- CONTACTOS DE NOTIFICACIÓN (solo jurídica) ----
@@ -47,13 +66,21 @@ export class CuentaService {
     );
   }
 
-  agregarContacto(ruc: string, data: ContactoNotificacionRequest): Observable<ContactoNotificacionResponse> {
+  agregarContacto(
+    ruc: string,
+    data: ContactoNotificacionRequest
+  ): Observable<ContactoNotificacionResponse> {
     return this.http.post<ContactoNotificacionResponse>(
-      `${this.base}/juridica/${ruc}/contactos`, data
+      `${this.base}/juridica/${ruc}/contactos`,
+      data
     );
   }
 
-  toggleContacto(ruc: string, contactoId: string, activo: boolean): Observable<ContactoNotificacionResponse> {
+  toggleContacto(
+    ruc: string,
+    contactoId: string,
+    activo: boolean
+  ): Observable<ContactoNotificacionResponse> {
     return this.http.patch<ContactoNotificacionResponse>(
       `${this.base}/juridica/${ruc}/contactos/${contactoId}/estado`,
       { activo } as ToggleContactoRequest
@@ -68,6 +95,8 @@ export class CuentaService {
 
   // ---- CAMBIAR CONTRASEÑA ----
 
+  // Body: CambiarPasswordRequestDTO { tipoPersna, identificador, passwordActual,
+  //                                   nuevaPassword, confirmarPassword }
   cambiarPassword(data: CambiarPasswordRequest): Observable<void> {
     return this.http.post<void>(`${this.base}/cambiar-password`, data);
   }

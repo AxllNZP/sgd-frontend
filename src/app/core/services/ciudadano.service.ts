@@ -1,9 +1,11 @@
 // =============================================================
 // ciudadano.service.ts
-// CORRECCIONES:
-//   1. reenviarCodigo() — CRÍTICO: parámetro era 'tipoPersona', debe ser 'tipoPersna'
-//      El backend @RequestParam es "tipoPersna" (typo intencional)
-//      Se usa HttpParams para construir la query string correctamente
+// CORRECCIÓN CRÍTICA:
+//   URL absoluta 'http://localhost:8080/api/auth' → '/api/auth'
+//   El proxy de Angular (proxy.conf.json) reenvía /api/** a
+//   http://localhost:8080. Sin la URL relativa, el browser
+//   lanza un error de CORS porque el origen es localhost:4200
+//   vs localhost:8080 — Postman no tiene esta restricción.
 // =============================================================
 
 import { Injectable } from '@angular/core';
@@ -21,7 +23,8 @@ import { LoginResponse } from '../models/usuario.model';
 @Injectable({ providedIn: 'root' })
 export class CiudadanoService {
 
-  private readonly base = 'http://localhost:8080/api/auth';
+  // CORRECCIÓN: URL relativa — el proxy reenvía a http://localhost:8080
+  private readonly base = '/api/auth';
 
   constructor(private http: HttpClient) {}
 
@@ -42,11 +45,10 @@ export class CiudadanoService {
   }
 
   // ── POST /api/auth/reenviar-codigo?tipoPersna=...&identificador=... ──
-  // CORRECCIÓN: el parámetro se llama 'tipoPersna' (NO 'tipoPersona')
-  // El backend usa @RequestParam String tipoPersna
+  // El backend usa @RequestParam String tipoPersna (typo intencional — NO corregir)
   reenviarCodigo(tipoPersna: string, identificador: string): Observable<void> {
     const params = new HttpParams()
-      .set('tipoPersna', tipoPersna)       // ← contrato exacto del backend
+      .set('tipoPersna', tipoPersna)
       .set('identificador', identificador);
     return this.http.post<void>(`${this.base}/reenviar-codigo`, null, { params });
   }

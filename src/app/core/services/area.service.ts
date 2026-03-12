@@ -1,6 +1,7 @@
 // =============================================================
 // area.service.ts
-// Todos los endpoints /api/areas requieren rol ADMINISTRADOR
+// CORRECCIÓN CRÍTICA:
+//   URL absoluta 'http://localhost:8080/api/areas' → '/api/areas'
 // =============================================================
 
 import { Injectable } from '@angular/core';
@@ -11,7 +12,8 @@ import { AreaRequest, AreaResponse } from '../models/area.model';
 @Injectable({ providedIn: 'root' })
 export class AreaService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/areas';
+  // CORRECCIÓN: URL relativa — el proxy reenvía a http://localhost:8080
+  private readonly apiUrl = '/api/areas';
 
   constructor(private http: HttpClient) {}
 

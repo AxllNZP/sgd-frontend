@@ -1,3 +1,13 @@
+// =============================================================
+// detalle.component.ts
+// CORRECCIONES:
+//   1. cargarTodo() → next: (doc) tipado como DocumentoResponse
+//      Era: next: (doc) => {...}   →  TS7006 parámetro implícitamente any
+//   2. descargar()  → next: (blob) tipado como Blob
+//      Era: next: (blob) => {...}  →  TS7006 parámetro implícitamente any
+//   3. Sin otros cambios — toda la lógica y estructura es correcta
+// =============================================================
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,11 +33,21 @@ import { SpinnerComponent } from '../../../shared/components/spinner/spinner.com
 @Component({
   selector: 'app-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, CambiarEstadoComponent, AsignarAreaComponent, DerivarDocumentoComponent, EmitirRespuestaComponent, EstadoBadgeComponent, SpinnerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CambiarEstadoComponent,
+    AsignarAreaComponent,
+    DerivarDocumentoComponent,
+    EmitirRespuestaComponent,
+    EstadoBadgeComponent,
+    SpinnerComponent
+  ],
   templateUrl: './detalle.component.html',
   styleUrl: './detalle.component.css'
 })
 export class DetalleComponent implements OnInit {
+
   numeroTramite = '';
   documento: DocumentoResponse | null = null;
   historial: HistorialResponse[] = [];
@@ -37,70 +57,79 @@ export class DetalleComponent implements OnInit {
   nombreUsuario = '';
   cargando = false;
 
-  mostrarModalEstado = false;
-  mostrarModalArea = false;
+  mostrarModalEstado    = false;
+  mostrarModalArea      = false;
   mostrarModalDerivacion = false;
   mostrarModalRespuesta = false;
 
   cambioEstado: CambioEstado = { estado: 'EN_PROCESO', observacion: '', usuarioResponsable: '' };
   areaSeleccionada = '';
   derivacionForm: DerivacionRequest = { areaDestinoId: '', motivo: '', usuarioResponsable: '' };
-  respuestaForm: RespuestaRequest = { contenido: '', usuarioResponsable: '', enviarEmail: true };
+  respuestaForm: RespuestaRequest   = { contenido: '', usuarioResponsable: '', enviarEmail: true };
 
   estados = [
-    { label: 'Recibido',   value: 'RECIBIDO' },
-    { label: 'En Proceso', value: 'EN_PROCESO' },
-    { label: 'Observado',  value: 'OBSERVADO' },
-    { label: 'Archivado',  value: 'ARCHIVADO' }
+    { label: 'Recibido',   value: 'RECIBIDO'   },
+    { label: 'En Proceso', value: 'EN_PROCESO'  },
+    { label: 'Observado',  value: 'OBSERVADO'   },
+    { label: 'Archivado',  value: 'ARCHIVADO'   }
   ];
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
+    private route:            ActivatedRoute,
+    private router:           Router,
     private documentoService: DocumentoService,
     private historialService: HistorialService,
     private derivacionService: DerivacionService,
-    private respuestaService: RespuestaService,
-    private areaService: AreaService,
-    private authService: AuthService
+    private respuestaService:  RespuestaService,
+    private areaService:       AreaService,
+    private authService:       AuthService
   ) {}
 
   ngOnInit(): void {
     this.numeroTramite = this.route.snapshot.paramMap.get('numeroTramite') || '';
     this.nombreUsuario = this.authService.getNombre();
-    this.cambioEstado.usuarioResponsable = this.nombreUsuario;
+    this.cambioEstado.usuarioResponsable  = this.nombreUsuario;
     this.derivacionForm.usuarioResponsable = this.nombreUsuario;
-    this.respuestaForm.usuarioResponsable = this.nombreUsuario;
+    this.respuestaForm.usuarioResponsable  = this.nombreUsuario;
     this.cargarTodo();
   }
 
   cargarTodo(): void {
     this.cargando = true;
+
+    // CORRECCIÓN: parámetro tipado como DocumentoResponse (era implícitamente 'any')
     this.documentoService.consultarPorNumeroTramite(this.numeroTramite).subscribe({
-      next: (doc) => { this.documento = doc; this.cargando = false; }
+      next: (doc: DocumentoResponse) => {
+        this.documento = doc;
+        this.cargando  = false;
+      }
     });
+
     this.historialService.obtenerPorTramite(this.numeroTramite).subscribe({
-      next: (h) => this.historial = h
+      next: (h: HistorialResponse[]) => this.historial = h
     });
+
     this.derivacionService.obtenerPorTramite(this.numeroTramite).subscribe({
-      next: (d) => this.derivaciones = d
+      next: (d: DerivacionResponse[]) => this.derivaciones = d
     });
+
     this.respuestaService.obtenerPorTramite(this.numeroTramite).subscribe({
-      next: (r) => this.respuestas = r
+      next: (r: RespuestaResponse[]) => this.respuestas = r
     });
+
     this.areaService.listar().subscribe({
-      next: (a) => this.areas = a
+      next: (a: AreaResponse[]) => this.areas = a
     });
   }
 
-  abrirModalEstado(): void    { this.mostrarModalEstado = true; }
-  abrirModalArea(): void      { this.mostrarModalArea = true; }
-    abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
-  abrirModalRespuesta(): void  { this.mostrarModalRespuesta = true; }
+  abrirModalEstado():     void { this.mostrarModalEstado     = true; }
+  abrirModalArea():       void { this.mostrarModalArea       = true; }
+  abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
+  abrirModalRespuesta():  void { this.mostrarModalRespuesta  = true; }
 
   cerrarModales(): void {
-    this.mostrarModalEstado = false;
-    this.mostrarModalArea = false;
+    this.mostrarModalEstado    = false;
+    this.mostrarModalArea      = false;
     this.mostrarModalDerivacion = false;
     this.mostrarModalRespuesta = false;
   }
@@ -130,11 +159,12 @@ export class DetalleComponent implements OnInit {
   }
 
   descargar(): void {
+    // CORRECCIÓN: parámetro tipado como Blob (era implícitamente 'any')
     this.documentoService.descargarArchivo(this.numeroTramite).subscribe({
-      next: (blob) => {
+      next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+        const a   = document.createElement('a');
+        a.href     = url;
         a.download = `${this.numeroTramite}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
@@ -142,10 +172,11 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-
   getAreasParaDerivacion(): AreaResponse[] {
     return this.areas.filter(a => a.id !== this.documento?.areaId);
   }
 
-  irAtras(): void { this.router.navigate(['/documentos']); }
+  irAtras(): void {
+    this.router.navigate(['/documentos']);
+  }
 }

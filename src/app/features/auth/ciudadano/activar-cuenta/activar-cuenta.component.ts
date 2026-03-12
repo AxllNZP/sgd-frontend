@@ -1,8 +1,23 @@
-import { Component } from '@angular/core';
+// =============================================================
+// activar-cuenta.component.ts
+// CORRECCIONES CRÍTICAS:
+//   1. ELIMINADO: import HttpClient, HttpParams — componente no debe llamar la API directo
+//   2. ELIMINADO: URLs hardcodeadas 'http://localhost:8080/...'
+//   3. AÑADIDO: CiudadanoService inyectado — centraliza llamadas a:
+//      - POST /api/auth/reenviar-codigo (reenviarCodigo)
+//      - POST /api/auth/verificar (verificarCodigo)
+//   4. AÑADIDO: manejo específico de códigos HTTP por etapa:
+//      - 404 → Cuenta no encontrada
+//      - 409 → Cuenta ya verificada
+//      - 400 → Código inválido o expirado
+// =============================================================
+
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
+import { CiudadanoService } from '../../../../core/services/ciudadano.service';
 import { SoloNumerosDirective } from '../../../../shared/directives/solo-numeros.directive';
 import { validarDniRuc } from '../../../../shared/validators/validators';
 
@@ -12,16 +27,17 @@ import { validarDniRuc } from '../../../../shared/validators/validators';
   imports: [CommonModule, FormsModule, RouterLink, SoloNumerosDirective],
   templateUrl: './activar-cuenta.component.html',
   styleUrl: './activar-cuenta.component.css'
-
 })
-export class ActivarCuentaComponent {
+export class ActivarCuentaComponent implements OnDestroy {
 
   // Etapa 1 = ingresar datos para recibir/reenviar código
   // Etapa 2 = ingresar el código para activar
   etapa: 1 | 2 = 1;
 
+  // 'tipoPersna' mantiene el typo intencional del backend — NO corregir
+  // Fuente: @RequestParam String tipoPersna en POST /api/auth/reenviar-codigo
   form = {
-    tipoPersna: 'NATURAL',
+    tipoPersna: 'NATURAL' as 'NATURAL' | 'JURIDICA',
     identificador: ''
   };
 
@@ -33,9 +49,16 @@ export class ActivarCuentaComponent {
   // Countdown para reenvío
   reenvioDisabled = false;
   countdown = 0;
-  private timer: any;
+  private timer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  // CORRECCIÓN: CiudadanoService en lugar de HttpClient
+  constructor(private ciudadanoService: CiudadanoService, private router: Router) {}
+
+  ngOnDestroy(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  }
 
   // ── ETAPA 1: Reenviar código ──────────────────────────────
   enviarCodigo(): void {
@@ -49,7 +72,7 @@ export class ActivarCuentaComponent {
       return;
     }
 
-    const { valido } = validarDniRuc(this.form.identificador);
+    const { valido, tipo } = validarDniRuc(this.form.identificador);
     if (!valido) {
       this.errorMsg = this.form.tipoPersna === 'NATURAL'
         ? 'El DNI debe tener 8 dígitos.'
@@ -57,25 +80,26 @@ export class ActivarCuentaComponent {
       return;
     }
 
+    // Sincronizar tipoPersna con lo que el usuario realmente ingresó
+    this.form.tipoPersna = tipo!;
     this.loading = true;
 
-    const params = new HttpParams()
-      .set('tipoPersna', this.form.tipoPersna)
-      .set('identificador', this.form.identificador.trim());
-
-    this.http.post('http://localhost:8080/api/auth/reenviar-codigo', null, { params })
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.successMsg = 'Código enviado a su correo registrado.';
-          this.etapa = 2;
-          this.iniciarCountdown();
-        },
-        error: (err) => {
-          this.loading = false;
-          this.errorMsg = err.error?.message || 'No se encontró la cuenta o ya está verificada.';
-        }
-      });
+    // CiudadanoService.reenviarCodigo() usa URL relativa /api/auth/reenviar-codigo
+    this.ciudadanoService.reenviarCodigo(
+      this.form.tipoPersna,
+      this.form.identificador.trim()
+    ).subscribe({
+      next: () => {
+        this.loading = false;
+        this.successMsg = 'Código enviado a su correo registrado.';
+        this.etapa = 2;
+        this.iniciarCountdown();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading = false;
+        this.errorMsg = this.resolverErrorEnvio(err);
+      }
+    });
   }
 
   // ── ETAPA 2: Verificar código ─────────────────────────────
@@ -90,64 +114,86 @@ export class ActivarCuentaComponent {
 
     this.loading = true;
 
-    this.http.post('http://localhost:8080/api/auth/verificar', {
-      tipoPersna: this.form.tipoPersna,
+    // CiudadanoService.verificarCodigo() usa URL relativa /api/auth/verificar
+    // Body: VerificacionCodigoDTO { tipoPersna, identificador, codigo }
+    this.ciudadanoService.verificarCodigo({
+      tipoPersna:    this.form.tipoPersna,
       identificador: this.form.identificador.trim(),
-      codigo: this.codigo.trim()
+      codigo:        this.codigo.trim()
     }).subscribe({
       next: () => {
         this.loading = false;
-        this.successMsg = '¡Cuenta activada! Redirigiendo al inicio de sesión...';
+        this.successMsg = '¡Cuenta activada! Redirigiendo...';
+        if (this.timer) {
+          clearInterval(this.timer);
+        }
         setTimeout(() => this.router.navigate(['/ciudadano/login']), 2000);
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.loading = false;
-        this.errorMsg = err.error?.message || 'Código incorrecto o expirado.';
+        this.errorMsg = this.resolverErrorVerificacion(err);
       }
     });
   }
 
-  // ── Reenviar código desde etapa 2 ────────────────────────
   reenviarCodigo(): void {
     if (this.reenvioDisabled) return;
+    this.etapa = 1;
+    this.codigo = '';
     this.errorMsg = '';
     this.successMsg = '';
-
-    const params = new HttpParams()
-      .set('tipoPersna', this.form.tipoPersna)
-      .set('identificador', this.form.identificador.trim());
-
-    this.http.post('http://localhost:8080/api/auth/reenviar-codigo', null, { params })
-      .subscribe({
-        next: () => {
-          this.successMsg = 'Código reenviado. Revise su correo.';
-          this.codigo = '';
-          this.iniciarCountdown();
-        },
-        error: (err) => {
-          this.errorMsg = err.error?.message || 'No se pudo reenviar el código.';
-        }
-      });
   }
 
+  // Requerido por el HTML: (click)="volver()" en etapa 2
+  // Permite corregir los datos volviendo a la etapa 1
   volver(): void {
     this.etapa = 1;
     this.codigo = '';
     this.errorMsg = '';
     this.successMsg = '';
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.reenvioDisabled = false;
+      this.countdown = 0;
+    }
   }
 
   private iniciarCountdown(): void {
-    this.reenvioDisabled = true;
     this.countdown = 60;
-    if (this.timer) clearInterval(this.timer);
+    this.reenvioDisabled = true;
     this.timer = setInterval(() => {
       this.countdown--;
       if (this.countdown <= 0) {
-        clearInterval(this.timer);
         this.reenvioDisabled = false;
+        if (this.timer) {
+          clearInterval(this.timer);
+        }
       }
     }, 1000);
+  }
+
+  // Códigos HTTP específicos para el reenvío de código
+  private resolverErrorEnvio(err: HttpErrorResponse): string {
+    if (err.status === 404) {
+      return 'No existe una cuenta registrada con ese DNI/RUC.';
+    }
+    if (err.status === 409) {
+      return 'Esta cuenta ya ha sido verificada. Puede iniciar sesión.';
+    }
+    if (err.status === 0) {
+      return 'No se pudo conectar con el servidor. Verifique su conexión.';
+    }
+    return err.error?.message || 'No se encontró la cuenta o ya está verificada.';
+  }
+
+  // Códigos HTTP específicos para la verificación del código
+  private resolverErrorVerificacion(err: HttpErrorResponse): string {
+    if (err.status === 400) {
+      return 'Código inválido o expirado. Solicite uno nuevo.';
+    }
+    if (err.status === 0) {
+      return 'No se pudo conectar con el servidor. Verifique su conexión.';
+    }
+    return err.error?.message || 'Error al verificar el código. Intente nuevamente.';
   }
 }
