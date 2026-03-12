@@ -1,9 +1,25 @@
+// =============================================================
+// lista.component.ts
+// CORRECCIONES:
+//   1. listarTodos() ahora consume PageResponse<DocumentoResponse>
+//      La paginación se delega al servidor (no más slice en frontend)
+//   2. buscar() usa POST /api/documentos/buscar con body
+//      (no era GET como tenía antes)
+//   3. Se elimina la paginación manual en cliente (calcularPaginacion)
+//      El servidor ya retorna totalPages, number, totalElements
+//   4. El conteo de documentos usa page.totalElements
+// =============================================================
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DocumentoService } from '../../../core/services/documento.service';
-import { DocumentoResponse, DocumentoFiltro } from '../../../core/models/documento.model';
+import {
+  DocumentoResponse,
+  DocumentoFiltro,
+  PageResponse
+} from '../../../core/models/documento.model';
 import { EstadoBadgeComponent } from '../../../shared/components/estado-badge/estado-badge.component';
 import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
 
@@ -17,14 +33,16 @@ import { SpinnerComponent } from '../../../shared/components/spinner/spinner.com
 export class ListaComponent implements OnInit {
 
   // ===== DATOS =====
-  documentos: DocumentoResponse[] = [];         // Lista completa
-  documentosPaginados: DocumentoResponse[] = []; // Solo la página actual
-  cargando = false;
+  documentos: DocumentoResponse[] = [];
 
-  // ===== PAGINACIÓN =====
-  paginaActual = 1;
+  // ===== PAGINACIÓN DEL SERVIDOR =====
+  paginaActual = 0;           // 0-based (Spring Pageable)
   itemsPorPagina = 10;
   totalPaginas = 0;
+  totalElementos = 0;
+
+  cargando = false;
+  enModoBusqueda = false;    // true cuando hay filtros activos
 
   // ===== FILTROS =====
   filtro: DocumentoFiltro = {
@@ -47,36 +65,71 @@ export class ListaComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.listarTodos();
+    this.listarTodos(0);
   }
 
-  // ===== CARGA INICIAL =====
-  listarTodos(): void {
+  // ===== CARGA PAGINADA DEL SERVIDOR =====
+  listarTodos(pagina: number): void {
     this.cargando = true;
-    this.documentoService.listarTodos().subscribe({
-      next: (docs) => {
-        this.documentos = docs;
-        this.paginaActual = 1;
-        this.calcularPaginacion();
+    this.enModoBusqueda = false;
+    this.documentoService.listarTodos(pagina, this.itemsPorPagina).subscribe({
+      next: (page: PageResponse<DocumentoResponse>) => {
+        this.documentos = page.content;
+        this.paginaActual = page.number;
+        this.totalPaginas = page.totalPages;
+        this.totalElementos = page.totalElements;
         this.cargando = false;
       },
       error: () => { this.cargando = false; }
     });
   }
 
-  // ===== BUSCAR CON FILTROS =====
+  // ===== BÚSQUEDA CON FILTROS (POST /buscar) =====
   buscar(): void {
+    this.cargando = true;
+    this.enModoBusqueda = true;
+    // Construir filtro limpio (no enviar campos vacíos)
+    const filtroLimpio: DocumentoFiltro = {};
+    if (this.filtro.remitente) filtroLimpio.remitente = this.filtro.remitente;
+    if (this.filtro.asunto)    filtroLimpio.asunto    = this.filtro.asunto;
+    if (this.filtro.estado)    filtroLimpio.estado    = this.filtro.estado;
+
+    // Siempre empieza en página 0 al buscar
+    this.documentoService.buscarPorFiltros(filtroLimpio, 0, this.itemsPorPagina).subscribe({
+      next: (page: PageResponse<DocumentoResponse>) => {
+        this.documentos = page.content;
+        this.paginaActual = page.number;
+        this.totalPaginas = page.totalPages;
+        this.totalElementos = page.totalElements;
+        this.cargando = false;
+      },
+      error: () => { this.cargando = false; }
+    });
+  }
+
+  // ===== CAMBIO DE PÁGINA =====
+  cambiarPagina(pagina: number): void {
+    if (pagina < 0 || pagina >= this.totalPaginas) return;
+    if (this.enModoBusqueda) {
+      this.buscarEnPagina(pagina);
+    } else {
+      this.listarTodos(pagina);
+    }
+  }
+
+  private buscarEnPagina(pagina: number): void {
     this.cargando = true;
     const filtroLimpio: DocumentoFiltro = {};
     if (this.filtro.remitente) filtroLimpio.remitente = this.filtro.remitente;
     if (this.filtro.asunto)    filtroLimpio.asunto    = this.filtro.asunto;
     if (this.filtro.estado)    filtroLimpio.estado    = this.filtro.estado;
 
-    this.documentoService.buscarPorFiltros(filtroLimpio).subscribe({
-      next: (docs) => {
-        this.documentos = docs;
-        this.paginaActual = 1;        // Siempre vuelve a página 1 al buscar
-        this.calcularPaginacion();
+    this.documentoService.buscarPorFiltros(filtroLimpio, pagina, this.itemsPorPagina).subscribe({
+      next: (page: PageResponse<DocumentoResponse>) => {
+        this.documentos = page.content;
+        this.paginaActual = page.number;
+        this.totalPaginas = page.totalPages;
+        this.totalElementos = page.totalElements;
         this.cargando = false;
       },
       error: () => { this.cargando = false; }
@@ -86,37 +139,36 @@ export class ListaComponent implements OnInit {
   // ===== LIMPIAR FILTROS =====
   limpiar(): void {
     this.filtro = { remitente: '', asunto: '', estado: undefined };
-    this.listarTodos();
+    this.listarTodos(0);
   }
 
-  // ===== PAGINACIÓN =====
-
-  /** Calcula cuántas páginas hay y extrae el slice correcto */
-  calcularPaginacion(): void {
-    this.totalPaginas = Math.ceil(this.documentos.length / this.itemsPorPagina);
-    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
-    const fin    = inicio + this.itemsPorPagina;
-    this.documentosPaginados = this.documentos.slice(inicio, fin);
-  }
-
-  /** Cambia a una página específica */
-  cambiarPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginas) return;
-    this.paginaActual = pagina;
-    this.calcularPaginacion();
-  }
-
-  /** Genera el array de números de página para el *ngFor del HTML */
+  // ===== HELPERS DE PAGINACIÓN PARA TEMPLATE =====
+  // Genera array de índices de página visibles (0-based)
   getPaginas(): number[] {
-    // Muestra máximo 5 páginas alrededor de la actual
     const rango = 2;
-    const inicio = Math.max(1, this.paginaActual - rango);
-    const fin    = Math.min(this.totalPaginas, this.paginaActual + rango);
+    const inicio = Math.max(0, this.paginaActual - rango);
+    const fin    = Math.min(this.totalPaginas - 1, this.paginaActual + rango);
     const paginas: number[] = [];
     for (let i = inicio; i <= fin; i++) {
       paginas.push(i);
     }
     return paginas;
+  }
+
+  // Número de página 1-based para mostrar en UI
+  get paginaMostrada(): number {
+    return this.paginaActual + 1;
+  }
+
+  getDesde(): number {
+    return this.paginaActual * this.itemsPorPagina + 1;
+  }
+
+  getHasta(): number {
+    return Math.min(
+      (this.paginaActual + 1) * this.itemsPorPagina,
+      this.totalElementos
+    );
   }
 
   // ===== NAVEGACIÓN =====
@@ -127,19 +179,4 @@ export class ListaComponent implements OnInit {
   irDashboard(): void {
     this.router.navigate(['/dashboard']);
   }
-
-  getEstadoClass(estado: string): string {
-    switch (estado) {
-      case 'RECIBIDO':   return 'badge-info';
-      case 'EN_PROCESO': return 'badge-warn';
-      case 'OBSERVADO':  return 'badge-danger';
-      case 'ARCHIVADO':  return 'badge-success';
-      default:           return 'badge-info';
-    }
-  }
-
-  // Agrega este método en la clase ListaComponent
-  getHasta(): number {
-  return Math.min(this.paginaActual * this.itemsPorPagina, this.documentos.length);
-}
 }

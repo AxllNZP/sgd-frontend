@@ -15,7 +15,8 @@
 
     <div class="navbar-user">
       <span>{{ nombre }}</span>
-      <button class="btn-logout" (click)="logout()">Salir</button>
+      <!-- CORREGIDO: logout() → cerrarSesion() -->
+      <button class="btn-logout" (click)="cerrarSesion()">Salir</button>
     </div>
   </nav>
 
@@ -31,6 +32,7 @@
     <div class="stats-grid">
 
       <div class="stat-card total">
+        <!-- CORREGIDO: totalDocumentos viene de page.totalElements -->
         <div class="stat-number">{{ totalDocumentos }}</div>
         <div class="stat-label">Total Documentos</div>
       </div>
@@ -62,7 +64,8 @@
         </a>
       </div>
 
-      <div class="table-container" *ngIf="todosLosRecientes.length > 0">
+      <!-- CORREGIDO: todosLosRecientes → documentosRecientes -->
+      <div class="table-container" *ngIf="documentosRecientes.length > 0">
         <table class="recent-table">
           <thead>
             <tr>
@@ -75,7 +78,6 @@
             </tr>
           </thead>
           <tbody>
-            <!-- ✅ Itera documentosRecientes (página actual) -->
             <tr *ngFor="let doc of documentosRecientes">
               <td><code>{{ doc.numeroTramite }}</code></td>
               <td>{{ doc.remitente }}</td>
@@ -94,48 +96,63 @@
         </table>
 
         <!-- ===== PAGINACIÓN ===== -->
+        <!-- CORREGIDO: paginaActual es 0-based (Spring) → comparar con 0 y totalPaginas-1 -->
+        <!-- CORREGIDO: cambiarPagina → cargarPagina, todosLosRecientes → totalElementos -->
         <div class="pagination-wrap" *ngIf="totalPaginas > 1">
 
           <span class="pagination-info">
-            Mostrando
-            {{ (paginaActual - 1) * itemsPorPagina + 1 }}–{{ getHasta() }}
-            de {{ todosLosRecientes.length }}
+            Mostrando {{ getDesde() }}–{{ getHasta() }}
+            de {{ totalElementos }}
           </span>
 
           <div class="pagination-controls">
-            <button class="btn-page" (click)="cambiarPagina(1)" [disabled]="paginaActual === 1">«</button>
-            <button class="btn-page" (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">‹</button>
+            <!-- Primera página -->
+            <button class="btn-page"
+                    (click)="cargarPagina(0)"
+                    [disabled]="paginaActual === 0">«</button>
+            <!-- Página anterior -->
+            <button class="btn-page"
+                    (click)="cargarPagina(paginaActual - 1)"
+                    [disabled]="paginaActual === 0">‹</button>
 
+            <!-- Páginas numeradas (0-based internamente, +1 para mostrar) -->
             <button
               *ngFor="let p of getPaginas()"
               class="btn-page"
               [class.active]="p === paginaActual"
-              (click)="cambiarPagina(p)">
-              {{ p }}
+              (click)="cargarPagina(p)">
+              {{ p + 1 }}
             </button>
 
-            <button class="btn-page" (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">›</button>
-            <button class="btn-page" (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas">»</button>
+            <!-- Página siguiente -->
+            <button class="btn-page"
+                    (click)="cargarPagina(paginaActual + 1)"
+                    [disabled]="paginaActual === totalPaginas - 1">›</button>
+            <!-- Última página -->
+            <button class="btn-page"
+                    (click)="cargarPagina(totalPaginas - 1)"
+                    [disabled]="paginaActual === totalPaginas - 1">»</button>
           </div>
         </div>
         <!-- ===== FIN PAGINACIÓN ===== -->
 
       </div>
 
-      <div class="empty-wrap" *ngIf="todosLosRecientes.length === 0">
+      <!-- CORREGIDO: todosLosRecientes → documentosRecientes -->
+      <div class="empty-wrap" *ngIf="documentosRecientes.length === 0">
         No hay documentos recientes
       </div>
 
-      <!-- ===== GRÁFICO ===== -->
-      <div class="card grafico-card">
-        <div class="section-header">
-          <h2>Distribución por Estado</h2>
-        </div>
-        <div class="grafico-wrap">
-          <canvas #graficoEstados></canvas>
-        </div>
-      </div>
+    </div>
 
+    <!-- ===== GRÁFICO ===== -->
+    <div class="card grafico-card">
+      <div class="section-header">
+        <h2>Distribución por Estado</h2>
+      </div>
+      <div class="grafico-wrap">
+        <canvas #graficoEstados></canvas>
+      </div>
     </div>
 
   </div>

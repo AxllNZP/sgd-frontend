@@ -1,9 +1,16 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+// =============================================================
+// dashboard.component.ts — versión final con getDesde/getHasta/getPaginas
+// =============================================================
+
+import {
+  Component, OnInit, AfterViewInit,
+  ElementRef, ViewChild, OnDestroy
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DocumentoService } from '../../core/services/documento.service';
-import { DocumentoResponse } from '../../core/models/documento.model';
+import { DocumentoResponse, PageResponse } from '../../core/models/documento.model';
 import { EstadoBadgeComponent } from '../../shared/components/estado-badge/estado-badge.component';
 import { Chart, registerables } from 'chart.js';
 
@@ -29,14 +36,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   observados = 0;
   archivados = 0;
 
-  // Lista completa de recientes
-  todosLosRecientes: DocumentoResponse[] = [];
+  documentosRecientes: DocumentoResponse[] = [];
 
-  // ===== PAGINACIÓN =====
-  documentosRecientes: DocumentoResponse[] = [];  // Página actual
-  paginaActual = 1;
-  itemsPorPagina = 5;
-  totalPaginas = 0;
+  // Paginación del servidor (0-based — Spring Pageable)
+  paginaActual  = 0;
+  itemsPorPagina = 10;
+  totalPaginas  = 0;
+  totalElementos = 0;
 
   protected Math = Math;
 
@@ -51,7 +57,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.nombre = this.authService.getNombre();
-    this.rol = this.authService.getRol();
+    this.rol    = this.authService.getRol();
     this.cargarEstadisticas();
   }
 
@@ -61,61 +67,80 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  // ── Carga inicial: size=100 para estadísticas representativas ──
   cargarEstadisticas(): void {
-    this.documentoService.listarTodos().subscribe({
-      next: (docs) => {
-        this.totalDocumentos = docs.length;
+    this.documentoService.listarTodos(0, 100).subscribe({
+      next: (page: PageResponse<DocumentoResponse>) => {
+        const docs = page.content;
+        this.totalDocumentos = page.totalElements;
         this.recibidos  = docs.filter(d => d.estado === 'RECIBIDO').length;
         this.enProceso  = docs.filter(d => d.estado === 'EN_PROCESO').length;
         this.observados = docs.filter(d => d.estado === 'OBSERVADO').length;
         this.archivados = docs.filter(d => d.estado === 'ARCHIVADO').length;
 
-        // Guardamos todos (no solo 5)
-        this.todosLosRecientes = docs;
-        this.paginaActual = 1;
-        this.calcularPaginacion();
+        // Tabla: primeros 10 de la carga
+        this.documentosRecientes = docs.slice(0, this.itemsPorPagina);
+        this.paginaActual   = page.number;
+        this.totalPaginas   = page.totalPages;
+        this.totalElementos = page.totalElements;
 
         this.datosCargados = true;
-        this.crearGrafico();
+        if (this.graficoRef) {
+          this.crearGrafico();
+        }
+      },
+      error: () => { /* manejar error */ }
+    });
+  }
+
+  // ── Navegar a una página del servidor ─────────────────────
+  cargarPagina(pagina: number): void {
+    if (pagina < 0 || pagina >= this.totalPaginas) return;
+    this.documentoService.listarTodos(pagina, this.itemsPorPagina).subscribe({
+      next: (page: PageResponse<DocumentoResponse>) => {
+        this.documentosRecientes = page.content;
+        this.paginaActual        = page.number;
+        this.totalPaginas        = page.totalPages;
+        this.totalElementos      = page.totalElements;
       }
     });
   }
 
-  // ===== PAGINACIÓN =====
+  // ── Helpers de paginación para el template ─────────────────
 
-  calcularPaginacion(): void {
-    this.totalPaginas = Math.ceil(this.todosLosRecientes.length / this.itemsPorPagina);
-    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
-    const fin    = inicio + this.itemsPorPagina;
-    this.documentosRecientes = this.todosLosRecientes.slice(inicio, fin);
-  }
-
-  cambiarPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginas) return;
-    this.paginaActual = pagina;
-    this.calcularPaginacion();
-  }
-
+  /** Índices de página visibles (0-based) */
   getPaginas(): number[] {
     const rango = 2;
-    const inicio = Math.max(1, this.paginaActual - rango);
-    const fin    = Math.min(this.totalPaginas, this.paginaActual + rango);
+    const inicio = Math.max(0, this.paginaActual - rango);
+    const fin    = Math.min(this.totalPaginas - 1, this.paginaActual + rango);
     const paginas: number[] = [];
-    for (let i = inicio; i <= fin; i++) {
-      paginas.push(i);
-    }
+    for (let i = inicio; i <= fin; i++) paginas.push(i);
     return paginas;
   }
 
-  // ===== GRÁFICO =====
-  crearGrafico(): void {
-    if (!this.graficoRef) return;
-    if (this.chart) { this.chart.destroy(); }
+  /** Primer registro de la página actual (1-based para mostrar) */
+  getDesde(): number {
+    return this.paginaActual * this.itemsPorPagina + 1;
+  }
 
-    this.chart = new Chart(this.graficoRef.nativeElement, {
+  /** Último registro de la página actual */
+  getHasta(): number {
+    return Math.min(
+      (this.paginaActual + 1) * this.itemsPorPagina,
+      this.totalElementos
+    );
+  }
+
+  // ── Gráfico ────────────────────────────────────────────────
+  crearGrafico(): void {
+    if (this.chart) { this.chart.destroy(); }
+    const ctx = this.graficoRef?.nativeElement?.getContext('2d');
+    if (!ctx) return;
+
+    this.chart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Recibidos', 'En Proceso', 'Observados', 'Archivados'],
+        labels: ['Recibido', 'En Proceso', 'Observado', 'Archivado'],
         datasets: [{
           data: [this.recibidos, this.enProceso, this.observados, this.archivados],
           backgroundColor: ['#60a5fa', '#fbbf24', '#f87171', '#34d399'],
@@ -136,16 +161,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  logout(): void {
+  verDetalle(numeroTramite: string): void {
+    this.router.navigate(['/documentos', numeroTramite]);
+  }
+
+  cerrarSesion(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 
   ngOnDestroy(): void {
-    if (this.chart) { this.chart.destroy(); }
+    this.chart?.destroy();
   }
-
-  getHasta(): number {
-  return Math.min(this.paginaActual * this.itemsPorPagina, this.todosLosRecientes.length);
-}
 }

@@ -1,18 +1,32 @@
+// =============================================================
+// mis-datos.component.ts
+// CORRECCIONES:
+//   1. PREGUNTAS_SEGURIDAD: valores corregidos al enum real del backend
+//      ❌ 'COLEGIO'    → ✅ 'NOMBRE_COLEGIO'
+//      ❌ 'MEJOR_AMIGO' → ✅ 'APODO_INFANCIA'
+//      ❌ label 'nombre de soltera de tu madre' → ✅ 'primer nombre de tu madre'
+//   2. Usa CuentaService en vez de HttpClient directo
+//   3. Tipado estricto con interfaces de cuenta.model.ts
+//   4. editNatural.preguntaSeguridad tipado como PreguntaSeguridad (no string)
+// =============================================================
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-
-// Valores del enum PreguntaSeguridad del backend
-const PREGUNTAS_SEGURIDAD = [
-  { value: 'NOMBRE_MASCOTA',       label: '¿Cuál es el nombre de tu primera mascota?' },
-  { value: 'CIUDAD_NACIMIENTO',    label: '¿En qué ciudad naciste?' },
-  { value: 'NOMBRE_MADRE',         label: '¿Cuál es el nombre de soltera de tu madre?' },
-  { value: 'COLEGIO',              label: '¿En qué colegio estudiaste la primaria?' },
-  { value: 'PELICULA_FAVORITA',    label: '¿Cuál es tu película favorita?' },
-  { value: 'MEJOR_AMIGO',          label: '¿Cuál es el nombre de tu mejor amigo de infancia?' }
-];
+import { CuentaService } from '../../../../core/services/cuenta.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import {
+  PerfilNaturalResponse,
+  PerfilJuridicaResponse,
+  EditarNaturalRequest,
+  EditarJuridicaRequest,
+  CambiarPasswordRequest,
+} from '../../../../core/models/cuenta.model';
+import {
+  PreguntaSeguridad,
+  PREGUNTAS_SEGURIDAD,   // ← Importado del modelo, no hardcodeado
+} from '../../../../core/models/ciudadano.model';
 
 @Component({
   selector: 'app-mis-datos',
@@ -23,64 +37,40 @@ const PREGUNTAS_SEGURIDAD = [
 })
 export class MisDatosComponent implements OnInit {
 
-  // ── Preguntas de seguridad ────────────────────────────────
-  preguntasSeguridad = PREGUNTAS_SEGURIDAD;
+  // ── Preguntas de seguridad — consumidas del modelo, no hardcodeadas ──
+  readonly preguntasSeguridad = PREGUNTAS_SEGURIDAD;
 
   // ── Pestañas ──────────────────────────────────────────────
   pestanaActiva: 'perfil' | 'password' = 'perfil';
 
-  // ── Sesión (guardada al hacer login) ─────────────────────
-  tipoPersna   = '';   // 'NATURAL' | 'JURIDICA'
-  identificador = '';  // DNI o RUC
+  // ── Sesión ────────────────────────────────────────────────
+  tipoPersna    = '';   // 'NATURAL' | 'JURIDICA'
+  identificador = '';
 
-  // ── Datos de solo lectura del perfil ─────────────────────
-  // Natural
-  lectNatural = {
-    tipoDocumento:    '',
-    numeroDocumento:  '',
-    nombres:          '',
-    apellidoPaterno:  '',
-    apellidoMaterno:  '',
-    departamento:     '',
-    provincia:        '',
-    distrito:         '',
-    descripcionPregunta: ''
-  };
-
-  // Jurídica
-  lectJuridica = {
-    ruc:                          '',
-    razonSocial:                  '',
-    nombresRepresentante:         '',
-    apellidoPaternoRepresentante: '',
-    apellidoMaternoRepresentante: '',
-    emailRepresentante:           '',
-    descripcionPregunta:          ''
-  };
+  // ── Datos del perfil (tipados con interfaces del backend) ─
+  perfilNatural:  PerfilNaturalResponse  | null = null;
+  perfilJuridica: PerfilJuridicaResponse | null = null;
 
   // ── Datos editables Natural: EditarNaturalRequestDTO ─────
-  // { direccion, telefono, email, preguntaSeguridad, respuestaSeguridad }
-  editNatural = {
+  editNatural: EditarNaturalRequest = {
     direccion:          '',
     telefono:           '',
     email:              '',
-    preguntaSeguridad:  '',   // valor del enum PreguntaSeguridad
+    preguntaSeguridad:  'NOMBRE_MASCOTA',   // valor por defecto válido del enum
     respuestaSeguridad: ''
-    
   };
 
   // ── Datos editables Jurídica: EditarJuridicaRequestDTO ───
-  // { direccion, telefono, departamento, provincia, distrito }
-  editJuridica = {
-    direccion:   '',
-    telefono:    '',
+  editJuridica: EditarJuridicaRequest = {
+    direccion:    '',
+    telefono:     '',
     departamento: '',
-    provincia:   '',
-    distrito:    ''
+    provincia:    '',
+    distrito:     ''
   };
 
   // ── Cambio de contraseña: CambiarPasswordRequestDTO ──────
-  // { tipoPersna, identificador, passwordActual, nuevaPassword, confirmarPassword }
+  // tipoPersna e identificador se inyectan al enviar
   passwords = {
     passwordActual:    '',
     nuevaPassword:     '',
@@ -91,57 +81,44 @@ export class MisDatosComponent implements OnInit {
   cargandoPerfil  = false;
   guardandoPerfil = false;
   guardandoPass   = false;
-
   errorPerfil  = '';
   exitoPerfil  = '';
   errorPass    = '';
   exitoPass    = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private cuentaService: CuentaService,
+    private authService: AuthService
+  ) {}
 
-  // ── Carga inicial ─────────────────────────────────────────
   ngOnInit(): void {
-    // El login ciudadano debe guardar tipoPersna e identificador en localStorage
-    this.tipoPersna    = localStorage.getItem('tipoPersna')    || '';
-    this.identificador = localStorage.getItem('identificador') || '';
+    this.tipoPersna    = this.authService.getTipoPersna();
+    this.identificador = this.authService.getIdentificador();
 
     if (!this.tipoPersna || !this.identificador) {
-      this.errorPerfil = 'No se pudo identificar la sesión. Vuelva a iniciar sesión.';
+      this.errorPerfil = 'No se pudo identificar la sesión.';
       return;
     }
     this.cargarPerfil();
   }
 
+  // ── Carga del perfil vía servicio ────────────────────────
   cargarPerfil(): void {
     this.cargandoPerfil = true;
+    this.errorPerfil = '';
 
     if (this.tipoPersna === 'NATURAL') {
-      // GET /api/cuenta/natural/{numeroDocumento}
-      // Responde: PerfilNaturalResponseDTO
-      this.http.get<any>(
-        `http://localhost:8080/api/cuenta/natural/${this.identificador}`
-      ).subscribe({
-        next: (data) => {
+      this.cuentaService.getPerfilNatural(this.identificador).subscribe({
+        next: (data: PerfilNaturalResponse) => {
           this.cargandoPerfil = false;
-          // Solo lectura
-          this.lectNatural = {
-            tipoDocumento:       data.tipoDocumento       || '',
-            numeroDocumento:     data.numeroDocumento     || '',
-            nombres:             data.nombres             || '',
-            apellidoPaterno:     data.apellidoPaterno     || '',
-            apellidoMaterno:     data.apellidoMaterno     || '',
-            departamento:        data.departamento        || '',
-            provincia:           data.provincia           || '',
-            distrito:            data.distrito            || '',
-            descripcionPregunta: data.descripcionPregunta || ''
-          };
-          // Editables
+          this.perfilNatural = data;
+          // Pre-poblar campos editables
           this.editNatural = {
-            direccion:          data.direccion          || '',
-            telefono:           data.telefono           || '',
-            email:              data.email              || '',
-            preguntaSeguridad:  data.preguntaSeguridad  || '',
-            respuestaSeguridad: ''   // no se devuelve por seguridad
+            direccion:          data.direccion,
+            telefono:           data.telefono,
+            email:              data.email,
+            preguntaSeguridad:  data.preguntaSeguridad,
+            respuestaSeguridad: ''   // no se pre-pobla por seguridad
           };
         },
         error: () => {
@@ -149,32 +126,18 @@ export class MisDatosComponent implements OnInit {
           this.errorPerfil = 'No se pudieron cargar sus datos.';
         }
       });
-
     } else {
-      // GET /api/cuenta/juridica/{ruc}
-      // Responde: PerfilJuridicaResponseDTO
-      this.http.get<any>(
-        `http://localhost:8080/api/cuenta/juridica/${this.identificador}`
-      ).subscribe({
-        next: (data) => {
+      this.cuentaService.getPerfilJuridica(this.identificador).subscribe({
+        next: (data: PerfilJuridicaResponse) => {
           this.cargandoPerfil = false;
-          // Solo lectura
-          this.lectJuridica = {
-            ruc:                          data.ruc                          || '',
-            razonSocial:                  data.razonSocial                  || '',
-            nombresRepresentante:         data.nombresRepresentante         || '',
-            apellidoPaternoRepresentante: data.apellidoPaternoRepresentante || '',
-            apellidoMaternoRepresentante: data.apellidoMaternoRepresentante || '',
-            emailRepresentante:           data.emailRepresentante           || '',
-            descripcionPregunta:          data.descripcionPregunta          || ''
-          };
-          // Editables
+          this.perfilJuridica = data;
+          // Pre-poblar campos editables
           this.editJuridica = {
-            direccion:    data.direccion    || '',
-            telefono:     data.telefono     || '',
-            departamento: data.departamento || '',
-            provincia:    data.provincia    || '',
-            distrito:     data.distrito     || ''
+            direccion:    data.direccion,
+            telefono:     data.telefono,
+            departamento: data.departamento,
+            provincia:    data.provincia,
+            distrito:     data.distrito
           };
         },
         error: () => {
@@ -191,7 +154,6 @@ export class MisDatosComponent implements OnInit {
     this.exitoPerfil = '';
 
     if (this.tipoPersna === 'NATURAL') {
-      // Validaciones de EditarNaturalRequestDTO
       if (!this.editNatural.direccion.trim()) {
         this.errorPerfil = 'La dirección es obligatoria.'; return;
       }
@@ -204,73 +166,44 @@ export class MisDatosComponent implements OnInit {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.editNatural.email)) {
         this.errorPerfil = 'El correo no tiene un formato válido.'; return;
       }
-      if (!this.editNatural.preguntaSeguridad) {
-        this.errorPerfil = 'Seleccione una pregunta de seguridad.'; return;
-      }
       if (!this.editNatural.respuestaSeguridad.trim()) {
         this.errorPerfil = 'La respuesta de seguridad es obligatoria.'; return;
       }
 
       this.guardandoPerfil = true;
-      // PUT /api/cuenta/natural/{numeroDocumento}
-      // Body: EditarNaturalRequestDTO
-      this.http.put<any>(
-        `http://localhost:8080/api/cuenta/natural/${this.identificador}`,
-        this.editNatural
-      ).subscribe({
+      this.cuentaService.editarPerfilNatural(this.identificador, this.editNatural).subscribe({
         next: () => {
           this.guardandoPerfil = false;
           this.exitoPerfil = 'Datos actualizados correctamente.';
-          this.editNatural.respuestaSeguridad = ''; // limpiar por seguridad
-          this.cargarPerfil(); // recargar descripción de pregunta actualizada
         },
         error: (err) => {
           this.guardandoPerfil = false;
-          this.errorPerfil = err.error?.message || 'No se pudieron guardar los cambios.';
+          this.errorPerfil = err.error?.message || 'Error al guardar los datos.';
         }
       });
-
     } else {
-      // Validaciones de EditarJuridicaRequestDTO
       if (!this.editJuridica.direccion.trim()) {
         this.errorPerfil = 'La dirección es obligatoria.'; return;
       }
       if (!this.editJuridica.telefono.trim()) {
         this.errorPerfil = 'El teléfono es obligatorio.'; return;
       }
-      if (!this.editJuridica.departamento.trim()) {
-        this.errorPerfil = 'El departamento es obligatorio.'; return;
-      }
-      if (!this.editJuridica.provincia.trim()) {
-        this.errorPerfil = 'La provincia es obligatoria.'; return;
-      }
-      if (!this.editJuridica.distrito.trim()) {
-        this.errorPerfil = 'El distrito es obligatorio.'; return;
-      }
 
       this.guardandoPerfil = true;
-      // PUT /api/cuenta/juridica/{ruc}
-      // Body: EditarJuridicaRequestDTO
-      this.http.put<any>(
-        `http://localhost:8080/api/cuenta/juridica/${this.identificador}`,
-        this.editJuridica
-      ).subscribe({
+      this.cuentaService.editarPerfilJuridica(this.identificador, this.editJuridica).subscribe({
         next: () => {
           this.guardandoPerfil = false;
           this.exitoPerfil = 'Datos actualizados correctamente.';
         },
         error: (err) => {
           this.guardandoPerfil = false;
-          this.errorPerfil = err.error?.message || 'No se pudieron guardar los cambios.';
+          this.errorPerfil = err.error?.message || 'Error al guardar los datos.';
         }
       });
     }
   }
 
   // ── Cambiar contraseña ────────────────────────────────────
-  // POST /api/cuenta/cambiar-password
-  // Body: CambiarPasswordRequestDTO
-  // { tipoPersna, identificador, passwordActual, nuevaPassword, confirmarPassword }
   cambiarPassword(): void {
     this.errorPass = '';
     this.exitoPass = '';
@@ -278,27 +211,23 @@ export class MisDatosComponent implements OnInit {
     if (!this.passwords.passwordActual) {
       this.errorPass = 'Ingrese su contraseña actual.'; return;
     }
-    if (!this.passwords.nuevaPassword) {
-      this.errorPass = 'Ingrese la nueva contraseña.'; return;
-    }
     if (this.passwords.nuevaPassword.length < 8) {
-      this.errorPass = 'La nueva contraseña debe tener al menos 8 caracteres.'; return;
+      this.errorPass = 'La contraseña debe tener al menos 8 caracteres.'; return;
     }
     if (this.passwords.nuevaPassword !== this.passwords.confirmarPassword) {
-      this.errorPass = 'Las contraseñas nuevas no coinciden.'; return;
-    }
-    if (this.passwords.passwordActual === this.passwords.nuevaPassword) {
-      this.errorPass = 'La nueva contraseña debe ser diferente a la actual.'; return;
+      this.errorPass = 'Las contraseñas no coinciden.'; return;
     }
 
-    this.guardandoPass = true;
-    this.http.post<void>('http://localhost:8080/api/cuenta/cambiar-password', {
-      tipoPersna:        this.tipoPersna,
-      identificador:     this.identificador,
-      passwordActual:    this.passwords.passwordActual,
-      nuevaPassword:     this.passwords.nuevaPassword,
+    const request: CambiarPasswordRequest = {
+      tipoPersna:       this.tipoPersna,      // campo del contrato del backend
+      identificador:    this.identificador,
+      passwordActual:   this.passwords.passwordActual,
+      nuevaPassword:    this.passwords.nuevaPassword,
       confirmarPassword: this.passwords.confirmarPassword
-    }).subscribe({
+    };
+
+    this.guardandoPass = true;
+    this.cuentaService.cambiarPassword(request).subscribe({
       next: () => {
         this.guardandoPass = false;
         this.exitoPass = 'Contraseña actualizada correctamente.';
@@ -306,17 +235,12 @@ export class MisDatosComponent implements OnInit {
       },
       error: (err) => {
         this.guardandoPass = false;
-        this.errorPass = err.error?.message || 'No se pudo cambiar la contraseña.';
+        this.errorPass = err.error?.message || 'Error al cambiar la contraseña.';
       }
     });
   }
 
-  // ── Helpers ───────────────────────────────────────────────
-  cambiarPestana(p: 'perfil' | 'password'): void {
-    this.pestanaActiva = p;
-    this.errorPerfil = ''; this.exitoPerfil = '';
-    this.errorPass   = ''; this.exitoPass   = '';
+  cerrarSesion(): void {
+    this.authService.logout();
   }
-
-  get esNatural(): boolean { return this.tipoPersna === 'NATURAL'; }
 }

@@ -5,16 +5,22 @@
     ← Volver al registro de documento
   </a>
 </div>
+
 <div class="mis-datos-container">
 
   <h2 class="titulo">Mis Datos</h2>
 
   <!-- ── Pestañas ── -->
+  <!-- CORREGIDO: cambiarPestana('x') → pestanaActiva = 'x' directamente -->
   <div class="pestanas">
     <button class="pestana-btn" [class.activa]="pestanaActiva === 'perfil'"
-            (click)="cambiarPestana('perfil')">Datos personales</button>
+            (click)="pestanaActiva = 'perfil'; errorPerfil = ''; exitoPerfil = ''">
+      Datos personales
+    </button>
     <button class="pestana-btn" [class.activa]="pestanaActiva === 'password'"
-            (click)="cambiarPestana('password')">Cambiar contraseña</button>
+            (click)="pestanaActiva = 'password'; errorPass = ''; exitoPass = ''">
+      Cambiar contraseña
+    </button>
   </div>
 
 
@@ -23,7 +29,6 @@
   ════════════════════════════════════════════════════════════ -->
   <div *ngIf="pestanaActiva === 'perfil'">
 
-
     <p *ngIf="cargandoPerfil" class="cargando-msg">Cargando datos...</p>
 
     <div *ngIf="!cargandoPerfil">
@@ -31,46 +36,50 @@
       <div class="error-msg" *ngIf="errorPerfil">{{ errorPerfil }}</div>
       <div class="exito-msg" *ngIf="exitoPerfil">{{ exitoPerfil }}</div>
 
-      <!-- ── PERSONA NATURAL ── -->
-      <ng-container *ngIf="esNatural">
+      <!-- ══════════════════════════════════════
+           PERSONA NATURAL
+           CORREGIDO: esNatural → tipoPersna === 'NATURAL'
+           lectNatural.X → perfilNatural?.X
+      ══════════════════════════════════════ -->
+      <ng-container *ngIf="tipoPersna === 'NATURAL'">
 
         <!-- Solo lectura -->
-        <section class="seccion">
+        <section class="seccion" *ngIf="perfilNatural">
           <h3>Datos de identidad <span class="badge-readonly">Solo lectura</span></h3>
           <div class="fila-dos">
             <div class="campo">
               <label>Tipo de documento</label>
-              <input type="text" [value]="lectNatural.tipoDocumento" disabled />
+              <input type="text" [value]="perfilNatural.tipoDocumento" disabled />
             </div>
             <div class="campo">
               <label>Número de documento</label>
-              <input type="text" [value]="lectNatural.numeroDocumento" disabled />
+              <input type="text" [value]="perfilNatural.numeroDocumento" disabled />
             </div>
           </div>
           <div class="fila-dos">
             <div class="campo">
               <label>Nombres</label>
-              <input type="text" [value]="lectNatural.nombres" disabled />
+              <input type="text" [value]="perfilNatural.nombres" disabled />
             </div>
             <div class="campo">
               <label>Apellidos</label>
               <input type="text"
-                     [value]="lectNatural.apellidoPaterno + ' ' + lectNatural.apellidoMaterno"
+                     [value]="perfilNatural.apellidoPaterno + ' ' + perfilNatural.apellidoMaterno"
                      disabled />
             </div>
           </div>
           <div class="fila-tres">
             <div class="campo">
               <label>Departamento</label>
-              <input type="text" [value]="lectNatural.departamento" disabled />
+              <input type="text" [value]="perfilNatural.departamento" disabled />
             </div>
             <div class="campo">
               <label>Provincia</label>
-              <input type="text" [value]="lectNatural.provincia" disabled />
+              <input type="text" [value]="perfilNatural.provincia" disabled />
             </div>
             <div class="campo">
               <label>Distrito</label>
-              <input type="text" [value]="lectNatural.distrito" disabled />
+              <input type="text" [value]="perfilNatural.distrito" disabled />
             </div>
           </div>
         </section>
@@ -83,23 +92,25 @@
             <label>Dirección *</label>
             <input type="text" [(ngModel)]="editNatural.direccion" maxlength="300" />
           </div>
-          <div class="campo">
-            <label>Teléfono / Celular *</label>
-            <input type="text" [(ngModel)]="editNatural.telefono" maxlength="20" />
+          <div class="fila-dos">
+            <div class="campo">
+              <label>Teléfono *</label>
+              <input type="text" [(ngModel)]="editNatural.telefono" maxlength="20" />
+            </div>
+            <div class="campo">
+              <label>Correo electrónico *</label>
+              <input type="email" [(ngModel)]="editNatural.email" maxlength="200" />
+            </div>
           </div>
-          <div class="campo">
-            <label>Correo electrónico *</label>
-            <input type="email" [(ngModel)]="editNatural.email" maxlength="100" />
-          </div>
-        </section>
 
-        <section class="seccion">
-          <h3>Pregunta de seguridad</h3>
-          <p class="seccion-nota">Pregunta actual: <em>{{ lectNatural.descripcionPregunta || '—' }}</em></p>
+          <!-- Pregunta de seguridad -->
           <div class="campo">
-            <label>Nueva pregunta de seguridad *</label>
+            <label>Pregunta de seguridad *</label>
+            <!-- CORREGIDO: usa preguntasSeguridad importado del modelo, no hardcodeado -->
+            <p class="hint" *ngIf="perfilNatural">
+              Pregunta actual: <em>{{ perfilNatural.descripcionPregunta || '(no definida)' }}</em>
+            </p>
             <select [(ngModel)]="editNatural.preguntaSeguridad">
-              <option value="">-- Seleccione --</option>
               <option *ngFor="let p of preguntasSeguridad" [value]="p.value">
                 {{ p.label }}
               </option>
@@ -115,31 +126,41 @@
       </ng-container>
 
 
-      <!-- ── PERSONA JURÍDICA ── -->
-      <ng-container *ngIf="!esNatural">
+      <!-- ══════════════════════════════════════
+           PERSONA JURÍDICA
+           CORREGIDO: !esNatural → tipoPersna === 'JURIDICA'
+           lectJuridica.X → perfilJuridica?.X
+      ══════════════════════════════════════ -->
+      <ng-container *ngIf="tipoPersna === 'JURIDICA'">
 
         <!-- Solo lectura -->
-        <section class="seccion">
+        <section class="seccion" *ngIf="perfilJuridica">
           <h3>Datos de la empresa <span class="badge-readonly">Solo lectura</span></h3>
           <div class="fila-dos">
             <div class="campo">
               <label>RUC</label>
-              <input type="text" [value]="lectJuridica.ruc" disabled />
+              <input type="text" [value]="perfilJuridica.ruc" disabled />
             </div>
             <div class="campo">
               <label>Razón Social</label>
-              <input type="text" [value]="lectJuridica.razonSocial" disabled />
+              <input type="text" [value]="perfilJuridica.razonSocial" disabled />
             </div>
           </div>
           <div class="campo">
             <label>Representante Legal</label>
             <input type="text"
-                   [value]="lectJuridica.nombresRepresentante + ' ' + lectJuridica.apellidoPaternoRepresentante + ' ' + lectJuridica.apellidoMaternoRepresentante"
+                   [value]="perfilJuridica.nombresRepresentante + ' '
+                             + perfilJuridica.apellidoPaternoRepresentante + ' '
+                             + perfilJuridica.apellidoMaternoRepresentante"
                    disabled />
           </div>
           <div class="campo">
             <label>Correo del representante</label>
-            <input type="text" [value]="lectJuridica.emailRepresentante" disabled />
+            <input type="text" [value]="perfilJuridica.emailRepresentante" disabled />
+          </div>
+          <div class="campo">
+            <label>Pregunta de seguridad actual</label>
+            <input type="text" [value]="perfilJuridica.descripcionPregunta" disabled />
           </div>
         </section>
 
@@ -173,25 +194,22 @@
 
       </ng-container>
 
-      <div class="acciones">
-        <button class="btn-primario" (click)="guardarPerfil()" [disabled]="guardandoPerfil">
-          <span *ngIf="!guardandoPerfil">Guardar cambios</span>
-          
-          <span *ngIf="guardandoPerfil">Guardando...</span>
+      <!-- Botón guardar — visible cuando no está cargando -->
+      <div class="acciones" *ngIf="!cargandoPerfil && (tipoPersna === 'NATURAL' || tipoPersna === 'JURIDICA')">
+        <button class="btn-primario"
+                (click)="guardarPerfil()"
+                [disabled]="guardandoPerfil">
+          {{ guardandoPerfil ? 'Guardando...' : 'Guardar cambios' }}
         </button>
-
       </div>
 
     </div>
-    
   </div>
-
 
 
   <!-- ════════════════════════════════════════════════════════
        PESTAÑA 2: Cambiar contraseña
-       POST /api/cuenta/cambiar-password
-       Body: { tipoPersna, identificador, passwordActual, nuevaPassword, confirmarPassword }
+       Sin cambios estructurales — passwords.X ya coincide con el TS nuevo
   ════════════════════════════════════════════════════════════ -->
   <div *ngIf="pestanaActiva === 'password'">
 
@@ -200,29 +218,30 @@
 
     <section class="seccion">
       <h3>Cambiar contraseña</h3>
+
       <div class="campo">
         <label>Contraseña actual *</label>
-        <input type="password" [(ngModel)]="passwords.passwordActual" maxlength="100" />
+        <input type="password" [(ngModel)]="passwords.passwordActual" />
       </div>
+
       <div class="campo">
-        <label>Nueva contraseña *</label>
-        <input type="password" [(ngModel)]="passwords.nuevaPassword"
-               maxlength="100" placeholder="Mínimo 8 caracteres" />
+        <label>Nueva contraseña * <span class="hint">(mínimo 8 caracteres)</span></label>
+        <input type="password" [(ngModel)]="passwords.nuevaPassword" />
       </div>
+
       <div class="campo">
         <label>Confirmar nueva contraseña *</label>
-        <input type="password" [(ngModel)]="passwords.confirmarPassword"
-               maxlength="100" (keyup.enter)="cambiarPassword()" />
+        <input type="password" [(ngModel)]="passwords.confirmarPassword" />
       </div>
     </section>
 
     <div class="acciones">
-      <button class="btn-primario" (click)="cambiarPassword()" [disabled]="guardandoPass">
-        <span *ngIf="!guardandoPass">Cambiar contraseña</span>
-        <span *ngIf="guardandoPass">Guardando...</span>
+      <button class="btn-primario"
+              (click)="cambiarPassword()"
+              [disabled]="guardandoPass">
+        {{ guardandoPass ? 'Guardando...' : 'Cambiar contraseña' }}
       </button>
     </div>
-    
 
   </div>
 
