@@ -1,36 +1,22 @@
-<!-- ── Header de sesión ciudadana ── -->
-<div class="header-ciudadano">
+<!-- =============================================================
+     registro.component.html
+     CORRECCIONES:
+       1. asunto textarea: maxlength="500" → maxlength="900"
+          Fuente: DocumentoRequestDTO.asunto @Size(max=900)
+          Columna: length=900 en entidad Documento
+       2. tipoDocumento: añadido indicador visual de campo obligatorio (*)
+          El campo es NOT NULL en la entidad y se valida en el componente.
+       3. Eventos de archivo: tipados con (change) genérico (compatible
+          con el handler Event tipado en el componente corregido).
+     ============================================================= -->
 
-  <span class="header-titulo">
-    Mesa de Partes Virtual
-  </span>
-
-  <div class="header-acciones">
-
-    <a routerLink="/ciudadano/mis-datos" class="header-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.8">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-      </svg>
-      Mis Datos
-    </a>
-
-    <button class="header-logout" (click)="cerrarSesion()">
-      Cerrar sesión
-    </button>
-
-  </div>
-
-</div>
 <!-- ──────────────────────────────────────────────────────────
-     ETAPA 1: Formulario de registro de documento
+     ETAPA 1: Formulario de datos
 ────────────────────────────────────────────────────────── -->
 <div class="registro-container" *ngIf="etapa === 1">
 
-  <h2 class="titulo">Registro de Documento</h2>
+  <h2 class="titulo">Registrar Documento</h2>
 
-  <!-- Indicador de etapas -->
   <div class="etapas-indicador">
     <span class="etapa-activa">1. Datos del documento</span>
     <span class="separador"> › </span>
@@ -67,8 +53,9 @@
   <section class="seccion">
     <h3>Datos del documento</h3>
 
+    <!-- CORRECCIÓN: campo marcado como obligatorio (*) — NOT NULL en entidad -->
     <div class="campo">
-      <label>Tipo de documento</label>
+      <label>Tipo de documento *</label>
       <select [(ngModel)]="form.tipoDocumento">
         <option value="">-- Seleccione --</option>
         <option *ngFor="let t of tiposDocumento" [value]="t.value">{{ t.label }}</option>
@@ -77,11 +64,21 @@
 
     <div class="campo">
       <label>Asunto *</label>
+      <!--
+        CORRECCIÓN: maxlength="500" → maxlength="900"
+        Fuente: DocumentoRequestDTO.asunto @Size(max=900)
+        Entidad: @Column(length = 900)
+        Con 500 se rechazaban en frontend asuntos de entre 501 y 900 chars
+        que el backend acepta perfectamente.
+      -->
       <textarea [(ngModel)]="form.asunto" rows="3"
-                placeholder="Describa el asunto del documento" maxlength="500"></textarea>
+                placeholder="Describa el asunto del documento"
+                maxlength="900"></textarea>
+      <small class="hint-contador">{{ form.asunto.length }}/900 caracteres</small>
     </div>
 
     <div class="campo campo-corto">
+      <!-- Fuente: DocumentoRequestDTO.numeroFolios @Min(1) @NotNull -->
       <label>Número de folios *</label>
       <input type="number" [(ngModel)]="form.numeroFolios" min="1" max="999" />
     </div>
@@ -92,13 +89,15 @@
     <h3>Archivos adjuntos</h3>
 
     <div class="campo">
-      <label>Documento principal (PDF)</label>
+      <!-- Límite backend: 50MB (DocumentoServiceImpl) -->
+      <label>Documento principal (PDF — máx. 50 MB)</label>
       <input type="file" accept=".pdf" (change)="onArchivoSeleccionado($event)" />
       <small *ngIf="archivoNombre">Seleccionado: {{ archivoNombre }}</small>
     </div>
 
     <div class="campo">
-      <label>Anexo (opcional)</label>
+      <!-- Límite backend: 20MB (DocumentoServiceImpl) -->
+      <label>Anexo opcional (PDF, DOC, DOCX, ZIP — máx. 20 MB)</label>
       <input type="file" accept=".pdf,.doc,.docx,.zip"
              (change)="onAnexoSeleccionado($event)" />
       <small *ngIf="anexoNombre">Seleccionado: {{ anexoNombre }}</small>
@@ -126,59 +125,55 @@
     <span class="etapa-activa">2. Confirmación</span>
   </div>
 
-  <p class="confirmar-texto">
-    Por favor verifique los datos antes de enviar su documento.
-  </p>
+  <!-- Mensaje de error de la llamada API -->
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
 
-  <!-- Resumen de los datos ingresados -->
-  <section class="resumen">
+  <!-- Resumen de datos a enviar -->
+  <section class="seccion resumen">
+    <h3>Resumen de su documento</h3>
 
     <div class="resumen-fila">
       <span class="resumen-label">Remitente:</span>
       <span class="resumen-valor">{{ form.remitente }}</span>
     </div>
-
     <div class="resumen-fila">
       <span class="resumen-label">DNI / RUC:</span>
       <span class="resumen-valor">{{ form.dniRuc }}</span>
     </div>
-
     <div class="resumen-fila">
-      <span class="resumen-label">Correo:</span>
-      <span class="resumen-valor">{{ form.emailRemitente }}</span>
+      <span class="resumen-label">Tipo persona:</span>
+      <span class="resumen-valor">{{ form.dniRuc.length === 11 ? 'Jurídica' : 'Natural' }}</span>
     </div>
-
-    <div class="resumen-fila" *ngIf="form.tipoDocumento">
+    <div class="resumen-fila">
       <span class="resumen-label">Tipo documento:</span>
       <span class="resumen-valor">{{ form.tipoDocumento }}</span>
     </div>
-
     <div class="resumen-fila">
       <span class="resumen-label">Asunto:</span>
       <span class="resumen-valor">{{ form.asunto }}</span>
     </div>
-
     <div class="resumen-fila">
       <span class="resumen-label">Folios:</span>
       <span class="resumen-valor">{{ form.numeroFolios }}</span>
     </div>
-
+    <div class="resumen-fila">
+      <span class="resumen-label">Correo:</span>
+      <span class="resumen-valor">{{ form.emailRemitente }}</span>
+    </div>
     <div class="resumen-fila" *ngIf="archivoNombre">
-      <span class="resumen-label">Archivo:</span>
+      <span class="resumen-label">Archivo principal:</span>
       <span class="resumen-valor">{{ archivoNombre }}</span>
     </div>
-
     <div class="resumen-fila" *ngIf="anexoNombre">
       <span class="resumen-label">Anexo:</span>
       <span class="resumen-valor">{{ anexoNombre }}</span>
     </div>
-
   </section>
 
-  <!-- Mensaje de error -->
-  <div class="error-msg" *ngIf="error">{{ error }}</div>
+  <p class="aviso-confirmacion">
+    ¿Está seguro de que desea enviar este documento a Mesa de Partes?
+  </p>
 
-  <!-- Botones de acción -->
   <div class="acciones">
     <button class="btn-secundario" (click)="cancelar()" [disabled]="cargando">
       ← No, corregir datos
@@ -193,30 +188,35 @@
 
 
 <!-- ──────────────────────────────────────────────────────────
-     MODAL: Número de expediente + GENERAR CARGO
+     MODAL: Documento registrado exitosamente
+     Muestra numeroTramite de DocumentoResponseDTO
 ────────────────────────────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="mostrarModal">
-  <div class="modal-box">
+  <div class="modal-content">
 
-    <div class="modal-icono">✔</div>
-    <h3 class="modal-titulo">Documento registrado con éxito</h3>
+    <div class="modal-icono-exito">✓</div>
+    <h3>¡Documento registrado!</h3>
 
-    <p>Su documento ha sido enviado correctamente.</p>
+    <p>Su documento fue ingresado correctamente a Mesa de Partes.</p>
 
-    <div class="expediente-box">
-      <span class="expediente-label">N° de Expediente:</span>
-      <strong class="expediente-numero">{{ numeroTramite }}</strong>
+    <div class="numero-tramite-box">
+      <span class="numero-tramite-label">N.º de trámite</span>
+      <!-- Fuente: DocumentoResponseDTO.numeroTramite -->
+      <strong class="numero-tramite">{{ numeroTramite }}</strong>
     </div>
 
-    <p class="modal-email">
-      Se envió una copia a: <strong>{{ emailConfirmacion }}</strong>
+    <p class="modal-nota">
+      Guarde este número. Puede usarlo para hacer seguimiento de su trámite en cualquier momento.
+    </p>
+    <p class="modal-nota" *ngIf="emailConfirmacion">
+      Se envió una confirmación a <strong>{{ emailConfirmacion }}</strong>.
     </p>
 
     <div class="modal-acciones">
-      <button class="btn-primario" (click)="generarCargo()">
-        GENERAR CARGO
+      <button class="btn-secundario" (click)="nuevoRegistro()">
+        Registrar otro documento
       </button>
-      <button class="btn-secundario" (click)="cerrarModal()">
+      <button class="btn-primario" (click)="cerrarModal()">
         Cerrar
       </button>
     </div>

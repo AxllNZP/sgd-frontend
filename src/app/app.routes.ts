@@ -1,3 +1,12 @@
+// =============================================================
+// app.routes.ts
+// CORRECCIÓN:
+//   - Eliminada ruta duplicada 'ciudadano/mis-datos'
+//     La definición repetida causaba que Angular Router registrara
+//     solo la primera y descartara la segunda silenciosamente,
+//     pudiendo generar comportamiento indefinido en producción.
+// =============================================================
+
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
@@ -45,24 +54,18 @@ export const routes: Routes = [
         .then(m => m.RegistroNaturalComponent)
   },
   {
-  path: 'ciudadano/mis-datos',
-  loadComponent: () =>
-    import('./features/auth/ciudadano/mis-datos/mis-datos.component')
-      .then(m => m.MisDatosComponent)
-},
-
+    // CORREGIDO: definición única (era duplicada — segunda copia eliminada)
+    path: 'ciudadano/mis-datos',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/mis-datos/mis-datos.component')
+        .then(m => m.MisDatosComponent)
+  },
   {
-  path: 'ciudadano/recuperar',
-  loadComponent: () =>
-    import('./features/auth/ciudadano/recuperar/Recuperar.component')
-      .then(m => m.RecuperarComponent)
-},
-{
-  path: 'ciudadano/mis-datos',
-  loadComponent: () =>
-    import('./features/auth/ciudadano/mis-datos/mis-datos.component')
-      .then(m => m.MisDatosComponent)
-},
+    path: 'ciudadano/recuperar',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/recuperar/Recuperar.component')
+        .then(m => m.RecuperarComponent)
+  },
   {
     path: 'ciudadano/registro-juridica',
     loadComponent: () =>
@@ -76,13 +79,13 @@ export const routes: Routes = [
         .then(m => m.VerificarComponent)
   },
   {
-  path: 'ciudadano/activar-cuenta',
-  loadComponent: () =>
-    import('./features/auth/ciudadano/activar-cuenta/activar-cuenta.component')
-      .then(m => m.ActivarCuentaComponent)
-},
+    path: 'ciudadano/activar-cuenta',
+    loadComponent: () =>
+      import('./features/auth/ciudadano/activar-cuenta/activar-cuenta.component')
+        .then(m => m.ActivarCuentaComponent)
+  },
 
-  // ── SISTEMA INTERNO ────────────────────────────────────
+  // ── PANEL INTERNO (requiere autenticación) ─────────────
   {
     path: 'dashboard',
     canActivate: [authGuard],
@@ -101,18 +104,24 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/documentos/detalle/detalle.component').then(m => m.DetalleComponent)
   },
-  {
-    path: 'usuarios',
-    canActivate: [authGuard, adminGuard],
-    loadComponent: () =>
-      import('./features/usuarios/usuarios.component').then(m => m.UsuariosComponent)
-  },
+
+  // ── ADMINISTRACIÓN (requiere rol ADMINISTRADOR) ────────
   {
     path: 'areas',
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>
       import('./features/areas/areas.component').then(m => m.AreasComponent)
   },
+  {
+    path: 'usuarios',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/usuarios/usuarios.component').then(m => m.UsuariosComponent)
+  },
 
-  { path: '**', redirectTo: 'login' }
+  // ── FALLBACK ───────────────────────────────────────────
+  {
+    path: '**',
+    redirectTo: 'login'
+  }
 ];

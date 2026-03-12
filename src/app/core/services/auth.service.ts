@@ -1,12 +1,11 @@
 // =============================================================
 // auth.service.ts
-// CORRECCIONES:
-//   1. login() — URL corregida a /api/auth/login (staff interno)
-//      Era '/api/auth/login' pero faltaba persistir tipoPersna/identificador
-//   2. loginCiudadano() — AÑADIDO: POST /api/auth/login/ciudadano
-//      El componente LoginCiudadanoComponent usaba HttpClient directo
-//      sin pasar por el servicio. Ahora centralizado aquí.
-//   3. getNombre(), getRol(), etc. — sin cambios, ya eran correctos
+// CORRECCIÓN:
+//   URL absoluta 'http://localhost:8080/api/auth' → '/api/auth'
+//   El proxy de Angular (proxy.conf.json) reenvía /api/** a
+//   http://localhost:8080 de forma transparente, eliminando
+//   cualquier posible problema de CORS en desarrollo.
+//   Sin URL relativa, el proxy no intercepta la request.
 // =============================================================
 
 import { Injectable } from '@angular/core';
@@ -19,7 +18,8 @@ import { LoginCiudadanoRequest } from '../models/ciudadano.model';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/auth';
+  // CORRECCIÓN: URL relativa — el proxy reenvía a http://localhost:8080
+  private readonly apiUrl = '/api/auth';
 
   constructor(private http: HttpClient) {}
 
