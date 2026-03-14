@@ -1,146 +1,365 @@
-<div class="lista-bg">
+<!-- ============================================================
+     usuarios.component.html
+     Layout:
+       1. Navbar (consistente con dashboard)
+       2. Header con título + botón crear
+       3. KPI cards (5 tarjetas derivadas del array)
+       4. Búsqueda + filtros por rol y estado
+       5. Tabla con paginación
+       6. Modal de creación
+     ============================================================ -->
 
-  <!-- ===== TOPBAR ===== -->
-  <div class="topbar">
-    <button class="btn-back" (click)="volver()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
-      </svg>
-      <span>Volver</span>
-    </button>
+<div class="page-root">
 
-    <div class="topbar-info">
-      <h1>Gestión de Usuarios</h1>
-      <span class="doc-count">
-        {{ usuarios.length }} usuario(s) registrado(s)
-      </span>
-    </div>
-
-    <div class="topbar-actions">
-      <button class="btn-primary" (click)="abrirDialog()">
-        + Nuevo Usuario
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar">
+    <div class="navbar-left">
+      <button class="btn-back" (click)="volver()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+        </svg>
       </button>
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+        </svg>
+      </div>
+      <span class="brand-name">SGD</span>
+      <span class="brand-sep">|</span>
+      <span class="page-title-nav">Gestión de Usuarios</span>
     </div>
-  </div>
+    <button class="btn-primary" (click)="abrirDialog()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nuevo Usuario
+    </button>
+  </nav>
 
-  <!-- ===== CARD ===== -->
-  <div class="card">
+  <!-- ===== MAIN ===== -->
+  <main class="page-main">
 
-    <app-spinner *ngIf="cargando"></app-spinner>
-
-    <div class="empty-wrap" *ngIf="!cargando && usuarios.length === 0">
-      <div class="empty-icon">👤</div>
-      <p>No hay usuarios registrados</p>
-    </div>
-
-    <div class="table-container" *ngIf="!cargando && usuarios.length > 0">
-      <table class="usuarios-table">
-        <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-            <th class="text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of usuarios">
-            <td>
-              <div class="user-info">
-                <div class="user-avatar">
-                  {{ u.nombre.charAt(0).toUpperCase() }}
-                </div>
-                <div class="user-text">
-                  <span class="user-name">{{ u.nombre }}</span>
-                </div>
-              </div>
-            </td>
-
-            <td class="email-cell">{{ u.email }}</td>
-
-            <td>
-              <span [class]="'estado-badge ' + getRolClass(u.rol)">
-                {{ u.rol }}
-              </span>
-            </td>
-
-            <td>
-              <span [class]="'estado-badge ' + getEstadoClass(u.activo)">
-                {{ u.activo ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-
-            <td class="fecha-cell">
-              {{ u.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
-            </td>
-
-            <td class="text-right">
-              <button class="btn-danger"
-                (click)="desactivar(u.id)"
-                [disabled]="!u.activo">
-                Desactivar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Error banner -->
+    <div class="error-banner" *ngIf="errorMsg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ errorMsg }}
     </div>
 
-  </div>
+    <!-- Loader -->
+    <div class="loader-row" *ngIf="cargando">
+      <div class="pulse-loader"><span></span><span></span><span></span></div>
+      <p>Cargando usuarios…</p>
+    </div>
+
+    <ng-container *ngIf="!cargando">
+
+      <!-- ================================================
+           SECCIÓN 1 — KPI CARDS
+           ================================================ -->
+      <section class="kpi-grid">
+
+        <div class="kpi-card anim-slide-up" style="--delay:0ms">
+          <div class="kpi-icon kpi-icon--blue">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num">{{ totalUsuarios }}</span>
+            <span class="kpi-label">Total Usuarios</span>
+          </div>
+          <div class="kpi-glow kpi-glow--blue"></div>
+        </div>
+
+        <div class="kpi-card anim-slide-up" style="--delay:60ms">
+          <div class="kpi-icon kpi-icon--green">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22,4 12,14.01 9,11.01"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--green">{{ totalActivos }}</span>
+            <span class="kpi-label">Activos</span>
+          </div>
+        </div>
+
+        <div class="kpi-card anim-slide-up" style="--delay:120ms">
+          <div class="kpi-icon kpi-icon--red">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--red">{{ totalInactivos }}</span>
+            <span class="kpi-label">Inactivos</span>
+          </div>
+        </div>
+
+        <div class="kpi-card anim-slide-up" style="--delay:180ms">
+          <div class="kpi-icon kpi-icon--indigo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+              <path d="M19 8l2 2-2 2"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--indigo">{{ totalAdmins }}</span>
+            <span class="kpi-label">Administradores</span>
+          </div>
+        </div>
+
+        <div class="kpi-card anim-slide-up" style="--delay:240ms">
+          <div class="kpi-icon kpi-icon--teal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--teal">{{ totalMesa }}</span>
+            <span class="kpi-label">Mesa de Partes</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================
+           SECCIÓN 2 — TABLA CON FILTROS
+           ================================================ -->
+      <section class="table-section anim-fade-in" style="--delay:200ms">
+
+        <!-- Cabecera -->
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Usuarios del sistema</h2>
+            <p class="section-sub">
+              {{ totalFiltrados }} resultado(s)
+              <ng-container *ngIf="hayFiltrosActivos">
+                — filtro activo
+                <button class="btn-clear" (click)="limpiarFiltros()">✕ limpiar</button>
+              </ng-container>
+            </p>
+          </div>
+        </div>
+
+        <!-- Búsqueda + filtros -->
+        <div class="search-bar">
+
+          <div class="search-input-wrap">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Buscar por nombre o correo…"
+              [(ngModel)]="terminoBusqueda"
+              (ngModelChange)="onBusquedaCambio()"
+            />
+            <button class="search-clear" *ngIf="terminoBusqueda" (click)="terminoBusqueda=''; onBusquedaCambio()">✕</button>
+          </div>
+
+          <!-- Filtro rol (pills) -->
+          <div class="filtro-pills">
+            <button
+              class="filtro-pill"
+              *ngFor="let f of rolesFiltro"
+              [class.active]="filtroRol === f.value"
+              (click)="filtroRol = f.value; onFiltroCambio()"
+            >{{ f.label }}</button>
+          </div>
+
+          <!-- Filtro estado (pills) -->
+          <div class="filtro-pills">
+            <button class="filtro-pill" [class.active]="filtroEstado === ''"       (click)="filtroEstado = '';         onFiltroCambio()">Todos</button>
+            <button class="filtro-pill" [class.active]="filtroEstado === 'activo'"  (click)="filtroEstado = 'activo';   onFiltroCambio()">Activos</button>
+            <button class="filtro-pill" [class.active]="filtroEstado === 'inactivo'"(click)="filtroEstado = 'inactivo'; onFiltroCambio()">Inactivos</button>
+          </div>
+
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-wrap">
+          <table class="usr-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th class="th-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of tabla" class="usr-row">
+
+                <!-- Avatar + nombre -->
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">{{ u.nombre.charAt(0).toUpperCase() }}</div>
+                    <span class="user-name">{{ u.nombre }}</span>
+                  </div>
+                </td>
+
+                <td class="td-email">{{ u.email }}</td>
+
+                <!-- Badge de rol -->
+                <td>
+                  <span [class]="'role-badge ' + getRolClass(u.rol)">
+                    {{ getRolLabel(u.rol) }}
+                  </span>
+                </td>
+
+                <!-- Badge de estado -->
+                <td>
+                  <span [class]="u.activo ? 'status-badge status-active' : 'status-badge status-inactive'">
+                    <span class="status-dot"></span>
+                    {{ u.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="td-actions">
+                  <button
+                    class="btn-deactivate"
+                    *ngIf="u.activo"
+                    (click)="desactivar(u.id, u.nombre)"
+                    title="Desactivar usuario"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="15" y1="9" x2="9" y2="15"/>
+                      <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    Desactivar
+                  </button>
+                  <span class="txt-inactivo" *ngIf="!u.activo">Desactivado</span>
+                </td>
+
+              </tr>
+
+              <!-- Estado vacío -->
+              <tr *ngIf="tabla.length === 0">
+                <td colspan="5" class="empty-state">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <span>No se encontraron usuarios con esos criterios</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="pagination" *ngIf="totalPaginas > 1">
+          <span class="pag-info">{{ getDesde() }}–{{ getHasta() }} de {{ totalFiltrados }}</span>
+          <div class="pag-controls">
+            <button class="pag-btn" [disabled]="paginaActual === 0" (click)="irAPagina(paginaActual - 1)">‹</button>
+            <button
+              class="pag-btn"
+              *ngFor="let p of getPaginas()"
+              [class.active]="p === paginaActual"
+              (click)="irAPagina(p)"
+            >{{ p + 1 }}</button>
+            <button class="pag-btn" [disabled]="paginaActual === totalPaginas - 1" (click)="irAPagina(paginaActual + 1)">›</button>
+          </div>
+        </div>
+
+      </section>
+    </ng-container>
+
+  </main>
 </div>
 
+<!-- ============================================================
+     MODAL — Crear usuario
+     📚 LECCIÓN: El overlay se cierra al hacer clic fuera
+     gracias a (click)="cerrarDialog()" en el backdrop
+     y stopPropagation() en el panel interior.
+     ============================================================ -->
+<div class="modal-overlay" *ngIf="mostrarDialog" (click)="cerrarDialog()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
 
-<!-- ===== DIALOG ===== -->
-<div class="dialog-overlay" *ngIf="mostrarDialog">
-  <div class="dialog-card">
-
-    <h2>Nuevo Usuario</h2>
-
-    <div class="field">
-      <label>Nombre completo *</label>
-      <input type="text"
-        [(ngModel)]="nuevoUsuario.nombre"
-        placeholder="Juan Pérez">
-    </div>
-
-    <div class="field">
-      <label>Email *</label>
-      <input type="email"
-        [(ngModel)]="nuevoUsuario.email"
-        placeholder="correo@ejemplo.com">
-    </div>
-
-    <div class="field">
-      <label>Contraseña *</label>
-      <input type="password"
-        [(ngModel)]="nuevoUsuario.password"
-        placeholder="••••••••">
-    </div>
-
-    <div class="field">
-      <label>Rol *</label>
-      <select [(ngModel)]="nuevoUsuario.rol">
-        <option *ngFor="let r of roles" [value]="r.value">
-          {{ r.label }}
-        </option>
-      </select>
-    </div>
-
-    <div class="error-msg" *ngIf="error">
-      {{ error }}
-    </div>
-
-    <div class="dialog-actions">
-      <button class="btn-secondary"
-        (click)="mostrarDialog = false">
-        Cancelar
+    <div class="modal-header">
+      <h3 class="modal-title">Nuevo Usuario</h3>
+      <button class="modal-close" (click)="cerrarDialog()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
-      <button class="btn-primary"
-        (click)="crear()">
-        Crear Usuario
+    </div>
+
+    <div class="modal-body">
+
+      <div class="error-banner" *ngIf="errorDialog">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ errorDialog }}
+      </div>
+
+      <!-- Nombre -->
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input
+          type="text"
+          class="form-input"
+          placeholder="Ej: Juan Pérez"
+          [(ngModel)]="nuevoUsuario.nombre"
+        />
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input
+          type="email"
+          class="form-input"
+          placeholder="correo@institución.com"
+          [(ngModel)]="nuevoUsuario.email"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input
+          type="password"
+          class="form-input"
+          placeholder="Mínimo 6 caracteres"
+          [(ngModel)]="nuevoUsuario.password"
+        />
+      </div>
+
+      <!-- Rol -->
+      <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select class="form-input form-select" [(ngModel)]="nuevoUsuario.rol">
+          <option *ngFor="let r of rolesSelect" [value]="r.value">{{ r.label }}</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="cerrarDialog()" [disabled]="guardando">Cancelar</button>
+      <button class="btn-primary" (click)="crear()" [disabled]="guardando">
+        <span *ngIf="!guardando">Crear usuario</span>
+        <span *ngIf="guardando" class="btn-loading">
+          <span class="mini-spinner"></span> Guardando…
+        </span>
       </button>
     </div>
 

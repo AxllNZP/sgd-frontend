@@ -1,159 +1,379 @@
-<div class="dashboard-bg">
+<!-- ============================================================
+     dashboard.component.html — Layout mejorado
+     Estructura:
+       1. Navbar fija
+       2. Hero de bienvenida
+       3. Tarjetas KPI (7 tarjetas)
+       4. Fila de gráficos (doughnut + línea)
+       5. Gráfico de barras horizontal (áreas)
+       6. Sección tabla con buscador + filtros
+     ============================================================ -->
+
+<div class="dash-root">
 
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar">
     <div class="navbar-brand">
-      <span class="brand-logo">SGD</span>
-      <span class="brand-text">Sistema de Gestión Documental</span>
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+        </svg>
+      </div>
+      <span class="brand-name">SGD</span>
+      <span class="brand-sep">|</span>
+      <span class="brand-full">Sistema de Gestión Documental</span>
     </div>
 
     <div class="navbar-links">
-      <a routerLink="/documentos">Documentos</a>
-      <a routerLink="/areas" *ngIf="rol === 'ADMINISTRADOR'">Áreas</a>
-      <a routerLink="/usuarios" *ngIf="rol === 'ADMINISTRADOR'">Usuarios</a>
+      <a routerLink="/documentos" class="nav-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        </svg>
+        Documentos
+      </a>
+      <a routerLink="/areas" class="nav-link" *ngIf="rol === 'ADMINISTRADOR'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Áreas
+      </a>
+      <a routerLink="/usuarios" class="nav-link" *ngIf="rol === 'ADMINISTRADOR'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Usuarios
+      </a>
     </div>
 
-    <div class="navbar-user">
-      <span>{{ nombre }}</span>
-      <!-- CORREGIDO: logout() → cerrarSesion() -->
-      <button class="btn-logout" (click)="cerrarSesion()">Salir</button>
+    <div class="navbar-right">
+      <div class="user-chip">
+        <div class="user-avatar">{{ nombre.charAt(0).toUpperCase() }}</div>
+        <span class="user-name">{{ nombre }}</span>
+        <span class="user-rol">{{ rol === 'ADMINISTRADOR' ? 'Admin' : 'Mesa' }}</span>
+      </div>
+      <button class="btn-logout" (click)="cerrarSesion()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16,17 21,12 16,7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Salir
+      </button>
     </div>
   </nav>
 
-  <!-- ===== CONTENIDO ===== -->
-  <div class="dashboard-content">
+  <!-- ===== CONTENIDO PRINCIPAL ===== -->
+  <main class="dash-main">
 
-    <div class="welcome-section">
-      <h1>Bienvenido, {{ nombre }}</h1>
-      <p>Panel de control general del sistema</p>
+    <!-- ── Error ── -->
+    <div class="error-banner" *ngIf="errorCarga">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ errorCarga }}
     </div>
 
-    <!-- ===== ESTADÍSTICAS ===== -->
-    <div class="stats-grid">
-
-      <div class="stat-card total">
-        <!-- CORREGIDO: totalDocumentos viene de page.totalElements -->
-        <div class="stat-number">{{ totalDocumentos }}</div>
-        <div class="stat-label">Total Documentos</div>
+    <!-- ── Bienvenida ── -->
+    <div class="welcome-row">
+      <div class="welcome-text">
+        <h1 class="welcome-title">Bienvenido, <span class="accent">{{ nombre }}</span></h1>
+        <p class="welcome-sub">Panel de control — visión general del sistema</p>
       </div>
-
-      <div class="stat-card recibidos">
-        <div class="stat-number">{{ recibidos }}</div>
-        <div class="stat-label">Recibidos</div>
+      <div class="welcome-date">
+        <span class="date-today">{{ 'hoy' | uppercase }}</span>
+        <span class="date-val">{{ formatearFecha(hoyISO) }}</span>
       </div>
-
-      <div class="stat-card proceso">
-        <div class="stat-number">{{ enProceso }}</div>
-        <div class="stat-label">En Proceso</div>
-      </div>
-
-      <div class="stat-card archivados">
-        <div class="stat-number">{{ archivados }}</div>
-        <div class="stat-label">Archivados</div>
-      </div>
-
     </div>
 
-    <!-- ===== DOCUMENTOS RECIENTES ===== -->
-    <div class="card recent-card">
-
-      <div class="section-header">
-        <h2>Documentos Recientes</h2>
-        <a routerLink="/documentos" class="ver-todos">
-          Ver todos →
-        </a>
+    <!-- ── Spinner de carga ── -->
+    <div class="loader-row" *ngIf="cargando">
+      <div class="pulse-loader">
+        <span></span><span></span><span></span>
       </div>
+      <p>Cargando datos del panel…</p>
+    </div>
 
-      <!-- CORREGIDO: todosLosRecientes → documentosRecientes -->
-      <div class="table-container" *ngIf="documentosRecientes.length > 0">
-        <table class="recent-table">
-          <thead>
-            <tr>
-              <th>N° Trámite</th>
-              <th>Remitente</th>
-              <th>Asunto</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let doc of documentosRecientes">
-              <td><code>{{ doc.numeroTramite }}</code></td>
-              <td>{{ doc.remitente }}</td>
-              <td>{{ doc.asunto }}</td>
-              <td>{{ doc.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td>
-                <app-estado-badge [estado]="doc.estado"></app-estado-badge>
-              </td>
-              <td>
-                <a [routerLink]="['/documentos', doc.numeroTramite]" class="btn-ver">
-                  Ver
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <ng-container *ngIf="!cargando">
 
-        <!-- ===== PAGINACIÓN ===== -->
-        <!-- CORREGIDO: paginaActual es 0-based (Spring) → comparar con 0 y totalPaginas-1 -->
-        <!-- CORREGIDO: cambiarPagina → cargarPagina, todosLosRecientes → totalElementos -->
-        <div class="pagination-wrap" *ngIf="totalPaginas > 1">
+      <!-- ======================================================
+           SECCIÓN 1: TARJETAS KPI
+           7 tarjetas: total + 4 estados + áreas + usuarios
+           ====================================================== -->
+      <section class="kpi-grid">
 
-          <span class="pagination-info">
-            Mostrando {{ getDesde() }}–{{ getHasta() }}
-            de {{ totalElementos }}
-          </span>
+        <!-- Total documentos — tarjeta destacada -->
+        <div class="kpi-card kpi-total anim-slide-up" style="--delay: 0ms">
+          <div class="kpi-icon kpi-icon--total">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num">{{ totalDocumentos }}</span>
+            <span class="kpi-label">Total Documentos</span>
+          </div>
+          <div class="kpi-glow kpi-glow--blue"></div>
+        </div>
 
-          <div class="pagination-controls">
-            <!-- Primera página -->
-            <button class="btn-page"
-                    (click)="cargarPagina(0)"
-                    [disabled]="paginaActual === 0">«</button>
-            <!-- Página anterior -->
-            <button class="btn-page"
-                    (click)="cargarPagina(paginaActual - 1)"
-                    [disabled]="paginaActual === 0">‹</button>
-
-            <!-- Páginas numeradas (0-based internamente, +1 para mostrar) -->
-            <button
-              *ngFor="let p of getPaginas()"
-              class="btn-page"
-              [class.active]="p === paginaActual"
-              (click)="cargarPagina(p)">
-              {{ p + 1 }}
-            </button>
-
-            <!-- Página siguiente -->
-            <button class="btn-page"
-                    (click)="cargarPagina(paginaActual + 1)"
-                    [disabled]="paginaActual === totalPaginas - 1">›</button>
-            <!-- Última página -->
-            <button class="btn-page"
-                    (click)="cargarPagina(totalPaginas - 1)"
-                    [disabled]="paginaActual === totalPaginas - 1">»</button>
+        <!-- Recibidos -->
+        <div class="kpi-card anim-slide-up" style="--delay: 60ms">
+          <div class="kpi-icon kpi-icon--blue">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20,12 20,22 4,22 4,12"/>
+              <rect x="2" y="7" width="20" height="5"/>
+              <line x1="12" y1="22" x2="12" y2="7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--blue">{{ recibidos }}</span>
+            <span class="kpi-label">Recibidos</span>
           </div>
         </div>
-        <!-- ===== FIN PAGINACIÓN ===== -->
 
-      </div>
+        <!-- En Proceso -->
+        <div class="kpi-card anim-slide-up" style="--delay: 120ms">
+          <div class="kpi-icon kpi-icon--amber">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--amber">{{ enProceso }}</span>
+            <span class="kpi-label">En Proceso</span>
+          </div>
+        </div>
 
-      <!-- CORREGIDO: todosLosRecientes → documentosRecientes -->
-      <div class="empty-wrap" *ngIf="documentosRecientes.length === 0">
-        No hay documentos recientes
-      </div>
+        <!-- Observados -->
+        <div class="kpi-card anim-slide-up" style="--delay: 180ms">
+          <div class="kpi-icon kpi-icon--red">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--red">{{ observados }}</span>
+            <span class="kpi-label">Observados</span>
+          </div>
+        </div>
 
-    </div>
+        <!-- Archivados -->
+        <div class="kpi-card anim-slide-up" style="--delay: 240ms">
+          <div class="kpi-icon kpi-icon--green">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20,12 20,22 4,22 4,12"/>
+              <rect x="2" y="7" width="20" height="5"/>
+              <line x1="12" y1="22" x2="12" y2="7"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--green">{{ archivados }}</span>
+            <span class="kpi-label">Archivados</span>
+          </div>
+        </div>
 
-    <!-- ===== GRÁFICO ===== -->
-    <div class="card grafico-card">
-      <div class="section-header">
-        <h2>Distribución por Estado</h2>
-      </div>
-      <div class="grafico-wrap">
-        <canvas #graficoEstados></canvas>
-      </div>
-    </div>
+        <!-- Áreas activas -->
+        <div class="kpi-card anim-slide-up" style="--delay: 300ms">
+          <div class="kpi-icon kpi-icon--indigo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--indigo">{{ totalAreas }}</span>
+            <span class="kpi-label">Áreas Activas</span>
+          </div>
+        </div>
 
-  </div>
+        <!-- Usuarios activos -->
+        <div class="kpi-card anim-slide-up" style="--delay: 360ms">
+          <div class="kpi-icon kpi-icon--teal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-num kpi-num--teal">{{ totalUsuarios }}</span>
+            <span class="kpi-label">Usuarios Activos</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ======================================================
+           SECCIÓN 2: GRÁFICOS — Doughnut + Línea (fila)
+           ====================================================== -->
+      <section class="charts-row anim-fade-in" style="--delay: 200ms">
+
+        <!-- Donut estados -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Distribución por Estado</span>
+            <span class="chart-badge">{{ totalDocumentos }} total</span>
+          </div>
+          <div class="chart-body chart-body--donut">
+            <canvas #graficoEstados></canvas>
+          </div>
+        </div>
+
+        <!-- Línea actividad -->
+        <div class="chart-card chart-card--wide">
+          <div class="chart-header">
+            <span class="chart-title">Actividad — últimos 7 días</span>
+            <span class="chart-badge">documentos registrados</span>
+          </div>
+          <div class="chart-body">
+            <canvas #graficoActividad></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ======================================================
+           SECCIÓN 3: GRÁFICO DE BARRAS (áreas)
+           ====================================================== -->
+      <section class="chart-card anim-fade-in" style="--delay: 300ms" *ngIf="docsPorArea.length > 0">
+        <div class="chart-header">
+          <span class="chart-title">Documentos por Área</span>
+          <span class="chart-badge">top {{ docsPorArea.length }} áreas</span>
+        </div>
+        <div class="chart-body chart-body--bars">
+          <canvas #graficoAreas></canvas>
+        </div>
+      </section>
+
+      <!-- ======================================================
+           SECCIÓN 4: TABLA CON BUSCADOR + FILTROS
+           ====================================================== -->
+      <section class="table-section anim-fade-in" style="--delay: 400ms">
+
+        <!-- Cabecera de sección -->
+        <div class="table-section-header">
+          <div>
+            <h2 class="section-title">Documentos</h2>
+            <p class="section-sub">{{ totalElementos }} resultado(s)
+              <ng-container *ngIf="terminoBusqueda || filtroEstado">
+                — filtrado activo
+                <button class="btn-clear" (click)="limpiarFiltros()">✕ limpiar</button>
+              </ng-container>
+            </p>
+          </div>
+          <a routerLink="/documentos" class="btn-ver-todos">Ver todos →</a>
+        </div>
+
+        <!-- ── Controles de búsqueda / filtro ── -->
+        <div class="search-bar">
+
+          <!-- Input buscador -->
+          <div class="search-input-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Buscar por remitente, asunto, N° trámite, área…"
+              [(ngModel)]="terminoBusqueda"
+              (ngModelChange)="onBusquedaCambio()"
+            />
+            <button class="search-clear" *ngIf="terminoBusqueda" (click)="terminoBusqueda=''; onBusquedaCambio()">✕</button>
+          </div>
+
+          <!-- Filtros por estado (pills) -->
+          <div class="filtro-pills">
+            <button
+              class="filtro-pill"
+              *ngFor="let f of estadosFiltro"
+              [class.active]="filtroEstado === f.value"
+              (click)="onFiltroCambio(f.value)"
+            >
+              {{ f.label }}
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ── Tabla ── -->
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>N° Trámite</th>
+                <th>Remitente</th>
+                <th>Asunto</th>
+                <th>Área</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let doc of documentosTabla" class="doc-row" (click)="verDetalle(doc.numeroTramite)">
+                <td><code class="tramite-code">{{ doc.numeroTramite }}</code></td>
+                <td class="td-remitente">
+                  <span class="remitente-name">{{ doc.remitente }}</span>
+                  <span class="remitente-dni">{{ doc.dniRuc }}</span>
+                </td>
+                <td class="td-asunto">{{ doc.asunto }}</td>
+                <td>
+                  <span class="area-tag" *ngIf="doc.areaNombre; else sinArea">{{ doc.areaNombre }}</span>
+                  <ng-template #sinArea><span class="area-tag area-tag--empty">Sin asignar</span></ng-template>
+                </td>
+                <td><app-estado-badge [estado]="doc.estado"></app-estado-badge></td>
+                <td class="td-fecha">{{ formatearFecha(doc.fechaHoraRegistro) }}</td>
+                <td class="td-action">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9,18 15,12 9,6"/>
+                  </svg>
+                </td>
+              </tr>
+              <!-- Estado vacío -->
+              <tr *ngIf="documentosTabla.length === 0">
+                <td colspan="7" class="empty-state">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <span>No hay documentos que coincidan con la búsqueda</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Paginación ── -->
+        <div class="pagination" *ngIf="totalPaginas > 1">
+          <span class="pag-info">{{ getDesde() }}–{{ getHasta() }} de {{ totalElementos }}</span>
+          <div class="pag-controls">
+            <button class="pag-btn" [disabled]="paginaActual === 0" (click)="irAPagina(paginaActual - 1)">‹</button>
+            <button
+              class="pag-btn"
+              *ngFor="let p of getPaginas()"
+              [class.active]="p === paginaActual"
+              (click)="irAPagina(p)"
+            >{{ p + 1 }}</button>
+            <button class="pag-btn" [disabled]="paginaActual === totalPaginas - 1" (click)="irAPagina(paginaActual + 1)">›</button>
+          </div>
+        </div>
+
+      </section>
+    </ng-container>
+
+  </main>
 </div>
