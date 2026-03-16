@@ -285,9 +285,8 @@
 <app-asignar-area
   [visible]="mostrarModalArea"
   [areas]="areas"
-  [areaSeleccionada]="areaSeleccionada"
   (cerrar)="mostrarModalArea = false"
-  (guardar)="guardarArea()">
+  (guardar)="guardarArea($event)">
 </app-asignar-area>
 
 <app-derivar-documento

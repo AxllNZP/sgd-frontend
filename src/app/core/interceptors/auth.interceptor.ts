@@ -1,31 +1,45 @@
+// auth.interceptor.ts — VERSIÓN DEFINITIVA
+// Fuente de verdad: SecurityConfig.java
+
 import { HttpInterceptorFn } from '@angular/common/http';
 
-// Rutas que NUNCA deben llevar Authorization header.
-// Mapeadas desde SecurityConfig.java → .permitAll()
-const PUBLIC_URL_PREFIXES = [
-  '/api/auth/login',
-  '/api/auth/login/ciudadano',
-  '/api/auth/registro',
-  '/api/auth/verificar',
-  '/api/auth/recuperar',
-  '/api/auth/reenviar-codigo',
-];
-
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // Verificación exacta por startsWith — más segura que includes()
-  // porque evita falsos positivos si algún endpoint privado
-  // tuviera "auth" en otra parte de la URL.
-  const isPublic = PUBLIC_URL_PREFIXES.some(prefix =>
-    req.url.startsWith(prefix)
-  );
 
-  if (isPublic) {
-    // Ruta pública: pasa sin token, aunque haya uno en storage.
-    // Esto previene que el JwtFilter del backend rechace la request
-    // con 403 por un token expirado de sesión anterior.
-    return next(req);
+  // ── 1. Todo /api/auth/** es público ──────────────────────
+  const esAuth = req.url.includes('/api/auth/');
+
+  // ── 2. POST /api/documentos — registro público ───────────
+  // Solo el endpoint raíz, sin sub-ruta.
+  // El $ al final asegura que no haya nada después (ni /buscar)
+  // Fuente: .requestMatchers(HttpMethod.POST, "/api/documentos").permitAll()
+  const esRegistroPublico =
+    req.method === 'POST' &&
+    /\/api\/documentos(\?.*)?$/.test(req.url);
+
+  // ── 3. GET /api/documentos/{id} — consulta pública ───────
+  // Solo cuando el número de trámite es el ÚLTIMO segmento de la URL.
+  // El $ final excluye: /descargar, /descargar-anexo, /estado, /area, etc.
+  // Fuente: .requestMatchers(HttpMethod.GET, "/api/documentos/*").permitAll()
+  //
+  // ✅ coincide:  /api/documentos/MP-20260305-ABC123
+  // ❌ no coincide: /api/documentos/MP-20260305-ABC123/descargar  ← protegido
+  // ❌ no coincide: /api/documentos/MP-20260305-ABC123/cargo      ← tratado aparte
+  const esConsultaPublica =
+    req.method === 'GET' &&
+    /\/api\/documentos\/[^/?]+(\?.*)?$/.test(req.url);
+
+  // ── 4. GET /api/documentos/{id}/cargo — cargo público ────
+  // Fuente: .requestMatchers(HttpMethod.GET, "/api/documentos/*/cargo").permitAll()
+  const esCargo =
+    req.method === 'GET' &&
+    /\/api\/documentos\/[^/?]+\/cargo(\?.*)?$/.test(req.url);
+
+  if (esAuth || esRegistroPublico || esConsultaPublica || esCargo) {
+    return next(req);  // pasa SIN token
   }
 
+  // ── Todo lo demás lleva token si existe ──────────────────
+  // Incluye: descargar, descargar-anexo, estado, area, listar, buscar...
   const token = localStorage.getItem('token');
   const authReq = token
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })

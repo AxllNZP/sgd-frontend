@@ -140,11 +140,22 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-  guardarArea(): void {
-    this.documentoService.asignarArea(this.numeroTramite, this.areaSeleccionada).subscribe({
-      next: () => { this.mostrarModalArea = false; this.cargarTodo(); }
-    });
-  }
+guardarArea(areaId: string): void {
+  // areaId llega directamente del $event emitido por AsignarAreaComponent
+  // Ya no depende de this.areaSeleccionada (que siempre estaba vacío)
+  if (!areaId) return;
+
+  this.documentoService.asignarArea(this.numeroTramite, areaId).subscribe({
+    next: () => {
+      this.mostrarModalArea = false;
+      this.cargarTodo();
+    },
+    error: (err) => {
+      console.error('Error al asignar área:', err);
+      // Opcional: mostrar mensaje de error en la UI
+    }
+  });
+}
 
   guardarDerivacion(): void {
     this.derivacionService.derivar(this.numeroTramite, this.derivacionForm).subscribe({
