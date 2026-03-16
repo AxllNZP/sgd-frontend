@@ -26,7 +26,7 @@ import { SoloNumerosDirective } from '../../../shared/directives/solo-numeros.di
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SoloNumerosDirective],
+  imports: [CommonModule, FormsModule, SoloNumerosDirective],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.css'
 })
