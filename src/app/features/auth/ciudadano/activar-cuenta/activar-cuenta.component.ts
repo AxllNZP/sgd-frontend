@@ -107,8 +107,8 @@ export class ActivarCuentaComponent implements OnDestroy {
     this.errorMsg = '';
     this.successMsg = '';
 
-    if (!this.codigo.trim() || this.codigo.length !== 6) {
-      this.errorMsg = 'Ingrese el código de 6 dígitos.';
+    if (!this.codigo.trim() || this.codigo.length !== 8) {
+  this.errorMsg = 'Ingrese el código de 8 dígitos.';
       return;
     }
 

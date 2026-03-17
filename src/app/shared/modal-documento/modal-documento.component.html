@@ -1,0 +1,50 @@
+<div class="modal-overlay"
+     [ngClass]="{ 'closing': isClosing }"
+     (click)="cerrarModal()">
+
+  <div class="modal-content"
+       [ngClass]="{ 'closing': isClosing }"
+       (click)="$event.stopPropagation()">
+
+    <div class="modal-icono-exito">✓</div>
+
+    <h3>¡Documento registrado!</h3>
+
+    <p>
+      Su documento fue ingresado correctamente a Mesa de Partes.
+    </p>
+
+    <div class="numero-tramite-box">
+      <span class="numero-tramite-label">
+        N.º de trámite
+      </span>
+
+      <strong class="numero-tramite">
+        {{ numeroTramite }}
+      </strong>
+    </div>
+
+    <p class="modal-nota">
+      Guarde este número. Puede usarlo para hacer seguimiento del trámite.
+    </p>
+
+    <p class="modal-nota" *ngIf="emailConfirmacion">
+      Se envió una confirmación a
+      <strong>{{ emailConfirmacion }}</strong>
+    </p>
+
+    <div class="modal-acciones">
+
+      <button class="btn-secundario" (click)="nuevoRegistro()">
+        Registrar otro documento
+      </button>
+
+      <button class="btn-primario" (click)="cerrarModal()">
+        Cerrar
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

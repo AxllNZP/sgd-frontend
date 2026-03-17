@@ -1,53 +1,29 @@
-// =============================================================
-// registro-natural.component.ts — VERSIÓN CORREGIDA
-//
-// CORRECCIONES vs versión anterior:
-//   1. HttpClient directo → CiudadanoService (URL relativa, proxy)
-//      El componente NO debe conocer la URL del backend.
-//   2. form tipado con RegistroNaturalRequest en lugar de objeto
-//      anónimo — el compilador de TypeScript detecta campos faltantes
-//      o con nombre incorrecto antes de llegar al servidor.
-//   3. Respuesta tipada con RegistroResponse (no 'any').
-//      res.tipoPersna (con typo) es el campo real del backend — NO corregir.
-// =============================================================
+// registro-natural.component.ts — versión completa corregida
 
 import { Component } from '@angular/core';
-import { Router, RouterLink }   from '@angular/router';
-import { CommonModule }          from '@angular/common';
-import { FormsModule }           from '@angular/forms';
-import { HttpErrorResponse }     from '@angular/common/http';
-
-import { CiudadanoService }      from '../../../../core/services/ciudadano.service';
-import {
-  RegistroNaturalRequest,
-  RegistroResponse,
-  PREGUNTAS_SEGURIDAD,
-  TipoDocumento,
-  PreguntaSeguridad
-} from '../../../../core/models/ciudadano.model';
-import { SoloNumerosDirective }  from '../../../../shared/directives/solo-numeros.directive';
-import { SoloLetrasDirective }   from '../../../../shared/directives/solo-letras.directive';
-import { TrimInputDirective }    from '../../../../shared/directives/trim-input.directive';
+import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { CiudadanoService } from '../../../../core/services/ciudadano.service';
+import { SoloNumerosDirective } from '../../../../shared/directives/solo-numeros.directive';
+import { SoloLetrasDirective } from '../../../../shared/directives/solo-letras.directive';
+import { TrimInputDirective } from '../../../../shared/directives/trim-input.directive';
 import { validarEmail, validarPassword } from '../../../../shared/validators/validators';
+import { PREGUNTAS_SEGURIDAD } from '../../../../core/models/ciudadano.model'; // ← AÑADIR
 
 @Component({
   selector: 'app-registro-natural',
   standalone: true,
-  imports: [
-    CommonModule, FormsModule, RouterLink,
-    SoloNumerosDirective, SoloLetrasDirective, TrimInputDirective
-  ],
+  imports: [CommonModule, FormsModule, RouterLink,
+            SoloNumerosDirective, SoloLetrasDirective, TrimInputDirective],
   templateUrl: './registro-natural.component.html',
   styleUrl:    './registro-natural.component.css'
 })
 export class RegistroNaturalComponent {
 
-  // ── Formulario tipado 1:1 con RegistroNaturalRequestDTO ──────
-  // 📚 LECCIÓN: tipamos el form con la interfaz del modelo.
-  // TypeScript nos avisará si un campo del DTO no está en el form
-  // o si tiene el nombre incorrecto — antes de llegar al servidor.
-  form: RegistroNaturalRequest = {
-    tipoDocumento:      '' as TipoDocumento,
+  form = {
+    tipoDocumento:      '',
     numeroDocumento:    '',
     nombres:            '',
     apellidoPaterno:    '',
@@ -59,63 +35,99 @@ export class RegistroNaturalComponent {
     telefono:           '',
     email:              '',
     password:           '',
-    preguntaSeguridad:  '' as PreguntaSeguridad,
+    preguntaSeguridad:  '',
     respuestaSeguridad: '',
     afiliadoBuzon:      false
   };
 
-  // Confirmación de contraseña — solo vive en el frontend, no va al backend
-  confirmarPassword = '';
-
-  // ── Estado UI ────────────────────────────────────────────────
-  loading    = false;
-  errorMsg   = '';
-  showPw     = false;
-  showPwConf = false;
-
-  // ── Opciones tipadas desde el modelo — Cero Hardcoding ───────
-  // Contract-First: estos valores vienen del enum TipoDocumento del backend
-  readonly tiposDoc: { label: string; value: TipoDocumento }[] = [
-    { label: 'DNI',                value: 'DNI'               },
-    { label: 'Carné de Extranjería', value: 'CARNET_EXTRANJERIA' },
+  // ← AÑADIR: el HTML usa tiposDoc en *ngFor
+  // Fuente: TipoDocumento enum del backend — solo 2 valores
+  tiposDoc = [
+    { value: 'DNI',               label: 'DNI' },
+    { value: 'CARNET_EXTRANJERIA', label: 'Carné de Extranjería' }
   ];
 
-  // Contract-First: estos valores vienen del enum PreguntaSeguridad del backend
-  readonly preguntas = PREGUNTAS_SEGURIDAD;
+  // ← AÑADIR: el HTML usa preguntas en *ngFor
+  // Importado de ciudadano.model.ts — no hardcodeado aquí
+  preguntas = PREGUNTAS_SEGURIDAD;
+
+  confirmarPassword = '';
+  loading      = false;
+  errorMsg     = '';
+  showPw       = false;
+  showPwConfirm = false;   // ← El HTML usa showPwConf — hay que corregir el HTML también
 
   constructor(
-    // CORRECCIÓN: CiudadanoService en vez de HttpClient directo
-    // CiudadanoService usa URL relativa /api/auth → el proxy lo reenvía
     private ciudadanoService: CiudadanoService,
-    private router:           Router
+    private router: Router
   ) {}
 
   registrar(): void {
     this.errorMsg = '';
 
-    // Validar contraseña (reglas del backend: @Size(min=8))
+    if (!this.form.tipoDocumento) {
+      this.errorMsg = 'Seleccione el tipo de documento.'; return;
+    }
+    if (!this.form.numeroDocumento.trim()) {
+      this.errorMsg = 'Ingrese el número de documento.'; return;
+    }
+    if (this.form.tipoDocumento === 'DNI' && this.form.numeroDocumento.length !== 8) {
+      this.errorMsg = 'El DNI debe tener exactamente 8 dígitos.'; return;
+    }
+    if (!this.form.nombres.trim()) {
+      this.errorMsg = 'Ingrese sus nombres.'; return;
+    }
+    if (!this.form.apellidoPaterno.trim()) {
+      this.errorMsg = 'Ingrese el apellido paterno.'; return;
+    }
+    if (!this.form.apellidoMaterno.trim()) {
+      this.errorMsg = 'Ingrese el apellido materno.'; return;
+    }
+    if (!this.form.departamento.trim() || !this.form.provincia.trim() || !this.form.distrito.trim()) {
+      this.errorMsg = 'Complete todos los campos de ubicación.'; return;
+    }
+    if (!this.form.direccion.trim()) {
+      this.errorMsg = 'Ingrese su dirección.'; return;
+    }
+    if (!this.form.telefono.trim()) {
+      this.errorMsg = 'Ingrese su teléfono.'; return;
+    }
+    if (!validarEmail(this.form.email)) {
+      this.errorMsg = 'El correo electrónico no tiene un formato válido.'; return;
+    }
+    if (!this.form.preguntaSeguridad) {
+      this.errorMsg = 'Seleccione una pregunta de seguridad.'; return;
+    }
+    if (!this.form.respuestaSeguridad.trim()) {
+      this.errorMsg = 'Ingrese la respuesta de seguridad.'; return;
+    }
     const pwVal = validarPassword(this.form.password);
     if (!pwVal.valido) { this.errorMsg = pwVal.mensaje; return; }
-
     if (this.form.password !== this.confirmarPassword) {
-      this.errorMsg = 'Las contraseñas no coinciden.';
-      return;
-    }
-
-    if (!validarEmail(this.form.email)) {
-      this.errorMsg = 'El correo electrónico no tiene un formato válido.';
-      return;
+      this.errorMsg = 'Las contraseñas no coinciden.'; return;
     }
 
     this.loading = true;
 
-    // CORRECCIÓN: CiudadanoService.registrarNatural()
-    // → POST /api/auth/registro/natural (URL relativa — proxy activo)
-    // Body: RegistroNaturalRequestDTO (serializado como JSON)
-    this.ciudadanoService.registrarNatural(this.form).subscribe({
-      next: (res: RegistroResponse) => {
-        // Navegar a verificación pasando el estado necesario
-        // tipoPersna viene del backend — respetamos el typo intencional
+    this.ciudadanoService.registrarNatural({
+      tipoDocumento:      this.form.tipoDocumento as any,
+      numeroDocumento:    this.form.numeroDocumento,
+      nombres:            this.form.nombres,
+      apellidoPaterno:    this.form.apellidoPaterno,
+      apellidoMaterno:    this.form.apellidoMaterno,
+      departamento:       this.form.departamento,
+      provincia:          this.form.provincia,
+      distrito:           this.form.distrito,
+      direccion:          this.form.direccion,
+      telefono:           this.form.telefono,
+      email:              this.form.email,
+      password:           this.form.password,
+      preguntaSeguridad:  this.form.preguntaSeguridad as any,
+      respuestaSeguridad: this.form.respuestaSeguridad,
+      afiliadoBuzon:      this.form.afiliadoBuzon
+    }).subscribe({
+      next: (res) => {
+        this.loading = false;
         this.router.navigate(['/ciudadano/verificar'], {
           state: {
             identificador: res.identificador,
@@ -125,22 +137,20 @@ export class RegistroNaturalComponent {
       },
       error: (err: HttpErrorResponse) => {
         this.loading = false;
-        // 409 = email o documento ya en uso (BusinessConflictException)
-        // 400 = validación de @Valid falló en el backend
-        if (err.status === 409) {
-          this.errorMsg = 'Ya existe una cuenta con ese documento o correo.';
-        } else if (err.status === 400) {
-          // El backend devuelve { campos: { field: message } } para validaciones
-          const campos = err.error?.campos;
-          if (campos) {
-            this.errorMsg = Object.values(campos).join(' ');
-          } else {
-            this.errorMsg = err.error?.message || 'Datos inválidos. Revise el formulario.';
-          }
-        } else {
-          this.errorMsg = err.error?.message || 'Error al registrar. Inténtelo de nuevo.';
-        }
+        this.errorMsg = this.interpretarError(err);
       }
     });
+  }
+
+  private interpretarError(err: HttpErrorResponse): string {
+    const body = err.error;
+    switch (err.status) {
+      case 400:
+        if (body?.campos) return `Dato inválido: ${Object.values(body.campos)[0]}`;
+        return body?.message || 'Datos del formulario incorrectos.';
+      case 409: return body?.message || 'Ya existe una cuenta con estos datos.';
+      case 0:   return 'No se pudo conectar con el servidor.';
+      default:  return body?.message || 'Error al registrar. Intente nuevamente.';
+    }
   }
 }

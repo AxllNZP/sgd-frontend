@@ -11,7 +11,6 @@
   <h2 class="titulo">Mis Datos</h2>
 
   <!-- ── Pestañas ── -->
-  <!-- CORREGIDO: cambiarPestana('x') → pestanaActiva = 'x' directamente -->
   <div class="pestanas">
     <button class="pestana-btn" [class.activa]="pestanaActiva === 'perfil'"
             (click)="pestanaActiva = 'perfil'; errorPerfil = ''; exitoPerfil = ''">
@@ -38,8 +37,6 @@
 
       <!-- ══════════════════════════════════════
            PERSONA NATURAL
-           CORREGIDO: esNatural → tipoPersna === 'NATURAL'
-           lectNatural.X → perfilNatural?.X
       ══════════════════════════════════════ -->
       <ng-container *ngIf="tipoPersna === 'NATURAL'">
 
@@ -85,7 +82,7 @@
         </section>
 
         <!-- Editables: EditarNaturalRequestDTO -->
-        <!-- { direccion, telefono, email, preguntaSeguridad, respuestaSeguridad } -->
+        <!-- Campos: direccion, telefono, email, preguntaSeguridad, respuestaSeguridad -->
         <section class="seccion">
           <h3>Datos editables</h3>
           <div class="campo">
@@ -103,10 +100,15 @@
             </div>
           </div>
 
-          <!-- Pregunta de seguridad -->
+          <!-- ── Pregunta de seguridad ── -->
           <div class="campo">
             <label>Pregunta de seguridad *</label>
-            <!-- CORREGIDO: usa preguntasSeguridad importado del modelo, no hardcodeado -->
+
+            <!--
+              Se muestra la pregunta ACTUAL registrada (dato de solo lectura del perfil).
+              Viene del campo descripcionPregunta del PerfilNaturalResponseDTO.
+              El usuario puede seleccionar una nueva pregunta si lo desea.
+            -->
             <p class="hint" *ngIf="perfilNatural">
               Pregunta actual: <em>{{ perfilNatural.descripcionPregunta || '(no definida)' }}</em>
             </p>
@@ -116,11 +118,36 @@
               </option>
             </select>
           </div>
+
+          <!--
+            CAMPO CLAVE: respuestaSeguridad
+            ─────────────────────────────────────────────────────────────
+            ¿Qué hace este campo?
+              Al guardar, REEMPLAZA la respuesta almacenada en la BD.
+              El backend NO verifica la respuesta anterior (@NotBlank únicamente).
+
+            ¿Por qué pedimos la respuesta entonces?
+              Para que el usuario sea consciente de cuál quedará guardada.
+              Se normaliza a minúsculas + sin espacios extremos antes del PUT,
+              garantizando consistencia con la validación de recuperación de cuenta.
+
+            ¿Por qué se limpia tras guardar?
+              Porque el campo nunca debe mostrarse pre-llenado: es información
+              sensible y cada guardado debe ser un acto deliberado del usuario.
+            ─────────────────────────────────────────────────────────────
+          -->
           <div class="campo">
-            <label>Respuesta *</label>
-            <input type="text" [(ngModel)]="editNatural.respuestaSeguridad"
-                   maxlength="200" placeholder="Ingrese su respuesta" />
+            <label>Nueva respuesta de seguridad *</label>
+            <span class="hint">
+              Mínimo 3 caracteres. Se guardará en minúsculas para mayor consistencia.
+            </span>
+            <input
+              type="text"
+              [(ngModel)]="editNatural.respuestaSeguridad"
+              maxlength="200"
+              placeholder="Escribe tu respuesta (ej: lima, firulais)" />
           </div>
+
         </section>
 
       </ng-container>
@@ -128,8 +155,6 @@
 
       <!-- ══════════════════════════════════════
            PERSONA JURÍDICA
-           CORREGIDO: !esNatural → tipoPersna === 'JURIDICA'
-           lectJuridica.X → perfilJuridica?.X
       ══════════════════════════════════════ -->
       <ng-container *ngIf="tipoPersna === 'JURIDICA'">
 
@@ -165,7 +190,7 @@
         </section>
 
         <!-- Editables: EditarJuridicaRequestDTO -->
-        <!-- { direccion, telefono, departamento, provincia, distrito } -->
+        <!-- Campos: direccion, telefono, departamento, provincia, distrito -->
         <section class="seccion">
           <h3>Datos editables</h3>
           <div class="campo">
@@ -194,7 +219,7 @@
 
       </ng-container>
 
-      <!-- Botón guardar — visible cuando no está cargando -->
+      <!-- Botón guardar -->
       <div class="acciones" *ngIf="!cargandoPerfil && (tipoPersna === 'NATURAL' || tipoPersna === 'JURIDICA')">
         <button class="btn-primario"
                 (click)="guardarPerfil()"
@@ -209,7 +234,6 @@
 
   <!-- ════════════════════════════════════════════════════════
        PESTAÑA 2: Cambiar contraseña
-       Sin cambios estructurales — passwords.X ya coincide con el TS nuevo
   ════════════════════════════════════════════════════════════ -->
   <div *ngIf="pestanaActiva === 'password'">
 

@@ -156,17 +156,26 @@
 
       <label>Tipo de documento *</label>
 
-      <select [(ngModel)]="form.tipoDocumento">
-        <option value="">-- Seleccione --</option>
+      <div class="select-wrapper">
 
-        <option
-          *ngFor="let t of tiposDocumento"
-          [value]="t.value">
+  <div class="select-display" (click)="toggleSelect()">
+    {{ form.tipoDocumento || 'Seleccione' }}
+  </div>
 
-          {{ t.label }}
+  <div class="select-options" *ngIf="selectOpen">
 
-        </option>
-      </select>
+    <div
+      class="option"
+      *ngFor="let t of tiposDocumento"
+      (click)="selectTipo(t.value)">
+
+      {{ t.label }}
+
+    </div>
+
+  </div>
+
+</div>
 
     </div>
 
@@ -214,11 +223,72 @@
         Documento principal (PDF — máx. 50 MB)
       </label>
 
-      <input
-        type="file"
-        accept=".pdf"
-        (change)="onArchivoSeleccionado($event)"/>
+      <div class="file-upload-pro">
 
+  <input
+    #fileInput
+    type="file"
+    accept=".pdf"
+    (change)="onArchivoSeleccionado($event)"
+    hidden>
+
+  <div
+    class="file-box"
+    [class.has-file]="archivo"
+    (click)="!archivo && fileInput.click()"
+    (dragover)="onDragOver($event)"
+    (drop)="onDropArchivo($event)">
+
+    <!-- SIN ARCHIVO -->
+    <ng-container *ngIf="!archivo">
+
+      <div class="file-content">
+        <span class="file-icon">📎</span>
+
+        <div class="file-text">
+          <strong>Subir documento principal</strong>
+          <small>PDF — máximo 50MB</small>
+        </div>
+      </div>
+
+      <div class="file-status">
+        Ningún archivo seleccionado
+      </div>
+
+    </ng-container>
+
+    <!-- CON ARCHIVO -->
+    <ng-container *ngIf="archivo">
+
+      <div class="file-preview">
+
+        <div class="file-info">
+          <span class="file-name">{{ archivoNombre }}</span>
+          <span class="file-size">{{ getFileSize(archivo) }}</span>
+        </div>
+
+        <button
+          type="button"
+          class="file-remove"
+          (click)="eliminarArchivo($event)">
+          ✕
+        </button>
+
+      </div>
+
+      <div class="progress-bar" *ngIf="subiendoArchivo">
+        <div class="progress" [style.width.%]="progresoArchivo"></div>
+      </div>
+
+    </ng-container>
+
+  </div>
+
+  <div class="file-error" *ngIf="errorArchivo">
+    {{ errorArchivo }}
+  </div>
+
+</div>
       <small *ngIf="archivoNombre">
         Seleccionado: {{ archivoNombre }}
       </small>
@@ -231,10 +301,70 @@
         Anexo opcional (PDF, DOC, DOCX, ZIP — máx. 20 MB)
       </label>
 
-      <input
-        type="file"
-        accept=".pdf,.doc,.docx,.zip"
-        (change)="onAnexoSeleccionado($event)"/>
+      <div class="file-upload-pro">
+
+  <input
+    #anexoInput
+    type="file"
+    accept=".pdf,.doc,.docx,.zip"
+    (change)="onAnexoSeleccionado($event)"
+    hidden>
+
+  <div
+    class="file-box"
+    [class.has-file]="anexo"
+    (click)="!anexo && anexoInput.click()"
+    (dragover)="onDragOver($event)"
+    (drop)="onDropAnexo($event)">
+
+    <ng-container *ngIf="!anexo">
+
+      <div class="file-content">
+        <span class="file-icon">📎</span>
+
+        <div class="file-text">
+          <strong>Subir anexo (opcional)</strong>
+          <small>PDF, DOC, DOCX, ZIP — máximo 20MB</small>
+        </div>
+      </div>
+
+      <div class="file-status">
+        Ningún archivo seleccionado
+      </div>
+
+    </ng-container>
+
+    <ng-container *ngIf="anexo">
+
+      <div class="file-preview">
+
+        <div class="file-info">
+          <span class="file-name">{{ anexoNombre }}</span>
+          <span class="file-size">{{ getFileSize(anexo) }}</span>
+        </div>
+
+        <button
+          type="button"
+          class="file-remove"
+          (click)="eliminarAnexo($event)">
+          ✕
+        </button>
+
+      </div>
+
+      <div class="progress-bar" *ngIf="subiendoAnexo">
+        <div class="progress" [style.width.%]="progresoAnexo"></div>
+      </div>
+
+    </ng-container>
+
+  </div>
+
+  <div class="file-error" *ngIf="errorAnexo">
+    {{ errorAnexo }}
+  </div>
+
+</div>
 
       <small *ngIf="anexoNombre">
         Seleccionado: {{ anexoNombre }}
@@ -361,66 +491,10 @@
 
 </div>
 
-<!-- =========================================================
-   MODAL : DOCUMENTO REGISTRADO
-========================================================= -->
-<div class="modal-overlay" *ngIf="mostrarModal">
-
-  <div class="modal-content">
-
-    <div class="modal-icono-exito">✓</div>
-
-    <h3>¡Documento registrado!</h3>
-
-    <p>
-      Su documento fue ingresado correctamente a Mesa de Partes.
-    </p>
-
-    <div class="numero-tramite-box">
-
-      <span class="numero-tramite-label">
-        N.º de trámite
-      </span>
-
-      <strong class="numero-tramite">
-        {{ numeroTramite }}
-      </strong>
-
-    </div>
-
-    <p class="modal-nota">
-      Guarde este número. Puede usarlo para hacer seguimiento del trámite.
-    </p>
-
-    <p
-      class="modal-nota"
-      *ngIf="emailConfirmacion">
-
-      Se envió una confirmación a
-      <strong>{{ emailConfirmacion }}</strong>
-
-    </p>
-
-    <div class="modal-acciones">
-
-      <button
-        class="btn-secundario"
-        (click)="nuevoRegistro()">
-
-        Registrar otro documento
-
-      </button>
-
-      <button
-        class="btn-primario"
-        (click)="cerrarModal()">
-
-        Cerrar
-
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
+<app-modal-documento
+  *ngIf="mostrarModal"
+  [numeroTramite]="numeroTramite"
+  [emailConfirmacion]="emailConfirmacion"
+  (cerrar)="cerrarModal()"
+  (nuevo)="nuevoRegistro()">
+</app-modal-documento>

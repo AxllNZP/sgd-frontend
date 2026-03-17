@@ -104,6 +104,22 @@ export class RegistroJuridicaComponent {
 
   registrar(): void {
     this.errorMsg = '';
+    // ── Validaciones adicionales ──
+  if (!this.form.ruc || this.form.ruc.length !== 11) {
+    this.errorMsg = 'El RUC debe tener exactamente 11 dígitos.'; return;
+  }
+  if (!this.form.razonSocial.trim()) {
+    this.errorMsg = 'La razón social es obligatoria.'; return;
+  }
+  if (!this.form.tipoDocRepresentante) {
+    this.errorMsg = 'Seleccione el tipo de documento del representante.'; return;
+  }
+  if (!this.form.numDocRepresentante.trim()) {
+    this.errorMsg = 'Ingrese el número de documento del representante.'; return;
+  }
+  if (!this.form.preguntaSeguridad) {
+    this.errorMsg = 'Seleccione una pregunta de seguridad.'; return;
+  }
 
     // Validar contraseña (@Size(min=8) en el backend)
     const pwVal = validarPassword(this.form.password);

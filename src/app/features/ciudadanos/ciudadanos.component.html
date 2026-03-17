@@ -1,0 +1,265 @@
+<div class="lista-bg">
+
+  <!-- ═══ TOPBAR ═══ -->
+  <div class="topbar">
+    <button class="btn-back" (click)="volver()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+      </svg>
+      Volver
+    </button>
+    <div class="topbar-info">
+      <h1>Ciudadanos Registrados</h1>
+      <span class="doc-count">Gestión de personas naturales y jurídicas</span>
+    </div>
+  </div>
+
+  <!-- ═══ ESTADÍSTICAS ═══ -->
+  <div class="stats-grid" *ngIf="stats">
+    <div class="stat-card stat-blue">
+      <div class="stat-num">{{ stats.totalCiudadanos }}</div>
+      <div class="stat-lbl">Total ciudadanos</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-num">{{ stats.naturalesActivos }}</div>
+      <div class="stat-lbl">Naturales activos</div>
+    </div>
+    <div class="stat-card stat-teal">
+      <div class="stat-num">{{ stats.naturalesVerificados }}</div>
+      <div class="stat-lbl">Naturales verificados</div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-num">{{ stats.totalJuridicas }}</div>
+      <div class="stat-lbl">Jurídicas totales</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-num">{{ stats.juridicasActivas }}</div>
+      <div class="stat-lbl">Jurídicas activas</div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-num">{{ stats.naturalesInactivos + stats.juridicasInactivas }}</div>
+      <div class="stat-lbl">Total inactivos</div>
+    </div>
+  </div>
+
+  <!-- ═══ CARD PRINCIPAL ═══ -->
+  <div class="card">
+
+    <!-- Pestañas -->
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="tab === 'naturales'"
+              (click)="cambiarTab('naturales')">
+        Persona Natural
+        <span class="tab-badge">{{ stats?.totalNaturales ?? 0 }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="tab === 'juridicas'"
+              (click)="cambiarTab('juridicas')">
+        Persona Jurídica
+        <span class="tab-badge">{{ stats?.totalJuridicas ?? 0 }}</span>
+      </button>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="filtro.busqueda"
+          (ngModelChange)="onBusquedaCambia()"
+          [placeholder]="tab === 'naturales'
+            ? 'Buscar por nombre, DNI o email...'
+            : 'Buscar por RUC, razón social o email...'"
+        />
+      </div>
+      <select [(ngModel)]="filtro.activo" (ngModelChange)="onFiltroCambia()" class="select-estado">
+        <option [ngValue]="null">Todos los estados</option>
+        <option [ngValue]="true">Activos</option>
+        <option [ngValue]="false">Inactivos</option>
+      </select>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+    <app-spinner *ngIf="cargando"></app-spinner>
+
+    <!-- ══ TABLA NATURALES ══ -->
+    <div *ngIf="!cargando && tab === 'naturales'">
+
+      <div class="empty-wrap" *ngIf="naturales.length === 0">
+        <div class="empty-icon">👤</div>
+        <p>No se encontraron personas naturales</p>
+      </div>
+
+      <div class="table-container" *ngIf="naturales.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Persona</th>
+              <th>Documento</th>
+              <th>Email</th>
+              <th>Ubigeo</th>
+              <th>Estado</th>
+              <th>Verificado</th>
+              <th>Registro</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let n of naturales">
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar natural">
+                    {{ n.nombres.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="user-name">{{ n.nombres }} {{ n.apellidoPaterno }}</div>
+                    <div class="user-sub">{{ n.apellidoMaterno }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="user-name">{{ n.numeroDocumento }}</div>
+                <div class="user-sub">{{ n.tipoDocumento }}</div>
+              </td>
+              <td class="email-cell">{{ n.email }}</td>
+              <td>
+                <div class="user-sub">{{ n.departamento }}, {{ n.provincia }}</div>
+                <div class="user-sub">{{ n.distrito }}</div>
+              </td>
+              <td>
+                <span [class]="'estado-badge ' + (n.activo ? 'badge-success' : 'badge-danger')">
+                  {{ n.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <span [class]="'estado-badge ' + (n.verificado ? 'badge-info' : 'badge-warning')">
+                  {{ n.verificado ? 'Verificado' : 'Pendiente' }}
+                </span>
+              </td>
+              <td class="fecha-cell">{{ n.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+              <td class="text-right">
+                <div class="action-btns">
+                  <button
+                    [class]="n.activo ? 'btn-action btn-warn' : 'btn-action btn-ok'"
+                    (click)="toggleNatural(n)">
+                    {{ n.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                  <button class="btn-action btn-del" (click)="eliminarNatural(n)">
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Paginación naturales -->
+        <div class="pagination-wrap" *ngIf="totalPaginasN > 1">
+          <span class="pagination-info">{{ totalN }} resultados</span>
+          <div class="pagination-controls">
+            <button class="btn-page" (click)="cargarNaturales(0)" [disabled]="paginaN === 0">«</button>
+            <button class="btn-page" (click)="cargarNaturales(paginaN - 1)" [disabled]="paginaN === 0">‹</button>
+            <button *ngFor="let p of getPaginasN()" class="btn-page"
+                    [class.active]="p === paginaN" (click)="cargarNaturales(p)">
+              {{ p + 1 }}
+            </button>
+            <button class="btn-page" (click)="cargarNaturales(paginaN + 1)" [disabled]="paginaN === totalPaginasN - 1">›</button>
+            <button class="btn-page" (click)="cargarNaturales(totalPaginasN - 1)" [disabled]="paginaN === totalPaginasN - 1">»</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TABLA JURÍDICAS ══ -->
+    <div *ngIf="!cargando && tab === 'juridicas'">
+
+      <div class="empty-wrap" *ngIf="juridicas.length === 0">
+        <div class="empty-icon">🏢</div>
+        <p>No se encontraron personas jurídicas</p>
+      </div>
+
+      <div class="table-container" *ngIf="juridicas.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>RUC</th>
+              <th>Representante</th>
+              <th>Email</th>
+              <th>Contactos</th>
+              <th>Estado</th>
+              <th>Verificado</th>
+              <th>Registro</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let j of juridicas">
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar juridica">
+                    {{ j.razonSocial.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="user-name">{{ j.razonSocial }}</div>
+                </div>
+              </td>
+              <td class="user-name">{{ j.ruc }}</td>
+              <td>
+                <div class="user-name">{{ j.nombresRepresentante }} {{ j.apellidoPaternoRepresentante }}</div>
+                <div class="user-sub">{{ j.departamento }}, {{ j.provincia }}</div>
+              </td>
+              <td class="email-cell">{{ j.emailRepresentante }}</td>
+              <td>
+                <span class="estado-badge badge-info">{{ j.totalContactos }}</span>
+              </td>
+              <td>
+                <span [class]="'estado-badge ' + (j.activo ? 'badge-success' : 'badge-danger')">
+                  {{ j.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <span [class]="'estado-badge ' + (j.verificado ? 'badge-info' : 'badge-warning')">
+                  {{ j.verificado ? 'Verificado' : 'Pendiente' }}
+                </span>
+              </td>
+              <td class="fecha-cell">{{ j.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+              <td class="text-right">
+                <div class="action-btns">
+                  <button
+                    [class]="j.activo ? 'btn-action btn-warn' : 'btn-action btn-ok'"
+                    (click)="toggleJuridica(j)">
+                    {{ j.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                  <button class="btn-action btn-del" (click)="eliminarJuridica(j)">
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Paginación jurídicas -->
+        <div class="pagination-wrap" *ngIf="totalPaginasJ > 1">
+          <span class="pagination-info">{{ totalJ }} resultados</span>
+          <div class="pagination-controls">
+            <button class="btn-page" (click)="cargarJuridicas(0)" [disabled]="paginaJ === 0">«</button>
+            <button class="btn-page" (click)="cargarJuridicas(paginaJ - 1)" [disabled]="paginaJ === 0">‹</button>
+            <button *ngFor="let p of getPaginasJ()" class="btn-page"
+                    [class.active]="p === paginaJ" (click)="cargarJuridicas(p)">
+              {{ p + 1 }}
+            </button>
+            <button class="btn-page" (click)="cargarJuridicas(paginaJ + 1)" [disabled]="paginaJ === totalPaginasJ - 1">›</button>
+            <button class="btn-page" (click)="cargarJuridicas(totalPaginasJ - 1)" [disabled]="paginaJ === totalPaginasJ - 1">»</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,13 +1,15 @@
 // =============================================================
 // mis-datos.component.ts
-// CORRECCIONES:
-//   1. PREGUNTAS_SEGURIDAD: valores corregidos al enum real del backend
-//      ❌ 'COLEGIO'    → ✅ 'NOMBRE_COLEGIO'
-//      ❌ 'MEJOR_AMIGO' → ✅ 'APODO_INFANCIA'
-//      ❌ label 'nombre de soltera de tu madre' → ✅ 'primer nombre de tu madre'
-//   2. Usa CuentaService en vez de HttpClient directo
-//   3. Tipado estricto con interfaces de cuenta.model.ts
-//   4. editNatural.preguntaSeguridad tipado como PreguntaSeguridad (no string)
+// CORRECCIONES v2:
+//   1. respuestaSeguridad → normalizada con .trim().toLowerCase() ANTES del PUT
+//      ➤ Garantiza consistencia en BD: "Lima", "LIMA", " lima " → siempre "lima"
+//      ➤ Esto es lo que hace que la respuesta "sea la correcta" en usos futuros
+//   2. Validación mínimo 3 caracteres (después del trim, no antes)
+//   3. Se limpia respuestaSeguridad tras éxito → usuario debe reingresar siempre
+//   4. NOTA TÉCNICA: el campo respuestaSeguridad en PUT *reemplaza*, no verifica.
+//      El backend solo tiene @NotBlank. No existe endpoint de verificación sin
+//      efectos secundarios en la sesión de recuperación. Esta solución es la
+//      máxima seguridad posible sin modificar el backend.
 // =============================================================
 
 import { Component, OnInit } from '@angular/core';
@@ -25,7 +27,7 @@ import {
 } from '../../../../core/models/cuenta.model';
 import {
   PreguntaSeguridad,
-  PREGUNTAS_SEGURIDAD,   // ← Importado del modelo, no hardcodeado
+  PREGUNTAS_SEGURIDAD,
 } from '../../../../core/models/ciudadano.model';
 
 @Component({
@@ -44,10 +46,10 @@ export class MisDatosComponent implements OnInit {
   pestanaActiva: 'perfil' | 'password' = 'perfil';
 
   // ── Sesión ────────────────────────────────────────────────
-  tipoPersna    = '';   // 'NATURAL' | 'JURIDICA'
+  tipoPersna    = '';
   identificador = '';
 
-  // ── Datos del perfil (tipados con interfaces del backend) ─
+  // ── Datos del perfil ──────────────────────────────────────
   perfilNatural:  PerfilNaturalResponse  | null = null;
   perfilJuridica: PerfilJuridicaResponse | null = null;
 
@@ -56,7 +58,7 @@ export class MisDatosComponent implements OnInit {
     direccion:          '',
     telefono:           '',
     email:              '',
-    preguntaSeguridad:  'NOMBRE_MASCOTA',   // valor por defecto válido del enum
+    preguntaSeguridad:  'NOMBRE_MASCOTA',
     respuestaSeguridad: ''
   };
 
@@ -69,15 +71,14 @@ export class MisDatosComponent implements OnInit {
     distrito:     ''
   };
 
-  // ── Cambio de contraseña: CambiarPasswordRequestDTO ──────
-  // tipoPersna e identificador se inyectan al enviar
+  // ── Cambio de contraseña ──────────────────────────────────
   passwords = {
     passwordActual:    '',
     nuevaPassword:     '',
     confirmarPassword: ''
   };
 
-  // ── Estado ────────────────────────────────────────────────
+  // ── Estado UI ─────────────────────────────────────────────
   cargandoPerfil  = false;
   guardandoPerfil = false;
   guardandoPass   = false;
@@ -102,7 +103,7 @@ export class MisDatosComponent implements OnInit {
     this.cargarPerfil();
   }
 
-  // ── Carga del perfil vía servicio ────────────────────────
+  // ── Carga del perfil ──────────────────────────────────────
   cargarPerfil(): void {
     this.cargandoPerfil = true;
     this.errorPerfil = '';
@@ -112,13 +113,12 @@ export class MisDatosComponent implements OnInit {
         next: (data: PerfilNaturalResponse) => {
           this.cargandoPerfil = false;
           this.perfilNatural = data;
-          // Pre-poblar campos editables
           this.editNatural = {
             direccion:          data.direccion,
             telefono:           data.telefono,
             email:              data.email,
             preguntaSeguridad:  data.preguntaSeguridad,
-            respuestaSeguridad: ''   // no se pre-pobla por seguridad
+            respuestaSeguridad: ''   // ← nunca se pre-llena: es secreto
           };
         },
         error: () => {
@@ -131,7 +131,6 @@ export class MisDatosComponent implements OnInit {
         next: (data: PerfilJuridicaResponse) => {
           this.cargandoPerfil = false;
           this.perfilJuridica = data;
-          // Pre-poblar campos editables
           this.editJuridica = {
             direccion:    data.direccion,
             telefono:     data.telefono,
@@ -154,6 +153,8 @@ export class MisDatosComponent implements OnInit {
     this.exitoPerfil = '';
 
     if (this.tipoPersna === 'NATURAL') {
+
+      // Validaciones de los campos básicos
       if (!this.editNatural.direccion.trim()) {
         this.errorPerfil = 'La dirección es obligatoria.'; return;
       }
@@ -166,22 +167,50 @@ export class MisDatosComponent implements OnInit {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.editNatural.email)) {
         this.errorPerfil = 'El correo no tiene un formato válido.'; return;
       }
-      if (!this.editNatural.respuestaSeguridad.trim()) {
+
+      // ── Validación de respuesta de seguridad ──────────────
+      // IMPORTANTE: normalizamos ANTES de validar la longitud.
+      // Un valor como "   a   " pasaría @NotBlank del backend pero
+      // sería inútil como respuesta de seguridad.
+      const respuestaNormalizada = this.editNatural.respuestaSeguridad.trim().toLowerCase();
+
+      if (respuestaNormalizada.length === 0) {
         this.errorPerfil = 'La respuesta de seguridad es obligatoria.'; return;
+      }
+      if (respuestaNormalizada.length < 3) {
+        this.errorPerfil = 'La respuesta de seguridad debe tener al menos 3 caracteres.'; return;
+      }
+
+      const requestNatural: EditarNaturalRequest = {
+        ...this.editNatural,
+        respuestaSeguridad: respuestaNormalizada
+      };
+
+      if (this.editNatural.preguntaSeguridad === null) {
+        this.errorPerfil = 'Debe seleccionar una pregunta de seguridad.'; return;
+      }
+
+      if (!this.preguntasSeguridad.some(p => p.value === this.editNatural.preguntaSeguridad)) {
+        this.errorPerfil = 'Pregunta de seguridad seleccionada no es válida.'; return;
       }
 
       this.guardandoPerfil = true;
-      this.cuentaService.editarPerfilNatural(this.identificador, this.editNatural).subscribe({
+      this.cuentaService.editarPerfilNatural(this.identificador, requestNatural).subscribe({
         next: () => {
           this.guardandoPerfil = false;
           this.exitoPerfil = 'Datos actualizados correctamente.';
+          // Limpiar la respuesta tras éxito: el usuario debe ingresarla
+          // siempre de nuevo (nunca queda pre-llenada en pantalla)
+          this.editNatural.respuestaSeguridad = '';
         },
         error: (err) => {
           this.guardandoPerfil = false;
           this.errorPerfil = err.error?.message || 'Error al guardar los datos.';
         }
       });
+
     } else {
+
       if (!this.editJuridica.direccion.trim()) {
         this.errorPerfil = 'La dirección es obligatoria.'; return;
       }
@@ -219,10 +248,10 @@ export class MisDatosComponent implements OnInit {
     }
 
     const request: CambiarPasswordRequest = {
-      tipoPersna:       this.tipoPersna,      // campo del contrato del backend
-      identificador:    this.identificador,
-      passwordActual:   this.passwords.passwordActual,
-      nuevaPassword:    this.passwords.nuevaPassword,
+      tipoPersna:        this.tipoPersna,
+      identificador:     this.identificador,
+      passwordActual:    this.passwords.passwordActual,
+      nuevaPassword:     this.passwords.nuevaPassword,
       confirmarPassword: this.passwords.confirmarPassword
     };
 

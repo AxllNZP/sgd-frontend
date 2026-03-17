@@ -1,19 +1,26 @@
-// registro.component.ts — COMPLETO Y SINCRONIZADO
+// registro.component.ts
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';           // RouterLink ya estaba
 import { HttpErrorResponse } from '@angular/common/http';
 import { DocumentoService } from '../../../core/services/documento.service';
+import { AuthService } from '../../../core/services/auth.service'; // ← AÑADIDO
 import { DocumentoResponse } from '../../../core/models/documento.model';
 import { SoloNumerosDirective } from '../../../shared/directives/solo-numeros.directive';
-import { AuthService } from '../../../core/services/auth.service';
+import { ModalDocumentoComponent } from '../../../shared/modal-documento/modal-documento.component';
 
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule, SoloNumerosDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,          // ← NECESARIO para routerLink="/ciudadano/mis-datos"
+    SoloNumerosDirective,
+    ModalDocumentoComponent
+  ],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.css'
 })
@@ -22,7 +29,6 @@ export class RegistroComponent implements OnInit {
   etapa: 1 | 2 = 1;
   mostrarModal = false;
 
-  // ── Formulario — campos mapeados 1:1 con DocumentoRequestDTO ──
   form = {
     remitente:                   '',
     dniRuc:                      '',
@@ -30,11 +36,10 @@ export class RegistroComponent implements OnInit {
     asunto:                      '',
     tipoDocumento:               '',
     numeroFolios:                1,
-    emailNotificacionAdicional:  '',   // AÑADIDO — solo Persona Natural
-    contactosNotificacionIds:    [] as string[]  // AÑADIDO — solo Persona Jurídica
+    emailNotificacionAdicional:  '',
+    contactosNotificacionIds:    [] as string[]
   };
 
-  // Fuente: DocumentoRequestDTO — no hay enum en backend, son strings
   tiposDocumento = [
     { label: 'Solicitud', value: 'SOLICITUD'  },
     { label: 'Informe',   value: 'INFORME'    },
@@ -50,18 +55,26 @@ export class RegistroComponent implements OnInit {
 
   error     = '';
   cargando  = false;
+  descargandoCargo  = false;
   numeroTramite     = '';
   emailConfirmacion = '';
 
-  // ── Modo autenticado: se detecta en ngOnInit desde localStorage ──
-  // Fuente: AuthService guarda tipoPersna e identificador tras loginCiudadano()
   esCiudadanoAutenticado = false;
   tipoPersonaActual: 'NATURAL' | 'JURIDICA' | null = null;
+
+  errorArchivo = '';
+  errorAnexo = '';
+
+  subiendoArchivo = false;
+  progresoArchivo = 0;
+
+  subiendoAnexo = false;
+  progresoAnexo = 0;
 
   constructor(
     private documentoService: DocumentoService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService   // ← AÑADIDO
   ) {}
 
   ngOnInit(): void {
@@ -69,50 +82,50 @@ export class RegistroComponent implements OnInit {
     const identificador = localStorage.getItem('identificador');
     const rol           = localStorage.getItem('rol');
 
-    // Si hay sesión ciudadana activa, pre-cargar datos del formulario
     if (rol === 'CIUDADANO' && tipoPersna && identificador) {
-      this.esCiudadanoAutenticado  = true;
-      this.tipoPersonaActual       = tipoPersna as 'NATURAL' | 'JURIDICA';
-      this.form.dniRuc             = identificador;
+      this.esCiudadanoAutenticado = true;
+      this.tipoPersonaActual      = tipoPersna as 'NATURAL' | 'JURIDICA';
+      this.form.dniRuc            = identificador;
 
-      // Pre-cargar nombre visible si está guardado
       const nombre = localStorage.getItem('nombre');
       if (nombre) this.form.remitente = nombre;
 
-      // Pre-cargar email si está guardado
       const email = localStorage.getItem('email');
       if (email) this.form.emailRemitente = email;
     }
   }
 
-  // ── Detectar tipo de persona ──
-  // Si es ciudadano autenticado: usa el rol guardado (más fiable)
-  // Si es anónimo: infiere por longitud del DNI/RUC
-  // Fuente: DocumentoRequestDTO.tipoPersona — "NATURAL" | "JURIDICA"
+  get tipoPersona(): 'NATURAL' | 'JURIDICA' {
+    return this.detectarTipoPersona();
+  }
+
   private detectarTipoPersona(): 'NATURAL' | 'JURIDICA' {
     if (this.tipoPersonaActual) return this.tipoPersonaActual;
     return this.form.dniRuc.length === 11 ? 'JURIDICA' : 'NATURAL';
   }
 
-  // Getter para usar en el template sin llamar el método privado
-  get tipoPersona(): 'NATURAL' | 'JURIDICA' {
-    return this.detectarTipoPersona();
-  }
+  onArchivoSeleccionado(event: any) {
+  const file = event.target.files[0];
+  this.procesarArchivo(file, 'principal');
+}
 
-  // ── Selección de archivos ──
-  onArchivoSeleccionado(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file  = input.files?.[0];
-    if (file) { this.archivo = file; this.archivoNombre = file.name; }
-  }
+onAnexoSeleccionado(event: any) {
+  const file = event.target.files[0];
+  this.procesarArchivo(file, 'anexo');
+}
 
-  onAnexoSeleccionado(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file  = input.files?.[0];
-    if (file) { this.anexo = file; this.anexoNombre = file.name; }
-  }
+onDropArchivo(event: DragEvent) {
+  event.preventDefault();
+  const file = event.dataTransfer?.files[0];
+  this.procesarArchivo(file!, 'principal');
+}
 
-  // ── Validación ──
+onDropAnexo(event: DragEvent) {
+  event.preventDefault();
+  const file = event.dataTransfer?.files[0];
+  this.procesarArchivo(file!, 'anexo');
+}
+
   private validarFormulario(): boolean {
     if (!this.form.remitente.trim()) {
       this.error = 'El nombre completo es obligatorio.'; return false;
@@ -129,7 +142,6 @@ export class RegistroComponent implements OnInit {
     if (!this.form.asunto.trim()) {
       this.error = 'El asunto es obligatorio.'; return false;
     }
-    // Fuente: DocumentoRequestDTO.asunto @Size(max=900)
     if (this.form.asunto.length > 900) {
       this.error = 'El asunto no puede superar los 900 caracteres.'; return false;
     }
@@ -139,7 +151,6 @@ export class RegistroComponent implements OnInit {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.emailRemitente)) {
       this.error = 'El correo electrónico no tiene un formato válido.'; return false;
     }
-    // Fuente: DocumentoRequestDTO.numeroFolios @Min(1) @NotNull
     if (this.form.numeroFolios < 1) {
       this.error = 'El número de folios debe ser al menos 1.'; return false;
     }
@@ -166,9 +177,6 @@ export class RegistroComponent implements OnInit {
 
     const tipo = this.detectarTipoPersona();
 
-    // ── Construir datos exactamente como DocumentoRequestDTO ──
-    // Los campos opcionales solo se incluyen si tienen valor,
-    // para no enviar strings vacíos que el backend valida con @Email
     const datos: Record<string, unknown> = {
       tipoPersona:    tipo,
       remitente:      this.form.remitente,
@@ -179,20 +187,14 @@ export class RegistroComponent implements OnInit {
       emailRemitente: this.form.emailRemitente
     };
 
-    // CAMPO NUEVO: emailNotificacionAdicional — solo Persona Natural
-    // Fuente: DocumentoRequestDTO.emailNotificacionAdicional @Email (opcional)
     if (tipo === 'NATURAL' && this.form.emailNotificacionAdicional.trim()) {
       datos['emailNotificacionAdicional'] = this.form.emailNotificacionAdicional.trim();
     }
-
-    // CAMPO NUEVO: contactosNotificacionIds — solo Persona Jurídica
-    // Fuente: DocumentoRequestDTO.contactosNotificacionIds List<UUID> (opcional)
     if (tipo === 'JURIDICA' && this.form.contactosNotificacionIds.length > 0) {
       datos['contactosNotificacionIds'] = this.form.contactosNotificacionIds;
     }
 
     const formData = new FormData();
-    // Part "datos" como Blob application/json — @RequestPart("datos") lo requiere
     formData.append('datos', new Blob([JSON.stringify(datos)], { type: 'application/json' }));
     if (this.archivo) formData.append('archivo', this.archivo);
     if (this.anexo)   formData.append('anexo',   this.anexo);
@@ -211,68 +213,209 @@ export class RegistroComponent implements OnInit {
     });
   }
 
-  // ── Interpreta cada código HTTP que GlobalExceptionHandler puede emitir ──
-  // Fuente: GlobalExceptionHandler.java — estructura ApiErrorResponse
-  // { timestamp, status, error, message, path } o { campos: {} } para @Valid
   private interpretarError(err: HttpErrorResponse): string {
     const body = err.error;
-
     switch (err.status) {
-      case 0:
-        return 'No se pudo conectar con el servidor. Verifique su conexión.';
-
+      case 0:    return 'No se pudo conectar con el servidor.';
       case 400:
-        // Puede venir con "campos" (errores @Valid de campo) o "message" (BadRequestException)
-        if (body?.campos) {
-          const primerMensaje = Object.values(body.campos)[0] as string;
-          return `Dato inválido: ${primerMensaje}`;
-        }
+        if (body?.campos) return `Dato inválido: ${Object.values(body.campos)[0]}`;
         return body?.message || 'Datos del formulario incorrectos.';
-
-      case 413:
-        return 'El archivo supera el tamaño permitido (principal: 50 MB, anexo: 20 MB).';
-
-      case 415:
-        // Unsupported Media Type — el FormData no se construyó correctamente
-        return 'Formato de envío no válido. Recargue la página e intente nuevamente.';
-
+      case 413:  return 'El archivo supera el tamaño permitido (principal: 50 MB, anexo: 20 MB).';
+      case 415:  return 'Formato de envío no válido. Recargue la página.';
       case 500:
-        // Mostramos el mensaje del backend si es específico, sino uno genérico
         return (body?.message && body.message !== 'Error interno del servidor')
-          ? body.message
-          : 'Error interno del servidor. Intente en unos momentos.';
-
-      default:
-        return body?.message || `Error inesperado (código ${err.status}).`;
+          ? body.message : 'Error interno del servidor. Intente en unos momentos.';
+      default:   return body?.message || `Error inesperado (código ${err.status}).`;
     }
+  }
+
+  // ── Navega a /ciudadano/mis-datos ─────────────────────────
+  // El botón "Mis Datos" del header usa routerLink directamente en el HTML,
+  // este método es solo para el botón "Cerrar Sesión"
+  cerrarSesion(): void {
+    this.authService.logout();            // limpia todo el localStorage
+    this.router.navigate(['/ciudadano']); // vuelve a selección de tipo
   }
 
   cerrarModal(): void { this.mostrarModal = false; }
 
   nuevoRegistro(): void {
-    this.mostrarModal = false;
-    this.etapa        = 1;
-    this.form = {
-      remitente:                  '',
-      dniRuc:                     '',
-      emailRemitente:             '',
-      asunto:                     '',
-      tipoDocumento:              '',
-      numeroFolios:               1,
-      emailNotificacionAdicional: '',
-      contactosNotificacionIds:   []
-    };
-    this.archivo      = null;  this.archivoNombre = '';
-    this.anexo        = null;  this.anexoNombre   = '';
-    this.error        = '';
-    this.numeroTramite = '';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  this.mostrarModal = false;
+  this.etapa = 1;
+
+  // Reset formulario
+  this.form = {
+    remitente: '',
+    dniRuc: '',
+    emailRemitente: '',
+    asunto: '',
+    tipoDocumento: '',
+    numeroFolios: 1,
+    emailNotificacionAdicional: '',
+    contactosNotificacionIds: []
+  };
+
+  // Reset archivos
+  this.archivo = null;
+  this.archivoNombre = '';
+  this.anexo = null;
+  this.anexoNombre = '';
+
+  // Reset estados
+  this.error = '';
+  this.numeroTramite = '';
+  this.emailConfirmacion = '';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  this.ngOnInit();
+}
+
+selectOpen = false;
+
+toggleSelect() {
+  this.selectOpen = !this.selectOpen;
+}
+
+selectTipo(valor: string) {
+  this.form.tipoDocumento = valor;
+  this.selectOpen = false;
+}
+
+procesarArchivo(file: File, tipo: 'principal' | 'anexo') {
+
+  if (!file) return;
+
+  const maxSize = tipo === 'principal' ? 50 : 20;
+  const allowedTypes = tipo === 'principal'
+    ? ['application/pdf']
+    : [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/zip'
+      ];
+
+  const sizeMB = file.size / (1024 * 1024);
+
+  // Validar tamaño
+  if (sizeMB > maxSize) {
+    if (tipo === 'principal') {
+      this.errorArchivo = `Máximo ${maxSize}MB`;
+    } else {
+      this.errorAnexo = `Máximo ${maxSize}MB`;
+    }
+    return;
   }
 
-  cerrarSesion(): void {
-  this.authService.logout();          // limpia localStorage
-  this.router.navigate(['/ciudadano']); // vuelve a la pantalla de selección
-}
+  // Validar tipo
+  const extension = file.name.split('.').pop()?.toLowerCase();
+
+const allowedExt = tipo === 'principal'
+  ? ['pdf']
+  : ['pdf', 'doc', 'docx', 'zip'];
+
+if (!allowedExt.includes(extension!)) {
+  if (tipo === 'principal') {
+    this.errorArchivo = 'Formato no permitido';
+  } else {
+    this.errorAnexo = 'Formato no permitido';
+  }
+  return;
 }
 
+  // OK
+  if (tipo === 'principal') {
+    this.archivo = file;
+    this.archivoNombre = file.name;
+    this.errorArchivo = '';
+  } else {
+    this.anexo = file;
+    this.anexoNombre = file.name;
+    this.errorAnexo = '';
+  }
 
+  if (tipo === 'principal') {
+  this.subiendoArchivo = true;
+  this.progresoArchivo = 0;
+  this.simularProgreso('principal');
+} else {
+  this.subiendoAnexo = true;
+  this.progresoAnexo = 0;
+  this.simularProgreso('anexo');
+}
+}
+onDragOver(event: DragEvent) {
+  event.preventDefault();
+}
+simularProgreso(tipo: 'principal' | 'anexo') {
+
+  let progreso = 0;
+
+  const intervalo = setInterval(() => {
+    progreso += 10;
+
+    if (tipo === 'principal') {
+      this.progresoArchivo = progreso;
+    } else {
+      this.progresoAnexo = progreso;
+    }
+
+    if (progreso >= 100) {
+      clearInterval(intervalo);
+
+      if (tipo === 'principal') {
+        this.subiendoArchivo = false;
+      } else {
+        this.subiendoAnexo = false;
+      }
+    }
+
+  }, 100);
+}
+eliminarArchivo(event: Event) {
+  event.stopPropagation();
+  this.archivo = null;
+  this.archivoNombre = '';
+}
+
+eliminarAnexo(event: Event) {
+  event.stopPropagation();
+  this.anexo = null;
+  this.anexoNombre = '';
+}
+getFileSize(file: File): string {
+  const size = file.size / (1024 * 1024);
+  return size < 1
+    ? `${(size * 1024).toFixed(0)} KB`
+    : `${size.toFixed(2)} MB`;
+}
+
+descargarCargo(): void {
+    if (!this.numeroTramite) return;
+
+    this.descargandoCargo = true;
+
+    this.documentoService.descargarCargo(this.numeroTramite).subscribe({
+      next: (blob: Blob) => {
+        this.descargandoCargo = false;
+
+        // Crear URL temporal para forzar descarga del archivo
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href     = url;
+        enlace.download = `cargo-${this.numeroTramite}.html`;
+        enlace.click();
+
+        // Liberar la URL temporal inmediatamente
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.descargandoCargo = false;
+        // No cerramos el modal — el usuario puede reintentar
+        this.error = 'No se pudo descargar el cargo. Intente nuevamente.';
+      }
+    });
+  }
+
+}

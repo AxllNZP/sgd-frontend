@@ -84,6 +84,14 @@ export const routes: Routes = [
       import('./features/auth/ciudadano/activar-cuenta/activar-cuenta.component')
         .then(m => m.ActivarCuentaComponent)
   },
+  // Añadir después de la ruta 'usuarios':
+{
+  path: 'ciudadanos',
+  canActivate: [authGuard, adminGuard],
+  loadComponent: () =>
+    import('./features/ciudadanos/ciudadanos.component')
+      .then(m => m.CiudadanosComponent)
+},
 
   // ── PANEL INTERNO (requiere autenticación) ─────────────
   {
