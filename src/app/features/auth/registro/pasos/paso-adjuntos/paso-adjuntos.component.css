@@ -1,0 +1,155 @@
+/* =========================
+   DROP ZONE BASE
+========================= */
+
+.drop-zone {
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 14px;
+  padding: 1.2rem;
+
+  background: rgba(255,255,255,0.02);
+  text-align: center;
+
+  transition: all 0.25s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Hover real */
+.drop-zone:hover {
+  border-color: #6366f1;
+  background: rgba(99,102,241,0.05);
+}
+
+/* =========================
+   TEXTO
+========================= */
+
+.drop-texto {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+/* =========================
+   BOTÓN EXPLORAR
+========================= */
+
+.btn-explorar {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: none;
+  border-radius: 8px;
+
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+
+  color: white;
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.btn-explorar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99,102,241,0.4);
+}
+
+/* =========================
+   ARCHIVO SELECCIONADO
+========================= */
+
+.archivo-seleccionado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 10px;
+
+  padding: 0.5rem 0.7rem;
+}
+
+.archivo-nombre {
+  font-size: 0.8rem;
+  color: #e2e8f0;
+}
+
+/* =========================
+   BOTÓN ELIMINAR
+========================= */
+
+.btn-eliminar {
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn-eliminar:hover {
+  color: #ef4444;
+}
+
+/* =========================
+   PROGRESO
+========================= */
+
+.progreso-barra {
+  margin-top: 0.6rem;
+  height: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+
+  background: rgba(255,255,255,0.08);
+}
+
+.progreso-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  transition: width 0.2s ease;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.error-campo {
+  display: block;
+  margin-top: 0.4rem;
+
+  font-size: 0.75rem;
+  color: #f87171;
+}
+.drop-zone.dragging {
+  border-color: #818cf8;
+  background: rgba(99,102,241,0.12);
+  transform: scale(1.01);
+}
+.drop-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.drop-icono {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.drop-texto span {
+  color: #818cf8;
+  font-weight: 500;
+}
+
+.archivo-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.archivo-icono {
+  font-size: 1rem;
+}

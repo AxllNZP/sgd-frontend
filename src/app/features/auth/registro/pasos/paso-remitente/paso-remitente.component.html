@@ -1,0 +1,105 @@
+<section class="seccion">
+
+  <h3>👤 Datos del remitente</h3>
+
+  <!-- DOCUMENTO -->
+  <div class="campo">
+    <label>DNI / RUC *</label>
+
+    <input type="text"
+           [(ngModel)]="form.dniRuc"
+           #dniRef="ngModel"
+           required
+           appSoloNumeros
+           maxlength="11"
+           (input)="onDocumentoChange()"
+           placeholder="Ingrese DNI o RUC"
+           [class.input-error]="estadoDoc === 'error'"/>
+
+    <small *ngIf="estadoDoc === 'error'" class="error-text">
+      Documento inválido
+    </small>
+
+    <small *ngIf="estadoDoc === 'loading'">
+      🔎 Consultando datos...
+    </small>
+
+    <small *ngIf="estadoDoc === 'ok'">
+      ✔ {{ tipoDetectado }} válido
+    </small>
+  </div>
+
+  <!-- NOMBRE -->
+  <div class="campo">
+    <label>Nombre completo o Razón Social *</label>
+
+    <input type="text"
+           [(ngModel)]="form.remitente"
+           #nombreRef="ngModel"
+           required
+           minlength="3"
+           maxlength="200"
+           placeholder="Se autocompleta si ingresa DNI/RUC"
+           [class.input-error]="nombreRef.invalid && nombreRef.touched"/>
+
+    <small *ngIf="nombreRef.invalid && nombreRef.touched" class="error-text">
+      Ingrese un nombre válido
+    </small>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="campo">
+    <label>Correo electrónico *</label>
+
+    <input type="email"
+           [(ngModel)]="form.emailRemitente"
+           #emailRef="ngModel"
+           required
+           email
+           maxlength="100"
+           placeholder="ejemplo@correo.com"
+           [class.input-error]="emailRef.invalid && emailRef.touched"/>
+
+    <small *ngIf="emailRef.invalid && emailRef.touched" class="error-text">
+      Correo inválido
+    </small>
+
+    <small *ngIf="emailRef.valid && emailRef.touched">
+      ✔ Correo válido
+    </small>
+  </div>
+
+  <!-- EMAIL EXTRA -->
+  <div class="campo" *ngIf="tipoPersona === 'NATURAL'">
+    <label>Correo para copia (opcional)</label>
+
+    <input type="email"
+           [(ngModel)]="form.emailNotificacionAdicional"
+           #email2Ref="ngModel"
+           email
+           maxlength="100"
+           placeholder="correo.secundario@correo.com"
+           [class.input-error]="email2Ref.invalid && email2Ref.touched"/>
+
+    <small *ngIf="email2Ref.invalid && email2Ref.touched" class="error-text">
+      Correo inválido
+    </small>
+  </div>
+
+  <!-- JURÍDICA -->
+  <div class="campo"
+       *ngIf="tipoPersona === 'JURIDICA' && esCiudadanoAutenticado">
+
+    <label>Contactos a notificar (opcional)</label>
+
+    <div class="info-box">
+      <p>Los contactos registrados recibirán la confirmación.</p>
+
+      <a routerLink="/ciudadano/mis-datos" class="link-pro">
+        ⚙️ Gestionar contactos
+      </a>
+    </div>
+
+  </div>
+
+</section>

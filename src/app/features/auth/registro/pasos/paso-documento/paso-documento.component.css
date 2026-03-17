@@ -704,3 +704,12 @@
   border: 1px solid rgba(255,255,255,0.08);
   color: #cbd5f5;
 }
+.input-error {
+  border-color: rgba(239,68,68,0.6) !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.15);
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 0.75rem;
+}

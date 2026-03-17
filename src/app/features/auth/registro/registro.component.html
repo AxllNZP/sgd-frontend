@@ -1,68 +1,46 @@
-<!-- ══════════════════════════════════════════════════════
-     HEADER CIUDADANO AUTENTICADO
-     Solo visible cuando el ciudadano inició sesión.
-     Fuente: esCiudadanoAutenticado se determina en ngOnInit()
-     leyendo localStorage['tipoPersna'] + localStorage['identificador']
-════════════════════════════════════════════════════════ -->
-<header class="header-ciudadano" *ngIf="esCiudadanoAutenticado">
+<!-- =============================================================
+     registro.component.html — solo ensamblado de sub-componentes
+     Cada <app-paso-*> es un componente independiente.
+     El padre pasa datos vía [Input] y escucha eventos vía (Output).
+     ============================================================= -->
 
+<!-- ── Header ciudadano autenticado ── -->
+<header class="header-ciudadano" *ngIf="esCiudadanoAutenticado">
   <span class="header-titulo">
-    <!-- Muestra el tipo de sesión activa -->
     Sesión: {{ tipoPersonaActual === 'JURIDICA' ? 'Persona Jurídica' : 'Persona Natural' }}
     &nbsp;·&nbsp;
-    <strong style="color: #94a3b8">{{ form.remitente || 'Ciudadano' }}</strong>
+    <strong style="color:#94a3b8">{{ form.remitente || 'Ciudadano' }}</strong>
   </span>
-
   <div class="header-acciones">
-
-    <!-- Botón "Mis Datos" → navega a mis-datos.component -->
-    <!-- La ruta ciudadano/mis-datos existe en app.routes.ts -->
     <a routerLink="/ciudadano/mis-datos" class="header-btn">
-      <!-- Ícono persona -->
       <svg width="14" height="14" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0
-                 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998
-                 0A17.933 17.933 0 0112 21.75c-2.676
-                 0-5.216-.584-7.499-1.632z"/>
+              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z
+                 M4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0
+                 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
       </svg>
       Mis Datos
     </a>
-
-    <!-- Botón "Cerrar Sesión" -->
     <button class="header-logout" (click)="cerrarSesion()">
-      <!-- Ícono logout -->
       <svg width="14" height="14" viewBox="0 0 24 24"
            fill="none" stroke="currentColor" stroke-width="2"
-           style="display:inline; vertical-align:middle; margin-right:4px">
+           style="display:inline;vertical-align:middle;margin-right:4px">
         <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25
-                 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5
-                 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3
-                 3m0 0l3 3m-3-3h12.75"/>
+              d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25
+                 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25
+                 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/>
       </svg>
       Cerrar sesión
     </button>
-
   </div>
-
 </header>
-<!-- =========================================================
-   REGISTRO DOCUMENTO - MESA DE PARTES
-   Componente Angular
-   Flujo:
-   1. Ingreso de datos
-   2. Confirmación
-   3. Registro exitoso
-========================================================= -->
 
-<!-- =========================================================
-   ETAPA 1 : FORMULARIO DE DATOS
-========================================================= -->
+<!-- ════════════════════════════════════════════════════════
+     ETAPA 1 — Formulario
+════════════════════════════════════════════════════════ -->
 <div class="registro-container" *ngIf="etapa === 1">
 
-  <!-- HEADER -->
   <h2 class="titulo">Registrar Documento</h2>
 
   <div class="etapas-indicador">
@@ -71,430 +49,66 @@
     <span class="etapa-inactiva">2. Confirmación</span>
   </div>
 
-  <!-- MENSAJES -->
-  <div class="error-msg" *ngIf="error">
-    {{ error }}
-  </div>
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+  <!--
+    Paso 1: Datos del remitente
+    form se pasa por referencia — ngModel del hijo muta el objeto directamente
+  -->
+  <app-paso-remitente
+    [form]="form"
+    [tipoPersona]="tipoPersona"
+    [esCiudadanoAutenticado]="esCiudadanoAutenticado">
+  </app-paso-remitente>
+
+  <!-- Paso 2: Tipo de documento, asunto, folios -->
+  <app-paso-documento [form]="form">
+  </app-paso-documento>
+
+  <!--
+    Paso 3: Archivos adjuntos
+    Los archivos no son parte de RegistroForm — el hijo los valida
+    y emite los File al padre para armarlos en el FormData
+  -->
+  <app-paso-adjuntos
+    [archivoNombre]="archivoNombre"
+    [anexoNombre]="anexoNombre"
+    (archivoSeleccionado)="onArchivoSeleccionado($event)"
+    (anexoSeleccionado)="onAnexoSeleccionado($event)">
+  </app-paso-adjuntos>
 
-  <!-- =====================================================
-      DATOS DEL REMITENTE
-  ===================================================== -->
-  <section class="seccion">
-
-    <h3>Datos del remitente</h3>
-
-    <div class="campo">
-      <label>Nombre completo o Razón Social *</label>
-      <input
-        type="text"
-        [(ngModel)]="form.remitente"
-        maxlength="200"
-        placeholder="Ingrese nombre o razón social"/>
-    </div>
-
-    <div class="campo">
-      <label>DNI / RUC *</label>
-      <input
-        type="text"
-        [(ngModel)]="form.dniRuc"
-        appSoloNumeros
-        maxlength="11"
-        placeholder="8 dígitos (DNI) o 11 dígitos (RUC)"/>
-    </div>
-
-    <div class="campo">
-      <label>Correo electrónico *</label>
-      <input
-        type="email"
-        [(ngModel)]="form.emailRemitente"
-        maxlength="100"
-        placeholder="correo@ejemplo.com"/>
-    </div>
-
-    <!-- Email adicional -->
-    <div class="campo" *ngIf="tipoPersona === 'NATURAL'">
-      <label>Correo para copia <span class="hint">(opcional)</span></label>
-
-      <input
-        type="email"
-        [(ngModel)]="form.emailNotificacionAdicional"
-        maxlength="100"
-        placeholder="otro@ejemplo.com"/>
-
-      <small class="hint-campo">
-        Se enviará una copia de la confirmación a este correo.
-      </small>
-    </div>
-
-    <!-- Contactos persona jurídica -->
-    <div class="campo"
-        *ngIf="tipoPersona === 'JURIDICA' && esCiudadanoAutenticado">
-
-      <label>
-        Contactos a notificar
-        <span class="hint">(opcional)</span>
-      </label>
-
-      <p class="hint-campo">
-        Los contactos activos registrados en su cuenta recibirán la confirmación.
-        Puede gestionarlos en
-        <a routerLink="/ciudadano/mis-datos">Mis datos</a>.
-      </p>
-
-    </div>
-
-  </section>
-
-  <!-- =====================================================
-      DATOS DEL DOCUMENTO
-  ===================================================== -->
-  <section class="seccion">
-
-    <h3>Datos del documento</h3>
-
-    <div class="campo">
-
-      <label>Tipo de documento *</label>
-
-      <div class="select-wrapper">
-
-  <div class="select-display" (click)="toggleSelect()">
-    {{ form.tipoDocumento || 'Seleccione' }}
-  </div>
-
-  <div class="select-options" *ngIf="selectOpen">
-
-    <div
-      class="option"
-      *ngFor="let t of tiposDocumento"
-      (click)="selectTipo(t.value)">
-
-      {{ t.label }}
-
-    </div>
-
-  </div>
-
-</div>
-
-    </div>
-
-    <div class="campo">
-
-      <label>Asunto *</label>
-
-      <textarea
-        rows="3"
-        [(ngModel)]="form.asunto"
-        maxlength="900"
-        placeholder="Describa el asunto del documento">
-      </textarea>
-
-      <small class="hint-contador">
-        {{ form.asunto.length }}/900 caracteres
-      </small>
-
-    </div>
-
-    <div class="campo campo-corto">
-
-      <label>Número de folios *</label>
-
-      <input
-        type="number"
-        [(ngModel)]="form.numeroFolios"
-        min="1"
-        max="999"/>
-
-    </div>
-
-  </section>
-
-  <!-- =====================================================
-      ARCHIVOS ADJUNTOS
-  ===================================================== -->
-  <section class="seccion">
-
-    <h3>Archivos adjuntos</h3>
-
-    <div class="campo">
-
-      <label>
-        Documento principal (PDF — máx. 50 MB)
-      </label>
-
-      <div class="file-upload-pro">
-
-  <input
-    #fileInput
-    type="file"
-    accept=".pdf"
-    (change)="onArchivoSeleccionado($event)"
-    hidden>
-
-  <div
-    class="file-box"
-    [class.has-file]="archivo"
-    (click)="!archivo && fileInput.click()"
-    (dragover)="onDragOver($event)"
-    (drop)="onDropArchivo($event)">
-
-    <!-- SIN ARCHIVO -->
-    <ng-container *ngIf="!archivo">
-
-      <div class="file-content">
-        <span class="file-icon">📎</span>
-
-        <div class="file-text">
-          <strong>Subir documento principal</strong>
-          <small>PDF — máximo 50MB</small>
-        </div>
-      </div>
-
-      <div class="file-status">
-        Ningún archivo seleccionado
-      </div>
-
-    </ng-container>
-
-    <!-- CON ARCHIVO -->
-    <ng-container *ngIf="archivo">
-
-      <div class="file-preview">
-
-        <div class="file-info">
-          <span class="file-name">{{ archivoNombre }}</span>
-          <span class="file-size">{{ getFileSize(archivo) }}</span>
-        </div>
-
-        <button
-          type="button"
-          class="file-remove"
-          (click)="eliminarArchivo($event)">
-          ✕
-        </button>
-
-      </div>
-
-      <div class="progress-bar" *ngIf="subiendoArchivo">
-        <div class="progress" [style.width.%]="progresoArchivo"></div>
-      </div>
-
-    </ng-container>
-
-  </div>
-
-  <div class="file-error" *ngIf="errorArchivo">
-    {{ errorArchivo }}
-  </div>
-
-</div>
-      <small *ngIf="archivoNombre">
-        Seleccionado: {{ archivoNombre }}
-      </small>
-
-    </div>
-
-    <div class="campo">
-
-      <label>
-        Anexo opcional (PDF, DOC, DOCX, ZIP — máx. 20 MB)
-      </label>
-
-      <div class="file-upload-pro">
-
-  <input
-    #anexoInput
-    type="file"
-    accept=".pdf,.doc,.docx,.zip"
-    (change)="onAnexoSeleccionado($event)"
-    hidden>
-
-  <div
-    class="file-box"
-    [class.has-file]="anexo"
-    (click)="!anexo && anexoInput.click()"
-    (dragover)="onDragOver($event)"
-    (drop)="onDropAnexo($event)">
-
-    <ng-container *ngIf="!anexo">
-
-      <div class="file-content">
-        <span class="file-icon">📎</span>
-
-        <div class="file-text">
-          <strong>Subir anexo (opcional)</strong>
-          <small>PDF, DOC, DOCX, ZIP — máximo 20MB</small>
-        </div>
-      </div>
-
-      <div class="file-status">
-        Ningún archivo seleccionado
-      </div>
-
-    </ng-container>
-
-    <ng-container *ngIf="anexo">
-
-      <div class="file-preview">
-
-        <div class="file-info">
-          <span class="file-name">{{ anexoNombre }}</span>
-          <span class="file-size">{{ getFileSize(anexo) }}</span>
-        </div>
-
-        <button
-          type="button"
-          class="file-remove"
-          (click)="eliminarAnexo($event)">
-          ✕
-        </button>
-
-      </div>
-
-      <div class="progress-bar" *ngIf="subiendoAnexo">
-        <div class="progress" [style.width.%]="progresoAnexo"></div>
-      </div>
-
-    </ng-container>
-
-  </div>
-
-  <div class="file-error" *ngIf="errorAnexo">
-    {{ errorAnexo }}
-  </div>
-
-</div>
-
-      <small *ngIf="anexoNombre">
-        Seleccionado: {{ anexoNombre }}
-      </small>
-
-    </div>
-
-  </section>
-
-  <!-- =====================================================
-      ACCIONES
-  ===================================================== -->
   <div class="acciones">
-
-    <button
-      class="btn-primario"
-      (click)="continuar()">
-
+    <button class="btn-primario" (click)="continuar()">
       Continuar →
-
     </button>
-
   </div>
 
 </div>
 
-<!-- =========================================================
-   ETAPA 2 : CONFIRMACIÓN
-========================================================= -->
-<div class="registro-container" *ngIf="etapa === 2">
+<!-- ════════════════════════════════════════════════════════
+     ETAPA 2 — Confirmación (componente completo)
+     El hijo emite (confirmar) y (cancelar) al padre
+════════════════════════════════════════════════════════ -->
+<app-paso-confirmacion
+  *ngIf="etapa === 2"
+  [form]="form"
+  [archivoNombre]="archivoNombre"
+  [anexoNombre]="anexoNombre"
+  [cargando]="cargando"
+  [error]="error"
+  (confirmar)="confirmarEnvio()"
+  (cancelar)="cancelar()">
+</app-paso-confirmacion>
 
-  <h2 class="titulo">¡Ya casi termina!</h2>
-
-  <div class="etapas-indicador">
-
-    <span class="etapa-inactiva">1. Datos del documento</span>
-
-    <span class="separador"> › </span>
-
-    <span class="etapa-activa">2. Confirmación</span>
-
-  </div>
-
-  <div class="error-msg" *ngIf="error">
-    {{ error }}
-  </div>
-
-  <!-- RESUMEN -->
-  <section class="seccion resumen">
-
-    <h3>Resumen de su documento</h3>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">Remitente:</span>
-      <span class="resumen-valor">{{ form.remitente }}</span>
-    </div>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">DNI / RUC:</span>
-      <span class="resumen-valor">{{ form.dniRuc }}</span>
-    </div>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">Tipo persona:</span>
-      <span class="resumen-valor">
-        {{ form.dniRuc.length === 11 ? 'Jurídica' : 'Natural' }}
-      </span>
-    </div>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">Tipo documento:</span>
-      <span class="resumen-valor">{{ form.tipoDocumento }}</span>
-    </div>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">Asunto:</span>
-      <span class="resumen-valor">{{ form.asunto }}</span>
-    </div>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">Folios:</span>
-      <span class="resumen-valor">{{ form.numeroFolios }}</span>
-    </div>
-
-    <div class="resumen-fila">
-      <span class="resumen-label">Correo:</span>
-      <span class="resumen-valor">{{ form.emailRemitente }}</span>
-    </div>
-
-  </section>
-
-  <!-- CONFIRMACION -->
-  <p class="aviso-confirmacion">
-    ¿Está seguro de que desea enviar este documento a Mesa de Partes?
-  </p>
-
-  <div class="acciones">
-
-    <button
-      class="btn-secundario"
-      (click)="cancelar()"
-      [disabled]="cargando">
-
-      ← No, corregir datos
-
-    </button>
-
-    <button
-      class="btn-primario"
-      (click)="confirmarEnvio()"
-      [disabled]="cargando">
-
-      <span *ngIf="!cargando">
-        Sí, enviar documento
-      </span>
-
-      <span *ngIf="cargando">
-        Enviando...
-      </span>
-
-    </button>
-
-  </div>
-
-</div>
-
+<!-- ════════════════════════════════════════════════════════
+     MODAL DE ÉXITO — componente compartido en /shared
+════════════════════════════════════════════════════════ -->
 <app-modal-documento
   *ngIf="mostrarModal"
   [numeroTramite]="numeroTramite"
   [emailConfirmacion]="emailConfirmacion"
+  [descargandoCargo]="descargandoCargo"
   (cerrar)="cerrarModal()"
-  (nuevo)="nuevoRegistro()">
+  (nuevo)="nuevoRegistro()"
+  (descargar)="descargarCargo()">
 </app-modal-documento>

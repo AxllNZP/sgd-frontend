@@ -1,0 +1,103 @@
+<div class="registro-container confirmacion">
+
+  <!-- HEADER -->
+  <h2 class="titulo">Confirmar envío</h2>
+
+  <div class="etapas-indicador">
+    <span class="etapa-completa">1. Datos</span>
+    <span class="separador">›</span>
+    <span class="etapa-activa">2. Confirmación</span>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+  <!-- RESUMEN -->
+  <section class="seccion resumen-card">
+
+    <h3>📄 Resumen del documento</h3>
+
+    <div class="resumen-grid">
+
+      <div class="item">
+        <span>Remitente</span>
+        <strong>{{ form.remitente || '—' }}</strong>
+      </div>
+
+      <div class="item">
+        <span>DNI / RUC</span>
+        <strong>{{ form.dniRuc || '—' }}</strong>
+      </div>
+
+      <div class="item">
+        <span>Tipo de persona</span>
+        <strong>{{ getTipoPersona() }}</strong>
+      </div>
+
+      <div class="item">
+        <span>Tipo de documento</span>
+        <strong>{{ getTipoDocumentoLabel() }}</strong>
+      </div>
+
+      <div class="item full">
+        <span>Asunto</span>
+        <strong>{{ form.asunto || '—' }}</strong>
+      </div>
+
+      <div class="item">
+        <span>Folios</span>
+        <strong>{{ form.numeroFolios || '—' }}</strong>
+      </div>
+
+      <div class="item">
+        <span>Correo</span>
+        <strong>{{ form.emailRemitente || '—' }}</strong>
+      </div>
+
+    </div>
+
+    <!-- ARCHIVOS -->
+    <div class="archivos-box">
+
+      <div class="archivo" *ngIf="archivoNombre">
+        📎 <span>Principal:</span> {{ archivoNombre }}
+      </div>
+
+      <div class="archivo" *ngIf="!archivoNombre">
+        ⚠️ No se adjuntó documento principal
+      </div>
+
+      <div class="archivo" *ngIf="anexoNombre">
+        📂 <span>Anexo:</span> {{ anexoNombre }}
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ALERTA -->
+  <div class="confirmacion-alerta">
+    ⚠️ Una vez enviado, no podrás modificar el documento.
+  </div>
+
+  <!-- ACCIONES -->
+  <div class="acciones confirmacion-acciones">
+
+    <button class="btn-secundario"
+            (click)="cancelar.emit()"
+            [disabled]="cargando">
+      ← Corregir
+    </button>
+
+    <button class="btn-primario"
+            (click)="confirmar.emit()"
+            [disabled]="!formValido() || cargando">
+
+      <span *ngIf="!cargando">Enviar documento</span>
+      <span *ngIf="cargando">Enviando...</span>
+
+    </button>
+
+  </div>
+
+</div>

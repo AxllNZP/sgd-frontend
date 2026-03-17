@@ -6,43 +6,61 @@
        [ngClass]="{ 'closing': isClosing }"
        (click)="$event.stopPropagation()">
 
+    <!-- ICONO -->
     <div class="modal-icono-exito">✓</div>
 
-    <h3>¡Documento registrado!</h3>
+    <!-- TITULO -->
+    <h3 class="modal-title">
+      Documento registrado
+    </h3>
 
-    <p>
-      Su documento fue ingresado correctamente a Mesa de Partes.
+    <!-- MENSAJE -->
+    <p class="modal-text">
+      Tu documento fue ingresado correctamente a Mesa de Partes.
     </p>
 
+    <!-- NUMERO -->
     <div class="numero-tramite-box">
-      <span class="numero-tramite-label">
-        N.º de trámite
-      </span>
-
-      <strong class="numero-tramite">
-        {{ numeroTramite }}
-      </strong>
+      <span>N° de trámite</span>
+      <strong>{{ numeroTramite }}</strong>
     </div>
 
+    <!-- NOTA -->
     <p class="modal-nota">
-      Guarde este número. Puede usarlo para hacer seguimiento del trámite.
+      Guarda este número para hacer seguimiento.
     </p>
 
     <p class="modal-nota" *ngIf="emailConfirmacion">
-      Se envió una confirmación a
+      Confirmación enviada a
       <strong>{{ emailConfirmacion }}</strong>
     </p>
 
-    <div class="modal-acciones">
+    <!-- CTA PRINCIPAL -->
+    <button
+      class="btn-descarga"
+      (click)="onDescargar()"
+      [disabled]="descargandoCargo">
 
+      <span *ngIf="!descargandoCargo">
+        ⬇ Descargar cargo
+      </span>
+
+      <span *ngIf="descargandoCargo" class="btn-loading">
+        <span class="mini-spinner"></span>
+        Descargando...
+      </span>
+
+    </button>
+
+    <!-- ACCIONES -->
+    <div class="modal-acciones">
       <button class="btn-secundario" (click)="nuevoRegistro()">
-        Registrar otro documento
+        Registrar otro
       </button>
 
       <button class="btn-primario" (click)="cerrarModal()">
         Cerrar
       </button>
-
     </div>
 
   </div>

@@ -1,3 +1,15 @@
+// =============================================================
+// modal-documento.component.ts
+// AÑADIDO:
+//   + @Input()  descargandoCargo: boolean  — bloquea el botón mientras descarga
+//   + @Output() descargar: EventEmitter    — el padre ejecuta la descarga real
+//
+// ARQUITECTURA: el modal NO inyecta DocumentoService directamente.
+// Emite el evento al padre (registro.component) que ya tiene
+// descargarCargo() y descargandoCargo implementados.
+// Esto mantiene el mismo patrón que (cerrar) y (nuevo).
+// =============================================================
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -10,31 +22,40 @@ import { CommonModule } from '@angular/common';
 })
 export class ModalDocumentoComponent {
 
-  @Input() numeroTramite: string = '';
+  @Input() numeroTramite: string    = '';
   @Input() emailConfirmacion: string = '';
 
-  @Output() cerrar = new EventEmitter<void>();
-  @Output() nuevo = new EventEmitter<void>();
+  // ── NUEVO: controla el estado del botón de descarga ───────
+  // El padre (registro.component) maneja el estado real —
+  // este Input solo refleja el valor para deshabilitar el botón
+  @Input() descargandoCargo: boolean = false;
 
-isClosing = false;
+  @Output() cerrar    = new EventEmitter<void>();
+  @Output() nuevo     = new EventEmitter<void>();
 
-cerrarModal() {
-  this.isClosing = true;
+  // ── NUEVO: el padre escucha este evento y llama descargarCargo() ──
+  @Output() descargar = new EventEmitter<void>();
 
-  setTimeout(() => {
-    this.cerrar.emit();
-    this.isClosing = false;
-  }, 250);
-}
+  isClosing = false;
 
-nuevoRegistro() {
-  this.isClosing = true;
+  cerrarModal(): void {
+    this.isClosing = true;
+    setTimeout(() => {
+      this.cerrar.emit();
+      this.isClosing = false;
+    }, 250);
+  }
 
-  setTimeout(() => {
-    this.nuevo.emit();
-    this.isClosing = false;
-  }, 250);
-}
+  nuevoRegistro(): void {
+    this.isClosing = true;
+    setTimeout(() => {
+      this.nuevo.emit();
+      this.isClosing = false;
+    }, 250);
+  }
 
-
+  // ── NUEVO: emite al padre sin lógica propia ───────────────
+  onDescargar(): void {
+    this.descargar.emit();
+  }
 }

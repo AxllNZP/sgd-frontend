@@ -1,0 +1,79 @@
+<section class="seccion doc-card">
+
+  <h3 class="doc-title">📄 Datos del documento</h3>
+
+  <!-- Tipo de documento -->
+  <div class="campo">
+    <label>Tipo de documento *</label>
+
+    <div class="select-wrapper">
+
+      <div class="select-display"
+           [class.active]="selectOpen"
+           [class.input-error]="tipoInvalido"
+           (click)="toggleSelect()">
+
+        {{ getLabelSeleccionado() || 'Seleccionar tipo de documento' }}
+
+        <span class="arrow" [class.open]="selectOpen">▾</span>
+      </div>
+
+      <div class="select-options" *ngIf="selectOpen">
+        <div class="option"
+             *ngFor="let t of tiposDocumento"
+             (click)="selectTipo(t.value)">
+          {{ t.label }}
+        </div>
+      </div>
+
+    </div>
+
+    <small *ngIf="tipoInvalido" class="error-text">
+      Seleccione un tipo de documento
+    </small>
+  </div>
+
+  <!-- Asunto -->
+  <div class="campo">
+    <label>Asunto *</label>
+
+    <textarea
+      rows="3"
+      [(ngModel)]="form.asunto"
+      #asuntoRef="ngModel"
+      required
+      minlength="5"
+      maxlength="900"
+      placeholder="Describa brevemente el contenido del documento"
+      [class.input-error]="asuntoRef.invalid && asuntoRef.touched">
+    </textarea>
+
+    <div class="contador">
+      {{ form.asunto?.length || 0 }}/900
+    </div>
+
+    <small *ngIf="asuntoRef.invalid && asuntoRef.touched" class="error-text">
+      El asunto debe tener al menos 5 caracteres
+    </small>
+  </div>
+
+  <!-- Folios -->
+  <div class="campo campo-corto">
+    <label>Número de folios *</label>
+
+    <input
+      type="number"
+      [(ngModel)]="form.numeroFolios"
+      #foliosRef="ngModel"
+      required
+      min="1"
+      max="999"
+      placeholder="Ej: 3"
+      [class.input-error]="foliosRef.invalid && foliosRef.touched"/>
+
+    <small *ngIf="foliosRef.invalid && foliosRef.touched" class="error-text">
+      Ingrese un número entre 1 y 999
+    </small>
+  </div>
+
+</section>

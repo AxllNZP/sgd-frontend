@@ -1,0 +1,124 @@
+<section class="seccion">
+  <h3>Archivos adjuntos</h3>
+
+  <!-- =========================
+       DOCUMENTO PRINCIPAL
+  ========================= -->
+  <div class="campo">
+    <label>Documento principal (PDF — máx. 50 MB)</label>
+
+    <div class="drop-zone"
+         [class.dragging]="isDragging"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave()"
+         (drop)="onDropArchivo($event)"
+         (click)="inputArchivo.click()">
+
+      <input type="file"
+             accept=".pdf"
+             (change)="onArchivoSeleccionado($event)"
+             hidden
+             #inputArchivo />
+
+      <!-- SIN ARCHIVO -->
+      <ng-container *ngIf="!archivoNombre">
+        <div class="drop-contenido">
+          <div class="drop-icono">📄</div>
+          <p class="drop-texto">
+            Arrastra tu archivo aquí o <span>haz clic para seleccionar</span>
+          </p>
+          <small>Solo PDF — hasta 50 MB</small>
+        </div>
+      </ng-container>
+
+      <!-- CON ARCHIVO -->
+      <ng-container *ngIf="archivoNombre">
+        <div class="archivo-seleccionado">
+          <div class="archivo-info">
+            <span class="archivo-icono">📄</span>
+            <span class="archivo-nombre">{{ archivoNombre }}</span>
+          </div>
+
+          <button type="button"
+                  class="btn-eliminar"
+                  (click)="eliminarArchivo($event)">
+            ✕
+          </button>
+        </div>
+
+        <!-- PROGRESO -->
+        <div class="progreso-barra" *ngIf="subiendoArchivo">
+          <div class="progreso-fill"
+               [style.width.%]="progresoArchivo">
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+
+    <small class="error-campo" *ngIf="errorArchivo">
+      {{ errorArchivo }}
+    </small>
+  </div>
+
+  <!-- =========================
+       ANEXO OPCIONAL
+  ========================= -->
+  <div class="campo">
+    <label>Anexo opcional (PDF, DOC, DOCX, ZIP — máx. 20 MB)</label>
+
+    <div class="drop-zone"
+         [class.dragging]="isDragging"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave()"
+         (drop)="onDropAnexo($event)"
+         (click)="inputAnexo.click()">
+
+      <input type="file"
+             accept=".pdf,.doc,.docx,.zip"
+             (change)="onAnexoSeleccionado($event)"
+             hidden
+             #inputAnexo />
+
+      <!-- SIN ANEXO -->
+      <ng-container *ngIf="!anexoNombre">
+        <div class="drop-contenido">
+          <div class="drop-icono">📎</div>
+          <p class="drop-texto">
+            Arrastra el anexo aquí o <span>haz clic para seleccionar</span>
+          </p>
+          <small>PDF, DOC, DOCX, ZIP — hasta 20 MB</small>
+        </div>
+      </ng-container>
+
+      <!-- CON ANEXO -->
+      <ng-container *ngIf="anexoNombre">
+        <div class="archivo-seleccionado">
+          <div class="archivo-info">
+            <span class="archivo-icono">📎</span>
+            <span class="archivo-nombre">{{ anexoNombre }}</span>
+          </div>
+
+          <button type="button"
+                  class="btn-eliminar"
+                  (click)="eliminarAnexo($event)">
+            ✕
+          </button>
+        </div>
+
+        <!-- PROGRESO -->
+        <div class="progreso-barra" *ngIf="subiendoAnexo">
+          <div class="progreso-fill"
+               [style.width.%]="progresoAnexo">
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+
+    <small class="error-campo" *ngIf="errorAnexo">
+      {{ errorAnexo }}
+    </small>
+  </div>
+
+</section>
