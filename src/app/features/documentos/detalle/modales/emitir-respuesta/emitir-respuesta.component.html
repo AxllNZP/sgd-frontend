@@ -1,7 +1,17 @@
+<!-- =============================================================
+     emitir-respuesta.component.html
+     AÑADIDO:
+       - Mensaje de error del backend (errorRespuesta) con hint específico
+         para el caso 422 (fallo de SMTP)
+       - Botón "Emitir Respuesta" deshabilitado mientras guardandoRespuesta
+       - Texto del botón cambia a "Enviando..." durante la petición
+     ============================================================= -->
+
 <div class="modal wide" *ngIf="visible">
+
   <div class="modal-header">
     <span>Emitir Respuesta</span>
-    <button class="modal-close" (click)="onCerrar()">
+    <button class="modal-close" (click)="onCerrar()" [disabled]="guardandoRespuesta">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
       </svg>
@@ -9,11 +19,25 @@
   </div>
 
   <div class="modal-body">
+
+    <!-- Error del backend — visible solo cuando ocurre un error -->
+    <div class="error-banner" *ngIf="errorRespuesta">
+      <svg width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ errorRespuesta }}
+    </div>
+
     <div class="mfield">
       <label>Contenido de la Respuesta</label>
-      <textarea [(ngModel)]="respuestaForm.contenido"
+      <textarea
+        [(ngModel)]="respuestaForm.contenido"
         rows="6"
-        placeholder="Redacte la respuesta oficial...">
+        placeholder="Redacte la respuesta oficial..."
+        [disabled]="guardandoRespuesta">
       </textarea>
     </div>
 
@@ -21,19 +45,35 @@
       <input
         type="checkbox"
         [(ngModel)]="respuestaForm.enviarEmail"
-        id="enviarEmail"/>
+        id="enviarEmail"
+        [disabled]="guardandoRespuesta"/>
       <label for="enviarEmail">
         Enviar notificación por email al ciudadano
       </label>
     </div>
+
   </div>
 
   <div class="modal-footer">
-    <button class="btn-modal secondary" (click)="onCerrar()">
+
+    <button class="btn-modal secondary"
+            (click)="onCerrar()"
+            [disabled]="guardandoRespuesta">
       Cancelar
     </button>
-    <button class="btn-modal success" (click)="onGuardar()">
-      Emitir Respuesta
+
+    <!--
+      Bloqueado mientras guardandoRespuesta === true.
+      Sin esto el usuario podía hacer clic múltiples veces
+      generando 5+ llamadas simultáneas al backend (todas con 422).
+    -->
+    <button class="btn-modal success"
+            (click)="onGuardar()"
+            [disabled]="guardandoRespuesta">
+      <span *ngIf="!guardandoRespuesta">Emitir Respuesta</span>
+      <span *ngIf="guardandoRespuesta">Enviando...</span>
     </button>
+
   </div>
+
 </div>

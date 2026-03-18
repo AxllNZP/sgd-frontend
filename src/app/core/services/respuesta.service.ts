@@ -1,8 +1,7 @@
 // =============================================================
 // respuesta.service.ts
-// POST /api/respuestas/{numeroTramite} — emitir respuesta
-// GET  /api/respuestas/{numeroTramite} — listar respuestas
-// Requiere: MESA_PARTES o ADMINISTRADOR
+// CORRECCIÓN: URL absoluta → relativa (/api/respuestas)
+// El proxy de Angular reenvía /api/** a http://localhost:8080
 // =============================================================
 
 import { Injectable } from '@angular/core';
@@ -13,11 +12,13 @@ import { RespuestaRequest, RespuestaResponse } from '../models/respuesta.model';
 @Injectable({ providedIn: 'root' })
 export class RespuestaService {
 
-  private readonly apiUrl = 'http://localhost:8080/api/respuestas';
+  // CORRECCIÓN: URL relativa — el proxy reenvía a http://localhost:8080
+  private readonly apiUrl = '/api/respuestas';
 
   constructor(private http: HttpClient) {}
 
   // ── POST /api/respuestas/{numeroTramite} ──────────────────
+  // Requiere: MESA_PARTES o ADMINISTRADOR
   emitir(
     numeroTramite: string,
     request: RespuestaRequest

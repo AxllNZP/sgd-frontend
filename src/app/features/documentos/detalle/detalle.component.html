@@ -270,7 +270,9 @@
 <app-emitir-respuesta
   [visible]="mostrarModalRespuesta"
   [respuestaForm]="respuestaForm"
-  (cerrar)="mostrarModalRespuesta = false"
+  [guardandoRespuesta]="guardandoRespuesta"
+  [errorRespuesta]="errorRespuesta"
+  (cerrar)="mostrarModalRespuesta = false; errorRespuesta = ''"
   (guardar)="guardarRespuesta()">
 </app-emitir-respuesta>
 
