@@ -49,7 +49,7 @@
     </textarea>
 
     <div class="contador">
-      {{ form.asunto?.length || 0 }}/900
+      {{ (form.asunto || '').length }}/900
     </div>
 
     <small *ngIf="asuntoRef.invalid && asuntoRef.touched" class="error-text">
