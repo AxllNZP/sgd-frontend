@@ -85,13 +85,13 @@
     <div *ngIf="etapa === 2">
 
       <div class="form-group">
-        <label>Código de 6 dígitos</label>
+        <label>Código de 8 dígitos</label>
 
         <input
           type="text"
           [(ngModel)]="codigo"
-          placeholder="Ej: 123456"
-          maxlength="6"
+          placeholder="Ej: 12345678"
+          maxlength="8"
           appSoloNumeros
           (keyup.enter)="verificar()"
           class="input codigo-input"
