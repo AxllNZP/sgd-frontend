@@ -1,12 +1,12 @@
 <!-- ============================================================
-     dashboard.component.html — Layout mejorado
-     Estructura:
-       1. Navbar fija
-       2. Hero de bienvenida
-       3. Tarjetas KPI (7 tarjetas)
-       4. Fila de gráficos (doughnut + línea)
-       5. Gráfico de barras horizontal (áreas)
-       6. Sección tabla con buscador + filtros
+     dashboard.component.html
+     CORRECCIÓN: KPI cards de "Áreas Activas" y "Usuarios Activos"
+     se muestran SOLO si el rol es ADMINISTRADOR.
+
+     📚 LECCIÓN — *ngIf="esAdmin"
+     El getter esAdmin del componente devuelve true solo cuando
+     this.rol === 'ADMINISTRADOR'. Los roles vienen del JWT que
+     el backend firmó, por lo que es la fuente de verdad correcta.
      ============================================================ -->
 
 <div class="dash-root">
@@ -32,14 +32,14 @@
         </svg>
         Documentos
       </a>
-      <a routerLink="/areas" class="nav-link" *ngIf="rol === 'ADMINISTRADOR'">
+      <a routerLink="/areas" class="nav-link" *ngIf="esAdmin">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
           <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
         </svg>
         Áreas
       </a>
-      <a routerLink="/usuarios" class="nav-link" *ngIf="rol === 'ADMINISTRADOR'">
+      <a routerLink="/usuarios" class="nav-link" *ngIf="esAdmin">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
@@ -48,14 +48,20 @@
         </svg>
         Usuarios
       </a>
-        <a routerLink="/ciudadanos" *ngIf="rol === 'ADMINISTRADOR'">Ciudadanos</a>
+      <a routerLink="/ciudadanos" class="nav-link" *ngIf="esAdmin">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Ciudadanos
+      </a>
     </div>
 
     <div class="navbar-right">
       <div class="user-chip">
         <div class="user-avatar">{{ nombre.charAt(0).toUpperCase() }}</div>
         <span class="user-name">{{ nombre }}</span>
-        <span class="user-rol">{{ rol === 'ADMINISTRADOR' ? 'Admin' : 'Mesa' }}</span>
+        <span class="user-rol">{{ esAdmin ? 'Admin' : 'Mesa' }}</span>
       </div>
       <button class="btn-logout" (click)="cerrarSesion()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -104,11 +110,15 @@
 
       <!-- ======================================================
            SECCIÓN 1: TARJETAS KPI
-           7 tarjetas: total + 4 estados + áreas + usuarios
+           📚 LECCIÓN — Las KPIs de Áreas y Usuarios solo se
+           muestran con *ngIf="esAdmin" porque el backend las
+           protege bajo hasRole('ADMINISTRADOR'). No tiene sentido
+           mostrar "0 Áreas Activas" a MESA_PARTES cuando la
+           información simplemente no está disponible para ese rol.
            ====================================================== -->
       <section class="kpi-grid">
 
-        <!-- Total documentos — tarjeta destacada -->
+        <!-- Total documentos — tarjeta destacada (todos los roles) -->
         <div class="kpi-card kpi-total anim-slide-up" style="--delay: 0ms">
           <div class="kpi-icon kpi-icon--total">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -125,7 +135,7 @@
           <div class="kpi-glow kpi-glow--blue"></div>
         </div>
 
-        <!-- Recibidos -->
+        <!-- Recibidos (todos los roles) -->
         <div class="kpi-card anim-slide-up" style="--delay: 60ms">
           <div class="kpi-icon kpi-icon--blue">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -142,7 +152,7 @@
           </div>
         </div>
 
-        <!-- En Proceso -->
+        <!-- En Proceso (todos los roles) -->
         <div class="kpi-card anim-slide-up" style="--delay: 120ms">
           <div class="kpi-icon kpi-icon--amber">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -156,7 +166,7 @@
           </div>
         </div>
 
-        <!-- Observados -->
+        <!-- Observados (todos los roles) -->
         <div class="kpi-card anim-slide-up" style="--delay: 180ms">
           <div class="kpi-icon kpi-icon--red">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -171,7 +181,7 @@
           </div>
         </div>
 
-        <!-- Archivados -->
+        <!-- Archivados (todos los roles) -->
         <div class="kpi-card anim-slide-up" style="--delay: 240ms">
           <div class="kpi-icon kpi-icon--green">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -186,8 +196,8 @@
           </div>
         </div>
 
-        <!-- Áreas activas -->
-        <div class="kpi-card anim-slide-up" style="--delay: 300ms">
+        <!-- Áreas activas — SOLO ADMINISTRADOR -->
+        <div class="kpi-card anim-slide-up" style="--delay: 300ms" *ngIf="esAdmin">
           <div class="kpi-icon kpi-icon--indigo">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -200,8 +210,8 @@
           </div>
         </div>
 
-        <!-- Usuarios activos -->
-        <div class="kpi-card anim-slide-up" style="--delay: 360ms">
+        <!-- Usuarios activos — SOLO ADMINISTRADOR -->
+        <div class="kpi-card anim-slide-up" style="--delay: 360ms" *ngIf="esAdmin">
           <div class="kpi-icon kpi-icon--teal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -219,11 +229,10 @@
       </section>
 
       <!-- ======================================================
-           SECCIÓN 2: GRÁFICOS — Doughnut + Línea (fila)
+           SECCIÓN 2: GRÁFICOS — Doughnut + Línea
            ====================================================== -->
       <section class="charts-row anim-fade-in" style="--delay: 200ms">
 
-        <!-- Donut estados -->
         <div class="chart-card">
           <div class="chart-header">
             <span class="chart-title">Distribución por Estado</span>
@@ -234,7 +243,6 @@
           </div>
         </div>
 
-        <!-- Línea actividad -->
         <div class="chart-card chart-card--wide">
           <div class="chart-header">
             <span class="chart-title">Actividad — últimos 7 días</span>
@@ -265,7 +273,6 @@
            ====================================================== -->
       <section class="table-section anim-fade-in" style="--delay: 400ms">
 
-        <!-- Cabecera de sección -->
         <div class="table-section-header">
           <div>
             <h2 class="section-title">Documentos</h2>
@@ -279,10 +286,7 @@
           <a routerLink="/documentos" class="btn-ver-todos">Ver todos →</a>
         </div>
 
-        <!-- ── Controles de búsqueda / filtro ── -->
         <div class="search-bar">
-
-          <!-- Input buscador -->
           <div class="search-input-wrap">
             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -297,7 +301,6 @@
             <button class="search-clear" *ngIf="terminoBusqueda" (click)="terminoBusqueda=''; onBusquedaCambio()">✕</button>
           </div>
 
-          <!-- Filtros por estado (pills) -->
           <div class="filtro-pills">
             <button
               class="filtro-pill"
@@ -308,10 +311,8 @@
               {{ f.label }}
             </button>
           </div>
-
         </div>
 
-        <!-- ── Tabla ── -->
         <div class="table-wrap">
           <table class="doc-table">
             <thead>
@@ -345,7 +346,6 @@
                   </svg>
                 </td>
               </tr>
-              <!-- Estado vacío -->
               <tr *ngIf="documentosTabla.length === 0">
                 <td colspan="7" class="empty-state">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -358,7 +358,6 @@
           </table>
         </div>
 
-        <!-- ── Paginación ── -->
         <div class="pagination" *ngIf="totalPaginas > 1">
           <span class="pag-info">{{ getDesde() }}–{{ getHasta() }} de {{ totalElementos }}</span>
           <div class="pag-controls">

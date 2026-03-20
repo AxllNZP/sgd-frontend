@@ -1,15 +1,23 @@
 // =============================================================
-// dashboard.component.ts — VERSIÓN MEJORADA
+// dashboard.component.ts — CORRECCIÓN: forkJoin condicional por rol
 //
-// 📚 LECCIÓN DE ARQUITECTURA — "Derivar vs. Pedir"
-//   En lugar de crear un endpoint especial en el backend para
-//   cada estadística, derivamos los datos en el frontend desde
-//   los endpoints que ya existen. Esto respeta la regla de
-//   Inviolabilidad del Backend.
+// 📚 LECCIÓN — "El problema del forkJoin rígido"
 //
-//   forkJoin() = "ejecuta N observables en paralelo y emite
-//   cuando TODOS completan". Perfecto para cargar datos
-//   independientes (docs + áreas + usuarios) sin waterfalls.
+//   forkJoin({ a, b, c }) emite SOLO cuando los 3 completan.
+//   Si CUALQUIERA lanza error (403 incluido), forkJoin cancela
+//   TODO y ejecuta el bloque error(). Por eso MESA_PARTES veía
+//   "No se pudieron cargar los datos del panel" con todos los
+//   KPI en 0, aunque SÍ tenía permiso para /api/documentos.
+//
+// SOLUCIÓN: dos capas de defensa
+//   1. Si el rol NO es ADMINISTRADOR → sustituir áreas y usuarios
+//      por of([]) y of([]) antes de hacer cualquier HTTP call.
+//      Esto evita el 403 por completo.
+//   2. catchError en cada observable como última línea de defensa,
+//      por si en el futuro cambian los permisos sin avisar.
+//
+// REGLA INVIOLABLE: NO se toca SecurityConfig.java ni ningún
+// archivo del backend. El frontend se adapta al servidor.
 // =============================================================
 
 import {
@@ -20,8 +28,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin, Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { forkJoin, Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil, catchError } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
 
@@ -42,15 +50,11 @@ import { UsuarioResponse } from '../../core/models/usuario.model';
 
 Chart.register(...registerables);
 
-// ── Tipo local para el gráfico de línea ─────────────────────
-// Derivado de DocumentoResponse.fechaHoraRegistro (ISO string)
 interface ActividadDia {
-  fecha: string;   // "DD/MM"
+  fecha: string;
   total: number;
 }
 
-// ── Tipo local para el gráfico de barras ────────────────────
-// Derivado agrupando DocumentoResponse por areaNombre
 interface DocsPorArea {
   area: string;
   total: number;
@@ -65,16 +69,14 @@ interface DocsPorArea {
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  // ── Refs a los canvas de Chart.js ────────────────────────
-  @ViewChild('graficoEstados')  graficoEstadosRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('graficoAreas')    graficoAreasRef!:   ElementRef<HTMLCanvasElement>;
+  @ViewChild('graficoEstados')   graficoEstadosRef!:   ElementRef<HTMLCanvasElement>;
+  @ViewChild('graficoAreas')     graficoAreasRef!:     ElementRef<HTMLCanvasElement>;
   @ViewChild('graficoActividad') graficoActividadRef!: ElementRef<HTMLCanvasElement>;
 
-  // ── Info del usuario ─────────────────────────────────────
   nombre = '';
   rol    = '';
 
-  // ── Tarjetas de resumen ──────────────────────────────────
+  // ── KPI counters ─────────────────────────────────────────
   totalDocumentos = 0;
   recibidos       = 0;
   enProceso       = 0;
@@ -85,50 +87,33 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Tabla / búsqueda ─────────────────────────────────────
   documentosTabla:    DocumentoResponse[] = [];
-  todosLosDocumentos: DocumentoResponse[] = []; // caché para filtrado local
+  todosLosDocumentos: DocumentoResponse[] = [];
 
-  // Búsqueda en tiempo real (local, sin round-trip al servidor)
   terminoBusqueda = '';
   filtroEstado: EstadoDocumento | '' = '';
 
-  // Paginación — Spring usa índices 0-based
   paginaActual   = 0;
   itemsPorPagina = 10;
   totalPaginas   = 0;
   totalElementos = 0;
 
-  // ── Estado de carga ──────────────────────────────────────
-  cargando      = false;
-  errorCarga    = '';
+  cargando   = false;
+  errorCarga = '';
 
-  // ── Datos derivados para gráficos ────────────────────────
-  // 📚 LECCIÓN: 'protected' es visible en el template pero no
-  // fuera del componente. Más semántico que 'public' para datos
-  // que solo el template propio necesita leer.
   private  actividadUltimos7Dias: ActividadDia[] = [];
   protected docsPorArea: DocsPorArea[] = [];
 
-  // 📚 LECCIÓN: Angular NO permite expresiones como `new Date()`
-  // dentro del template porque el compilador de Angular (Ivy)
-  // solo puede acceder a miembros de la clase del componente.
-  // Solución: pre-calcular el valor como propiedad.
   protected hoyISO = new Date().toISOString();
 
-  // ── Charts ───────────────────────────────────────────────
   private chartEstados:   Chart | null = null;
   private chartAreas:     Chart | null = null;
   private chartActividad: Chart | null = null;
   private datosCargados = false;
 
-  // ── Para limpiar suscripciones en ngOnDestroy ─────────────
-  // 📚 LECCIÓN: Subject + takeUntil es el patrón recomendado en
-  // Angular para evitar memory leaks al destruir un componente.
   private destroy$ = new Subject<void>();
 
   protected Math = Math;
 
-  // ── Estados disponibles para el filtro ──────────────────
-  // Contract-First: estos valores mapean con EstadoDocumento del backend
   readonly estadosFiltro: Array<{ label: string; value: EstadoDocumento | '' }> = [
     { label: 'Todos',      value: ''           },
     { label: 'Recibido',   value: 'RECIBIDO'   },
@@ -137,16 +122,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     { label: 'Archivado',  value: 'ARCHIVADO'  },
   ];
 
+  // 📚 LECCIÓN — getter calculado
+  // En lugar de guardar un booleano extra, derivamos si el usuario
+  // es admin directamente del rol. Un solo punto de verdad.
+  get esAdmin(): boolean {
+    return this.rol === 'ADMINISTRADOR';
+  }
+
   constructor(
     private authService:      AuthService,
     private documentoService: DocumentoService,
     private areaService:      AreaService,
     private usuarioService:   UsuarioService,
     private router:           Router,
-    // 📚 LECCIÓN: ChangeDetectorRef.detectChanges() ejecuta change
-    // detection de forma síncrona. Útil cuando necesitas que el DOM
-    // se actualice AHORA MISMO antes de continuar con código que
-    // depende de elementos del DOM (como los canvas de Chart.js).
     private cdr:              ChangeDetectorRef
   ) {}
 
@@ -160,17 +148,50 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.datosCargados) this.crearTodosLosGraficos();
   }
 
-  // ── Carga paralela de las 3 fuentes de datos ─────────────
-  // 📚 LECCIÓN forkJoin: dispara los 3 GET simultáneamente.
-  // El tiempo total = MAX(t1, t2, t3), no t1+t2+t3.
+  // ── CORRECCIÓN PRINCIPAL ──────────────────────────────────
+  // 📚 LECCIÓN — "Observables condicionales con of()"
+  //
+  // of([]) crea un observable que emite inmediatamente un array
+  // vacío y completa. Es el "valor neutro" para forkJoin cuando
+  // no queremos (o no podemos) hacer la llamada HTTP real.
+  //
+  // Estructura:
+  //   this.esAdmin ? this.areaService.listar() : of([])
+  //   └─ Si es admin → hace el GET /api/areas
+  //   └─ Si NO es admin → devuelve [] sin ninguna llamada HTTP
+  //
+  // catchError como segunda línea de defensa: si por alguna
+  // razón el 403 llega de todos modos, lo capturamos y
+  // devolvemos [] en lugar de propagar el error al forkJoin.
   cargarTodo(): void {
     this.cargando   = true;
     this.errorCarga = '';
 
+    // Observables condicionales según el rol
+    const areas$ = this.esAdmin
+      ? this.areaService.listar().pipe(
+          catchError(() => of([] as AreaResponse[]))
+        )
+      : of([] as AreaResponse[]);
+
+    const usuarios$ = this.esAdmin
+      ? this.usuarioService.listar().pipe(
+          catchError(() => of([] as UsuarioResponse[]))
+        )
+      : of([] as UsuarioResponse[]);
+
     forkJoin({
-      docs:     this.documentoService.listarTodos(0, 500),  // muestra grande para estadísticas
-      areas:    this.areaService.listar(),
-      usuarios: this.usuarioService.listar()
+      docs:     this.documentoService.listarTodos(0, 500).pipe(
+        catchError(() => {
+          // Si falla documentos (no debería), devolvemos página vacía
+          return of({
+            content: [], totalElements: 0, totalPages: 0,
+            number: 0, size: 0, first: true, last: true, empty: true
+          } as PageResponse<DocumentoResponse>);
+        })
+      ),
+      areas:    areas$,
+      usuarios: usuarios$
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
@@ -182,17 +203,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cargando      = false;
         this.datosCargados = true;
 
-        // 📚 LECCIÓN — cdr.detectChanges() vs setTimeout:
-        //
-        // PROBLEMA: los <canvas> viven dentro de *ngIf="!cargando".
-        // setTimeout(0) funciona en la primera carga pero falla en
-        // back navigation porque Angular puede necesitar más de un
-        // microtask para re-hidratar la vista destruida.
-        //
-        // cdr.detectChanges() es la solución correcta:
-        //   → Ejecuta change detection SÍNCRONAMENTE ahora mismo
-        //   → El *ngIf renderiza el canvas ANTES de que Chart.js lo busque
-        //   → Funciona en primera carga Y en back navigation ✓
         this.cdr.detectChanges();
         this.crearTodosLosGraficos();
       },
@@ -203,29 +213,22 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // ── Procesar página de documentos ────────────────────────
   private procesarDocumentos(page: PageResponse<DocumentoResponse>): void {
     const docs = page.content;
 
-    // Contadores por estado
     this.totalDocumentos = page.totalElements;
     this.recibidos  = docs.filter(d => d.estado === 'RECIBIDO').length;
     this.enProceso  = docs.filter(d => d.estado === 'EN_PROCESO').length;
     this.observados = docs.filter(d => d.estado === 'OBSERVADO').length;
     this.archivados = docs.filter(d => d.estado === 'ARCHIVADO').length;
 
-    // Caché para búsqueda/filtrado local
     this.todosLosDocumentos = docs;
 
-    // Paginación inicial
     this.paginaActual   = page.number;
     this.totalPaginas   = page.totalPages;
     this.totalElementos = page.totalElements;
-    this.aplicarFiltroLocal(); // rellena documentosTabla
+    this.aplicarFiltroLocal();
 
-    // ── Derivar docs por área ────────────────────────────────
-    // 📚 LECCIÓN: reduce() agrupa un array en un mapa de conteos.
-    // Object.entries() convierte ese mapa en pares [clave, valor].
     const mapaAreas = docs.reduce<Record<string, number>>((acc, doc) => {
       const nombre = doc.areaNombre ?? 'Sin área';
       acc[nombre] = (acc[nombre] ?? 0) + 1;
@@ -234,10 +237,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.docsPorArea = Object.entries(mapaAreas)
       .map(([area, total]) => ({ area, total }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 8); // máximo 8 áreas en el gráfico
+      .slice(0, 8);
 
-    // ── Derivar actividad de los últimos 7 días ───────────────
-    // fechaHoraRegistro viene como ISO-8601 string desde Spring Boot
     const hoy = new Date();
     const dias: ActividadDia[] = [];
     for (let i = 6; i >= 0; i--) {
@@ -255,6 +256,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.actividadUltimos7Dias = dias;
   }
 
+  // 📚 LECCIÓN — cuando el array llega vacío (MESA_PARTES),
+  // filter() devuelve 0, lo que es correcto: no se muestran
+  // áreas activas en la KPI, en lugar de lanzar un error.
   private procesarAreas(areas: AreaResponse[]): void {
     this.totalAreas = areas.filter(a => a.activa).length;
   }
@@ -263,11 +267,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.totalUsuarios = usuarios.filter(u => u.activo).length;
   }
 
-  // ── Búsqueda y filtrado local ─────────────────────────────
-  // 📚 LECCIÓN: Filtrado local vs. servidor.
-  // Para un dataset < 1000 registros, filtrar en memoria es
-  // instantáneo y evita round-trips. Para datasets grandes
-  // (> 10k), se usa POST /api/documentos/buscar con paginación.
   onBusquedaCambio(): void {
     this.paginaActual = 0;
     this.aplicarFiltroLocal();
@@ -289,12 +288,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private aplicarFiltroLocal(): void {
     let filtrados = [...this.todosLosDocumentos];
 
-    // Filtro por estado (exacto — mapea con EstadoDocumento del backend)
     if (this.filtroEstado) {
       filtrados = filtrados.filter(d => d.estado === this.filtroEstado);
     }
 
-    // Búsqueda por texto en campos: remitente, asunto, numeroTramite
     const termino = this.terminoBusqueda.trim().toLowerCase();
     if (termino) {
       filtrados = filtrados.filter(d =>
@@ -305,7 +302,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
-    // Paginación local
     const inicio = this.paginaActual * this.itemsPorPagina;
     this.documentosTabla  = filtrados.slice(inicio, inicio + this.itemsPorPagina);
     this.totalElementos   = filtrados.length;
@@ -332,7 +328,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.min((this.paginaActual + 1) * this.itemsPorPagina, this.totalElementos);
   }
 
-  // ── Gráficos ─────────────────────────────────────────────
   private crearTodosLosGraficos(): void {
     this.crearGraficoEstados();
     this.crearGraficoAreas();
@@ -390,7 +385,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        indexAxis: 'y',   // barras horizontales — más legible con nombres largos
+        indexAxis: 'y',
         plugins: { legend: { display: false } },
         scales: {
           x: {
@@ -401,7 +396,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             ticks: {
               color: '#94a3b8',
               font: { size: 11 },
-              // Truncar nombres largos en el label del eje
               callback: (val, idx) => {
                 const label = this.docsPorArea[idx]?.area ?? '';
                 return label.length > 18 ? label.slice(0, 18) + '…' : label;
@@ -419,7 +413,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const ctx = this.graficoActividadRef?.nativeElement?.getContext('2d');
     if (!ctx) return;
 
-    // Gradiente azul de arriba hacia abajo para el área del gráfico
     const gradient = ctx.createLinearGradient(0, 0, 0, 200);
     gradient.addColorStop(0,   'rgba(59,130,246,0.4)');
     gradient.addColorStop(1,   'rgba(59,130,246,0.0)');
@@ -461,7 +454,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // ── Navegación ───────────────────────────────────────────
   verDetalle(numeroTramite: string): void {
     this.router.navigate(['/documentos', numeroTramite]);
   }
@@ -471,14 +463,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  // ── Fecha formateada legible ─────────────────────────────
   formatearFecha(iso: string): string {
     if (!iso) return '—';
     const d = new Date(iso);
     return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  // ── Cleanup ──────────────────────────────────────────────
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
