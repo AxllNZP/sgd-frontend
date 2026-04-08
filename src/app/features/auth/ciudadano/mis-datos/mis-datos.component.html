@@ -1,4 +1,4 @@
-<!-- Header con botón regresar -->
+<!-- Header -->
 <div style="background:#f8f9fa; border-bottom:1px solid #ddd; padding:0.75rem 1.5rem; display:flex; align-items:center; gap:1rem;">
   <a routerLink="/registro-documento"
      style="color:#005a9c; font-size:0.85rem; text-decoration:none; display:flex; align-items:center; gap:0.4rem;">
@@ -12,11 +12,22 @@
 
   <!-- ── Pestañas ── -->
   <div class="pestanas">
-    <button class="pestana-btn" [class.activa]="pestanaActiva === 'perfil'"
+    <button class="pestana-btn"
+            [class.activa]="pestanaActiva === 'perfil'"
             (click)="pestanaActiva = 'perfil'; errorPerfil = ''; exitoPerfil = ''">
       Datos personales
     </button>
-    <button class="pestana-btn" [class.activa]="pestanaActiva === 'password'"
+
+    <!-- Pestaña Contactos solo para Jurídica -->
+    <button class="pestana-btn"
+            *ngIf="tipoPersna === 'JURIDICA'"
+            [class.activa]="pestanaActiva === 'contactos'"
+            (click)="pestanaActiva = 'contactos'; errorContactos = ''">
+      Contactos de notificación
+    </button>
+
+    <button class="pestana-btn"
+            [class.activa]="pestanaActiva === 'password'"
             (click)="pestanaActiva = 'password'; errorPass = ''; exitoPass = ''">
       Cambiar contraseña
     </button>
@@ -35,12 +46,9 @@
       <div class="error-msg" *ngIf="errorPerfil">{{ errorPerfil }}</div>
       <div class="exito-msg" *ngIf="exitoPerfil">{{ exitoPerfil }}</div>
 
-      <!-- ══════════════════════════════════════
-           PERSONA NATURAL
-      ══════════════════════════════════════ -->
+      <!-- ── PERSONA NATURAL ── -->
       <ng-container *ngIf="tipoPersna === 'NATURAL'">
 
-        <!-- Solo lectura -->
         <section class="seccion" *ngIf="perfilNatural">
           <h3>Datos de identidad <span class="badge-readonly">Solo lectura</span></h3>
           <div class="fila-dos">
@@ -81,8 +89,6 @@
           </div>
         </section>
 
-        <!-- Editables: EditarNaturalRequestDTO -->
-        <!-- Campos: direccion, telefono, email, preguntaSeguridad, respuestaSeguridad -->
         <section class="seccion">
           <h3>Datos editables</h3>
           <div class="campo">
@@ -99,18 +105,10 @@
               <input type="email" [(ngModel)]="editNatural.email" maxlength="200" />
             </div>
           </div>
-
-          <!-- ── Pregunta de seguridad ── -->
           <div class="campo">
             <label>Pregunta de seguridad *</label>
-
-            <!--
-              Se muestra la pregunta ACTUAL registrada (dato de solo lectura del perfil).
-              Viene del campo descripcionPregunta del PerfilNaturalResponseDTO.
-              El usuario puede seleccionar una nueva pregunta si lo desea.
-            -->
             <p class="hint" *ngIf="perfilNatural">
-              Pregunta actual: <em>{{ perfilNatural.descripcionPregunta || '(no definida)' }}</em>
+              Actual: <em>{{ perfilNatural.descripcionPregunta || '(no definida)' }}</em>
             </p>
             <select [(ngModel)]="editNatural.preguntaSeguridad">
               <option *ngFor="let p of preguntasSeguridad" [value]="p.value">
@@ -118,49 +116,24 @@
               </option>
             </select>
           </div>
-
-          <!--
-            CAMPO CLAVE: respuestaSeguridad
-            ─────────────────────────────────────────────────────────────
-            ¿Qué hace este campo?
-              Al guardar, REEMPLAZA la respuesta almacenada en la BD.
-              El backend NO verifica la respuesta anterior (@NotBlank únicamente).
-
-            ¿Por qué pedimos la respuesta entonces?
-              Para que el usuario sea consciente de cuál quedará guardada.
-              Se normaliza a minúsculas + sin espacios extremos antes del PUT,
-              garantizando consistencia con la validación de recuperación de cuenta.
-
-            ¿Por qué se limpia tras guardar?
-              Porque el campo nunca debe mostrarse pre-llenado: es información
-              sensible y cada guardado debe ser un acto deliberado del usuario.
-            ─────────────────────────────────────────────────────────────
-          -->
           <div class="campo">
             <label>Nueva respuesta de seguridad *</label>
-            <span class="hint">
-              Mínimo 3 caracteres. Se guardará en minúsculas para mayor consistencia.
-            </span>
-            <input
-              type="text"
-              [(ngModel)]="editNatural.respuestaSeguridad"
-              maxlength="200"
-              placeholder="Escribe tu respuesta (ej: lima, firulais)" />
+            <span class="hint">Mínimo 3 caracteres. Se guardará en minúsculas.</span>
+            <input type="text" [(ngModel)]="editNatural.respuestaSeguridad"
+                   maxlength="200" placeholder="Escribe tu respuesta..." />
           </div>
-
         </section>
 
       </ng-container>
 
 
-      <!-- ══════════════════════════════════════
-           PERSONA JURÍDICA
-      ══════════════════════════════════════ -->
+      <!-- ── PERSONA JURÍDICA ── -->
       <ng-container *ngIf="tipoPersna === 'JURIDICA'">
 
-        <!-- Solo lectura -->
+        <!-- SOLO LECTURA: datos de la empresa -->
         <section class="seccion" *ngIf="perfilJuridica">
           <h3>Datos de la empresa <span class="badge-readonly">Solo lectura</span></h3>
+
           <div class="fila-dos">
             <div class="campo">
               <label>RUC</label>
@@ -171,6 +144,7 @@
               <input type="text" [value]="perfilJuridica.razonSocial" disabled />
             </div>
           </div>
+
           <div class="campo">
             <label>Representante Legal</label>
             <input type="text"
@@ -179,28 +153,58 @@
                              + perfilJuridica.apellidoMaternoRepresentante"
                    disabled />
           </div>
+
+          <div class="fila-dos">
+            <div class="campo">
+              <label>Tipo doc. representante</label>
+              <input type="text" [value]="perfilJuridica.tipoDocRepresentante" disabled />
+            </div>
+            <div class="campo">
+              <label>N° doc. representante</label>
+              <input type="text" [value]="perfilJuridica.numDocRepresentante" disabled />
+            </div>
+          </div>
+
           <div class="campo">
             <label>Correo del representante</label>
             <input type="text" [value]="perfilJuridica.emailRepresentante" disabled />
           </div>
+
           <div class="campo">
-            <label>Pregunta de seguridad actual</label>
+            <label>Pregunta de seguridad</label>
             <input type="text" [value]="perfilJuridica.descripcionPregunta" disabled />
+          </div>
+
+          <div class="fila-dos">
+            <div class="campo">
+              <label>Afiliado a buzón</label>
+              <input type="text"
+                     [value]="perfilJuridica.afiliadoBuzon ? 'Sí' : 'No'" disabled />
+            </div>
+            <div class="campo">
+              <label>Fecha de registro</label>
+              <input type="text"
+                     [value]="perfilJuridica.fechaCreacion | date:'dd/MM/yyyy'"
+                     disabled />
+            </div>
           </div>
         </section>
 
-        <!-- Editables: EditarJuridicaRequestDTO -->
-        <!-- Campos: direccion, telefono, departamento, provincia, distrito -->
+        <!-- EDITABLES: EditarJuridicaRequestDTO -->
+        <!-- Solo: direccion, telefono, departamento, provincia, distrito -->
         <section class="seccion">
           <h3>Datos editables</h3>
+
           <div class="campo">
             <label>Dirección *</label>
             <input type="text" [(ngModel)]="editJuridica.direccion" maxlength="300" />
           </div>
+
           <div class="campo">
             <label>Teléfono *</label>
             <input type="text" [(ngModel)]="editJuridica.telefono" maxlength="20" />
           </div>
+
           <div class="fila-tres">
             <div class="campo">
               <label>Departamento *</label>
@@ -220,7 +224,8 @@
       </ng-container>
 
       <!-- Botón guardar -->
-      <div class="acciones" *ngIf="!cargandoPerfil && (tipoPersna === 'NATURAL' || tipoPersna === 'JURIDICA')">
+      <div class="acciones"
+           *ngIf="!cargandoPerfil && (tipoPersna === 'NATURAL' || tipoPersna === 'JURIDICA')">
         <button class="btn-primario"
                 (click)="guardarPerfil()"
                 [disabled]="guardandoPerfil">
@@ -233,7 +238,113 @@
 
 
   <!-- ════════════════════════════════════════════════════════
-       PESTAÑA 2: Cambiar contraseña
+       PESTAÑA 2: Contactos de notificación (solo Jurídica)
+       Endpoints usados:
+         GET    /api/cuenta/juridica/{ruc}/contactos
+         POST   /api/cuenta/juridica/{ruc}/contactos
+         PATCH  /api/cuenta/juridica/{ruc}/contactos/{id}/estado
+         DELETE /api/cuenta/juridica/{ruc}/contactos/{id}
+  ════════════════════════════════════════════════════════════ -->
+  <div *ngIf="pestanaActiva === 'contactos' && tipoPersna === 'JURIDICA'">
+
+    <div class="error-msg" *ngIf="errorContactos">{{ errorContactos }}</div>
+
+    <!-- Cabecera de sección con botón agregar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h3 style="margin:0; font-size:1rem; color:#333;">
+        Contactos para recibir notificaciones
+      </h3>
+      <button class="btn-primario"
+              *ngIf="!mostrarFormContacto"
+              (click)="mostrarFormContacto = true">
+        + Agregar contacto
+      </button>
+    </div>
+
+    <!-- Formulario nuevo contacto -->
+    <section class="seccion" *ngIf="mostrarFormContacto">
+      <h3>Nuevo contacto</h3>
+
+      <div class="error-msg" *ngIf="errorNuevoContacto">{{ errorNuevoContacto }}</div>
+
+      <div class="fila-dos">
+        <div class="campo">
+          <label>Nombre completo *</label>
+          <input type="text" [(ngModel)]="nuevoContacto.nombres"
+                 maxlength="200" placeholder="Ej: Pedro Sánchez" />
+        </div>
+        <div class="campo">
+          <label>Correo electrónico *</label>
+          <input type="email" [(ngModel)]="nuevoContacto.email"
+                 maxlength="200" placeholder="contacto@empresa.com" />
+        </div>
+      </div>
+
+      <div class="acciones" style="gap:0.75rem;">
+        <button class="btn-secundario"
+                (click)="cancelarNuevoContacto()"
+                [disabled]="guardandoContacto">
+          Cancelar
+        </button>
+        <button class="btn-primario"
+                (click)="agregarContacto()"
+                [disabled]="guardandoContacto">
+          {{ guardandoContacto ? 'Guardando...' : 'Guardar contacto' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Lista de contactos -->
+    <p *ngIf="cargandoContactos" class="cargando-msg">Cargando contactos...</p>
+
+    <div *ngIf="!cargandoContactos">
+
+      <p *ngIf="contactos.length === 0" style="color:#888; font-size:0.9rem;">
+        No hay contactos de notificación registrados.
+      </p>
+
+      <!-- Tabla de contactos -->
+      <table class="tabla-contactos" *ngIf="contactos.length > 0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of contactos">
+            <td>{{ c.nombres }}</td>
+            <td>{{ c.email }}</td>
+            <td>
+              <!-- Toggle activo/inactivo -->
+              <!-- PATCH /api/cuenta/juridica/{ruc}/contactos/{id}/estado -->
+              <button class="btn-toggle"
+                      [class.activo]="c.activo"
+                      [class.inactivo]="!c.activo"
+                      (click)="toggleContacto(c)"
+                      [title]="c.activo ? 'Clic para desactivar' : 'Clic para activar'">
+                {{ c.activo ? 'Activo' : 'Inactivo' }}
+              </button>
+            </td>
+            <td>
+              <!-- DELETE /api/cuenta/juridica/{ruc}/contactos/{id} -->
+              <button class="btn-eliminar" (click)="eliminarContacto(c.id)"
+                      title="Eliminar contacto">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
+       PESTAÑA 3: Cambiar contraseña
   ════════════════════════════════════════════════════════════ -->
   <div *ngIf="pestanaActiva === 'password'">
 
@@ -247,12 +358,10 @@
         <label>Contraseña actual *</label>
         <input type="password" [(ngModel)]="passwords.passwordActual" />
       </div>
-
       <div class="campo">
         <label>Nueva contraseña * <span class="hint">(mínimo 8 caracteres)</span></label>
         <input type="password" [(ngModel)]="passwords.nuevaPassword" />
       </div>
-
       <div class="campo">
         <label>Confirmar nueva contraseña *</label>
         <input type="password" [(ngModel)]="passwords.confirmarPassword" />

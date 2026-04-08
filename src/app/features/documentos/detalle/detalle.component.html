@@ -36,38 +36,81 @@
         </div>
 
         <div class="info-rows">
+
+          <!-- Tipo de persona: NATURAL / JURÍDICA -->
+          <div class="info-row">
+            <span class="info-label">Tipo de persona</span>
+            <span class="info-value">{{ documento!.tipoPersona || '—' }}</span>
+          </div>
+
           <div class="info-row">
             <span class="info-label">Remitente</span>
             <span class="info-value">{{ documento!.remitente }}</span>
           </div>
+
           <div class="info-row">
             <span class="info-label">DNI / RUC</span>
             <span class="info-value">{{ documento!.dniRuc }}</span>
           </div>
+
           <div class="info-row">
             <span class="info-label">Email</span>
-            <span class="info-value">{{ documento!.emailRemitente }}</span>
+            <span class="info-value">{{ documento!.emailRemitente || '—' }}</span>
           </div>
+
           <div class="info-row">
             <span class="info-label">Asunto</span>
             <span class="info-value">{{ documento!.asunto }}</span>
           </div>
+
           <div class="info-row">
-            <span class="info-label">Tipo</span>
+            <span class="info-label">Tipo de documento</span>
             <span class="info-value">{{ documento!.tipoDocumento || '—' }}</span>
           </div>
+
+          <!-- N° documento del remitente (ej: número de oficio, carta) -->
+          <div class="info-row" *ngIf="documento!.numeroDocumentoRemitente">
+            <span class="info-label">N° doc. remitente</span>
+            <span class="info-value">{{ documento!.numeroDocumentoRemitente }}</span>
+          </div>
+
+          <!-- Folios -->
+          <div class="info-row">
+            <span class="info-label">N° de folios</span>
+            <span class="info-value">{{ documento!.numeroFolios ?? '—' }}</span>
+          </div>
+
           <div class="info-row">
             <span class="info-label">Área asignada</span>
             <span class="info-value">{{ documento!.areaNombre || 'Sin asignar' }}</span>
           </div>
+
           <div class="info-row">
             <span class="info-label">Fecha de registro</span>
             <span class="info-value">{{ documento!.fechaHoraRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
           </div>
+
+          <!-- Archivo principal -->
+          <div class="info-row" *ngIf="documento!.nombreArchivoOriginal">
+            <span class="info-label">Archivo principal</span>
+            <span class="info-value" style="color:#60a5fa; font-size:0.82rem;">
+              {{ documento!.nombreArchivoOriginal }}
+            </span>
+          </div>
+
+          <!-- Anexo — solo se muestra si existe -->
+          <div class="info-row" *ngIf="documento!.nombreAnexoOriginal">
+            <span class="info-label">Anexo</span>
+            <span class="info-value" style="color:#60a5fa; font-size:0.82rem;">
+              {{ documento!.nombreAnexoOriginal }}
+            </span>
+          </div>
+
           <div class="info-row no-border">
             <span class="info-label">Estado actual</span>
             <app-estado-badge [estado]="documento!.estado"></app-estado-badge>
           </div>
+
         </div>
       </div>
 
@@ -95,6 +138,7 @@
         </div>
 
         <div class="acciones-list">
+
           <button class="btn-accion warn" (click)="abrirModalEstado()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
@@ -142,6 +186,7 @@
             Emitir Respuesta
           </button>
 
+          <!-- Descargar archivo principal -->
           <button class="btn-accion outline"
             (click)="descargar()"
             [disabled]="!documento!.rutaArchivo">
@@ -155,6 +200,29 @@
             </svg>
             Descargar Archivo
           </button>
+
+          <!-- Descargar anexo — visible SOLO si existe rutaAnexo -->
+          <!-- GET /api/documentos/{numeroTramite}/descargar-anexo -->
+          <button class="btn-accion outline"
+            *ngIf="documento!.rutaAnexo"
+            (click)="descargarAnexo()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0
+                005.25 21h13.5A2.25 2.25 0
+                0021 18.75V16.5M16.5
+                12L12 16.5m0 0L7.5 12m4.5
+                4.5V3"/>
+            </svg>
+            Descargar Anexo
+            <!-- Nombre del anexo como indicador visual -->
+            <span *ngIf="documento!.nombreAnexoOriginal"
+                  style="font-size:0.72rem; opacity:0.7; margin-left:auto; max-width:100px;
+                         overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              {{ documento!.nombreAnexoOriginal }}
+            </span>
+          </button>
+
         </div>
       </div>
     </div>
@@ -263,7 +331,8 @@
 </div>
 
 <!-- ===== OVERLAY MODALES ===== -->
-<div class="modal-overlay" *ngIf="mostrarModalEstado || mostrarModalArea || mostrarModalDerivacion || mostrarModalRespuesta"
+<div class="modal-overlay"
+  *ngIf="mostrarModalEstado || mostrarModalArea || mostrarModalDerivacion || mostrarModalRespuesta"
   (click)="cerrarModales()">
 </div>
 

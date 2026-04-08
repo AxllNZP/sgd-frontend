@@ -1,14 +1,11 @@
 // =============================================================
 // detalle.component.ts
-// CORRECCIONES:
-//   1. guardarRespuesta(): añadido error handler + guardandoRespuesta
-//      flag para bloquear múltiples envíos mientras la petición está en vuelo.
-//   2. Manejo específico del error 422: ocurre cuando el backend intenta
-//      enviar el email ANTES de guardar la respuesta y el SMTP falla.
-//      El backend lanza BusinessException → exception handler → 422.
-//      El frontend ahora muestra un mensaje claro y sugiere desmarcar "Enviar email".
-//   3. errorRespuesta: string para mostrar el error dentro del modal
-//      (el modal ya está abierto, no es necesario cerrarlo).
+// CORRECCIONES v2:
+//   1. descargarAnexo() — método AÑADIDO.
+//      Llama a documentoService.descargarAnexo() que existe en
+//      el servicio pero nunca fue conectado al template.
+//      GET /api/documentos/{numeroTramite}/descargar-anexo
+//      Requiere: isAuthenticated() — ya tiene token.
 // =============================================================
 
 import { Component, OnInit } from '@angular/core';
@@ -24,11 +21,11 @@ import { RespuestaService }   from '../../../core/services/respuesta.service';
 import { AreaService }        from '../../../core/services/area.service';
 import { AuthService }        from '../../../core/services/auth.service';
 
-import { DocumentoResponse, CambioEstado }    from '../../../core/models/documento.model';
-import { HistorialResponse }                  from '../../../core/models/historial.model';
+import { DocumentoResponse, CambioEstado }       from '../../../core/models/documento.model';
+import { HistorialResponse }                     from '../../../core/models/historial.model';
 import { DerivacionRequest, DerivacionResponse } from '../../../core/models/derivacion.model';
 import { RespuestaRequest, RespuestaResponse }   from '../../../core/models/respuesta.model';
-import { AreaResponse }                       from '../../../core/models/area.model';
+import { AreaResponse }                          from '../../../core/models/area.model';
 
 import { CambiarEstadoComponent }    from './modales/cambiar-estado/cambiar-estado.component';
 import { AsignarAreaComponent }      from './modales/asignar-area/asignar-area.component';
@@ -57,7 +54,7 @@ export class DetalleComponent implements OnInit {
 
   numeroTramite  = '';
   documento: DocumentoResponse | null = null;
-  historial:   HistorialResponse[]  = [];
+  historial:    HistorialResponse[]  = [];
   derivaciones: DerivacionResponse[] = [];
   respuestas:   RespuestaResponse[]  = [];
   areas:        AreaResponse[]       = [];
@@ -69,16 +66,13 @@ export class DetalleComponent implements OnInit {
   mostrarModalDerivacion = false;
   mostrarModalRespuesta  = false;
 
-  cambioEstado:  CambioEstado     = { estado: 'EN_PROCESO', observacion: '', usuarioResponsable: '' };
+  cambioEstado:   CambioEstado     = { estado: 'EN_PROCESO', observacion: '', usuarioResponsable: '' };
   areaSeleccionada = '';
   derivacionForm: DerivacionRequest = { areaDestinoId: '', motivo: '', usuarioResponsable: '' };
   respuestaForm:  RespuestaRequest  = { contenido: '', usuarioResponsable: '', enviarEmail: true };
 
-  // ── NUEVO: estado de la petición de respuesta ────────────
-  // Bloquea el botón mientras la petición está en vuelo →
-  // evita los múltiples 422 que ocurrían por clicks repetidos.
   guardandoRespuesta = false;
-  errorRespuesta     = '';   // se muestra dentro del modal
+  errorRespuesta     = '';
 
   estados = [
     { label: 'Recibido',   value: 'RECIBIDO'   },
@@ -141,10 +135,9 @@ export class DetalleComponent implements OnInit {
   abrirModalDerivacion(): void { this.mostrarModalDerivacion = true; }
 
   abrirModalRespuesta(): void {
-    // Limpiar error anterior cada vez que se abre el modal
-    this.errorRespuesta    = '';
+    this.errorRespuesta          = '';
     this.respuestaForm.contenido = '';
-    this.mostrarModalRespuesta  = true;
+    this.mostrarModalRespuesta   = true;
   }
 
   cerrarModales(): void {
@@ -174,17 +167,12 @@ export class DetalleComponent implements OnInit {
     });
   }
 
-  // ── CORREGIDO ────────────────────────────────────────────
   guardarRespuesta(): void {
-    // Validación mínima en el frontend — @NotBlank en el DTO del backend
     if (!this.respuestaForm.contenido.trim()) {
       this.errorRespuesta = 'El contenido de la respuesta es obligatorio.';
       return;
     }
 
-    // Bloquear envíos múltiples mientras la petición está en vuelo.
-    // Sin esto, el usuario podía hacer clic varias veces y generar
-    // múltiples llamadas simultáneas (todos fallaban con 422).
     if (this.guardandoRespuesta) return;
 
     this.guardandoRespuesta = true;
@@ -200,16 +188,10 @@ export class DetalleComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.guardandoRespuesta = false;
         this.errorRespuesta     = this.interpretarErrorRespuesta(err);
-        // El modal permanece abierto para que el usuario pueda corregir
-        // (por ejemplo, desmarcar "Enviar email" si el SMTP no está listo)
       }
     });
   }
 
-  // ── Interpretación de errores específica para respuestas ─
-  // 422: el backend intenta enviar el email ANTES de guardar.
-  //      Si el SMTP falla → BusinessException → 422.
-  //      Solución: desmarcar "Enviar notificación por email".
   private interpretarErrorRespuesta(err: HttpErrorResponse): string {
     const msg = err.error?.message || '';
     switch (err.status) {
@@ -217,30 +199,48 @@ export class DetalleComponent implements OnInit {
         return msg.includes('correo') || msg.includes('email')
           ? `Error al enviar el email: ${msg}. Desmarque "Enviar notificación" e intente nuevamente.`
           : 'No se pudo guardar la respuesta. Desmarque "Enviar notificación por email" e intente nuevamente.';
-      case 400:
-        return msg || 'Datos inválidos. Verifique el contenido.';
-      case 403:
-        return 'No tiene permisos para emitir respuestas.';
-      case 404:
-        return 'No se encontró el trámite. Recargue la página.';
-      case 0:
-        return 'Sin conexión con el servidor.';
-      default:
-        return msg || 'Error al emitir la respuesta. Intente nuevamente.';
+      case 400:  return msg || 'Datos inválidos. Verifique el contenido.';
+      case 403:  return 'No tiene permisos para emitir respuestas.';
+      case 404:  return 'No se encontró el trámite. Recargue la página.';
+      case 0:    return 'Sin conexión con el servidor.';
+      default:   return msg || 'Error al emitir la respuesta. Intente nuevamente.';
     }
   }
 
+  // ── Descarga del archivo principal ────────────────────────
+  // GET /api/documentos/{numeroTramite}/descargar
   descargar(): void {
     this.documentoService.descargarArchivo(this.numeroTramite).subscribe({
       next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href     = url;
-        a.download = `${this.numeroTramite}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
+        const nombre = this.documento?.nombreArchivoOriginal || `${this.numeroTramite}.pdf`;
+        this.triggerDescarga(blob, nombre);
       }
     });
+  }
+
+  // ── Descarga del anexo ─────────────────────────────────────
+  // GET /api/documentos/{numeroTramite}/descargar-anexo
+  // 📚 LECCIÓN: el método existía en documento.service.ts pero
+  // nunca fue conectado al template. Se añade aquí y en el HTML.
+  descargarAnexo(): void {
+    this.documentoService.descargarAnexo(this.numeroTramite).subscribe({
+      next: (blob: Blob) => {
+        const nombre = this.documento?.nombreAnexoOriginal || `${this.numeroTramite}-anexo.pdf`;
+        this.triggerDescarga(blob, nombre);
+      }
+    });
+  }
+
+  // ── Helper compartido para disparar la descarga ───────────
+  // 📚 LECCIÓN: extraemos la lógica repetida a un método privado.
+  // Antes estaba duplicada entre descargar() y (hipotético) descargarAnexo().
+  private triggerDescarga(blob: Blob, nombreArchivo: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
   getAreasParaDerivacion(): AreaResponse[] {
